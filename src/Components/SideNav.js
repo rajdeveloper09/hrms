@@ -58,7 +58,7 @@ export default function SideNav() {
             to="/dashboard"
             className="text-3xl font-bold text-pink-600"
           >
-            ABCD
+            ABC
           </NavLink>
         </div>
 
