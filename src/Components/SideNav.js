@@ -34,7 +34,7 @@ export default function SideNav() {
       {/* TOP MOBILE BAR */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white shadow z-50 flex items-center justify-between px-4 py-3">
         <h2 className="text-xl font-bold text-pink-600">
-          BKD HRMS
+          Admin
         </h2>
 
         <button onClick={() => setMobileOpen(!mobileOpen)}>
@@ -58,7 +58,7 @@ export default function SideNav() {
             to="/dashboard"
             className="text-3xl font-bold text-pink-600"
           >
-            ABCD
+            Admin
           </NavLink>
         </div>
 
