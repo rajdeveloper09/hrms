@@ -42,7 +42,6 @@ function App() {
           </Route>
           <Route path="/employees-list" element={<EmployeeList />} />
           <Route path="/add-employee" element={<AddEmployee />} />
-
         </Routes>
       </Router>
     </>
