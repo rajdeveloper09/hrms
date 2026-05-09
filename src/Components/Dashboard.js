@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid
@@ -8,10 +7,6 @@ import SideNav from "./SideNav";
 import TopBar from "./TopBar";
 
 export default function Dashboard({ setIsAuth }) {
-  const navigate = useNavigate(); // ✅ FIX
-
-
-
 
   const stats = [
     { label: "Employees", value: 128, color: "bg-blue-400" },

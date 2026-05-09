@@ -4,7 +4,6 @@ import {
     Bell,
     Settings,
     UserCircle2,
-    Menu
 } from "lucide-react";
 
 export default function TopBar({ setIsAuth }) {
@@ -52,11 +51,6 @@ export default function TopBar({ setIsAuth }) {
 
                 {/* LEFT */}
                 <div className="flex items-center gap-4">
-
-                    {/* MENU ICON */}
-                    {/* <button className="p-2 rounded-xl hover:bg-pink-50 transition">
-            <Menu className="w-6 h-6 text-gray-700" />
-          </button> */}
 
                     {/* DASHBOARD TEXT */}
                     <div>
