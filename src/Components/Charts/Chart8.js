@@ -107,12 +107,11 @@ export default function Chart8() {
   const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-[430px] bg-white rounded-3xl border border-gray-200 shadow-lg p-4"
+        className="bg-white rounded-2xl shadow-md p-4"
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
@@ -211,6 +210,6 @@ export default function Chart8() {
           </p>
         </div>
       </motion.div>
-    </div>
+
   );
 }

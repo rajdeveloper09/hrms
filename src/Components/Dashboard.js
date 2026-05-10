@@ -59,13 +59,16 @@ export default function Dashboard({ setIsAuth }) {
           <Chart5 />
           <Chart2 />
           <Chart7 />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Chart8 />
           <Chart9 />
+          <Chart3 />
         </div>
         {/* Charts */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <Chart3 />
           <div className="bg-white rounded-2xl shadow-md p-5">
             <h2 className="text-lg font-semibold mb-4 text-gray-700">
               Employee List
