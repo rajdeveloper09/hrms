@@ -1,6 +1,5 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Slice } from "lucide-react";
 
 const data = [
   {
@@ -53,16 +52,6 @@ const data = [
     place: "Head Office",
     meeting_attend_by: "Area Manager",
   },
-  {
-    meeting_id: 123420,
-    title: "Guard Meeting",
-    designation: "Manager",
-    date: "28-05-2026",
-    time: "12 PM",
-    emp_count: 10,
-    place: "Head Office",
-    meeting_attend_by: "Area Manager",
-  },
 ];
 
 // Sort by date
@@ -76,7 +65,7 @@ const sortedData = [...data].sort((a, b) => {
   );
 });
 
-// Every next graph 20% down
+// Graph styles
 const graphStyles = [
   {
     color: "bg-emerald-700",
@@ -101,6 +90,22 @@ const graphStyles = [
 ];
 
 export default function Chart8() {
+  // Next Meeting
+  const nextMeeting = sortedData[0];
+
+  // Convert date
+  const [day, month, year] = nextMeeting.date.split("-");
+  const meetingDate = new Date(`${year}-${month}-${day}`);
+
+  // Today
+  const today = new Date();
+
+  // Difference
+  const diffTime = meetingDate - today;
+
+  // Days Left
+  const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
       <motion.div
@@ -120,6 +125,40 @@ export default function Chart8() {
             <option>This Month</option>
             <option>This Year</option>
           </select>
+        </div>
+
+        {/* Countdown Card */}
+        <div className="mb-4 bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-2xl p-4 text-white shadow-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">Next Meeting</p>
+
+              <h3 className="text-lg font-bold mt-1">
+                {nextMeeting.title}
+              </h3>
+
+              <p className="text-xs mt-1 opacity-90">
+                {nextMeeting.date} • {nextMeeting.time}
+              </p>
+            </div>
+
+            <motion.div
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{
+                duration: 0.5,
+              }}
+              className="bg-white/20 backdrop-blur-md rounded-2xl px-4 py-3 text-center min-w-[95px]"
+            >
+              <h2 className="text-3xl font-bold leading-none">
+                {daysLeft}
+              </h2>
+
+              <p className="text-xs mt-1 tracking-wide">
+                DAYS LEFT
+              </p>
+            </motion.div>
+          </div>
         </div>
 
         {/* Graph Area */}
@@ -168,7 +207,7 @@ export default function Chart8() {
           <p>Meeting graph decreases by 20%</p>
 
           <p className="text-emerald-700 font-semibold">
-            Next: {sortedData[0].title}
+            {daysLeft} Days Remaining
           </p>
         </div>
       </motion.div>

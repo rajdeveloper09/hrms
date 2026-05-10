@@ -10,6 +10,7 @@ import Chart5 from "./Charts/Chart5";
 import Chart6 from "./Charts/Chart6";
 import Chart7 from "./Charts/Chart7";
 import Chart8 from "./Charts/Chart8";
+import Chart9 from "./Charts/Chart9";
 
 export default function Dashboard({ setIsAuth }) {
 
@@ -59,7 +60,7 @@ export default function Dashboard({ setIsAuth }) {
           <Chart2 />
           <Chart7 />
           <Chart8 />
-
+          <Chart9 />
         </div>
         {/* Charts */}
 
