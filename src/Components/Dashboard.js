@@ -9,6 +9,7 @@ import Chart4 from "./Charts/Chart4";
 import Chart5 from "./Charts/Chart5";
 import Chart6 from "./Charts/Chart6";
 import Chart7 from "./Charts/Chart7";
+import Chart8 from "./Charts/Chart8";
 
 export default function Dashboard({ setIsAuth }) {
 
@@ -46,65 +47,65 @@ export default function Dashboard({ setIsAuth }) {
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">          
-           <Chart4 />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Chart4 />
           <Chart1 />
           <Chart6 />
-          
+
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Chart5 />
-         <Chart2 />
-         <Chart7 />
-          
-         
+          <Chart5 />
+          <Chart2 />
+          <Chart7 />
+          <Chart8 />
+
         </div>
         {/* Charts */}
 
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-<Chart3 />
-  <div className="bg-white rounded-2xl shadow-md p-5">
-          <h2 className="text-lg font-semibold mb-4 text-gray-700">
-            Employee List
-          </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <Chart3 />
+          <div className="bg-white rounded-2xl shadow-md p-5">
+            <h2 className="text-lg font-semibold mb-4 text-gray-700">
+              Employee List
+            </h2>
 
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-gray-500 border-b">
-                <th className="p-2 text-left">Name</th>
-                <th>Role</th>
-                <th>Department</th>
-                <th>Salary</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {employees.map(emp => (
-                <tr key={emp.id} className="border-b hover:bg-pink-50 transition">
-                  <td className="p-2 font-medium">{emp.name}</td>
-                  <td>{emp.role}</td>
-                  <td>{emp.dept}</td>
-                  <td>₹{emp.salary}</td>
-                  <td>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs text-white ${emp.status === "Active"
-                        ? "bg-green-400"
-                        : "bg-red-400"
-                        }`}
-                    >
-                      {emp.status}
-                    </span>
-                  </td>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-gray-500 border-b">
+                  <th className="p-2 text-left">Name</th>
+                  <th>Role</th>
+                  <th>Department</th>
+                  <th>Salary</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-         </div>
+              </thead>
 
-      
+              <tbody>
+                {employees.map(emp => (
+                  <tr key={emp.id} className="border-b hover:bg-pink-50 transition">
+                    <td className="p-2 font-medium">{emp.name}</td>
+                    <td>{emp.role}</td>
+                    <td>{emp.dept}</td>
+                    <td>₹{emp.salary}</td>
+                    <td>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs text-white ${emp.status === "Active"
+                          ? "bg-green-400"
+                          : "bg-red-400"
+                          }`}
+                      >
+                        {emp.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+
 
       </div>
     </div>
