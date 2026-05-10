@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Slice } from "lucide-react";
 
 const data = [
   {
@@ -52,9 +53,19 @@ const data = [
     place: "Head Office",
     meeting_attend_by: "Area Manager",
   },
+  {
+    meeting_id: 123420,
+    title: "Guard Meeting",
+    designation: "Manager",
+    date: "28-05-2026",
+    time: "12 PM",
+    emp_count: 10,
+    place: "Head Office",
+    meeting_attend_by: "Area Manager",
+  },
 ];
 
-// Date sorting
+// Sort by date
 const sortedData = [...data].sort((a, b) => {
   const [d1, m1, y1] = a.date.split("-");
   const [d2, m2, y2] = b.date.split("-");
@@ -65,27 +76,27 @@ const sortedData = [...data].sort((a, b) => {
   );
 });
 
-// Color + height logic
+// Every next graph 20% down
 const graphStyles = [
   {
     color: "bg-emerald-700",
-    height: "h-40",
+    height: "100%",
+  },
+  {
+    color: "bg-emerald-600",
+    height: "80%",
   },
   {
     color: "bg-emerald-500",
-    height: "h-32",
+    height: "60%",
   },
   {
     color: "bg-emerald-400",
-    height: "h-24",
+    height: "40%",
   },
   {
     color: "bg-emerald-300",
-    height: "h-16",
-  },
-  {
-    color: "bg-emerald-200",
-    height: "h-10",
+    height: "20%",
   },
 ];
 
@@ -114,18 +125,18 @@ export default function Chart8() {
         {/* Graph Area */}
         <div className="border border-gray-200 rounded-2xl overflow-hidden bg-[#fafafa]">
           <div className="grid grid-cols-5">
-            {sortedData.map((item, index) => (
+            {sortedData.slice(0, 5).map((item, index) => (
               <div
                 key={item.meeting_id}
                 className="border-r last:border-r-0 border-gray-200 flex flex-col justify-between"
               >
-                {/* Content */}
+                {/* Top Content */}
                 <div className="p-3">
                   <p className="text-[11px] text-gray-400 leading-4 mb-2">
                     {item.title}
                   </p>
 
-                  <h3 className="text-[15px] font-bold text-gray-900">
+                  <h3 className="text-[12px] font-bold text-gray-900">
                     {item.date}
                   </h3>
 
@@ -134,17 +145,17 @@ export default function Chart8() {
                   </p>
                 </div>
 
-                {/* Animated Bar */}
-                <div className="h-44 flex items-end px-1">
+                {/* Graph */}
+                <div className="h-44 flex items-end">
                   <motion.div
                     initial={{ height: 0 }}
-                    animate={{ height: "100%" }}
+                    animate={{ height: graphStyles[index].height }}
                     transition={{
                       duration: 0.8,
                       delay: index * 0.15,
                       ease: "easeOut",
                     }}
-                    className={`w-full rounded-t-[22px] ${graphStyles[index].height} ${graphStyles[index].color}`}
+                    className={`w-full rounded-t-[22px] ${graphStyles[index].color}`}
                   />
                 </div>
               </div>
@@ -154,7 +165,8 @@ export default function Chart8() {
 
         {/* Footer */}
         <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
-          <p>Nearest Meeting Highlighted</p>
+          <p>Meeting graph decreases by 20%</p>
+
           <p className="text-emerald-700 font-semibold">
             Next: {sortedData[0].title}
           </p>
