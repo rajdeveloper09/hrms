@@ -56,7 +56,7 @@ export default function Chart5() {
                 <div>
 
                     <h3 className="font-bold text-gray-800 text-xl">
-                        Complaints
+                        Branch Complaints
                     </h3>
 
                     <div className="flex items-center gap-2">
@@ -65,7 +65,7 @@ export default function Chart5() {
                         </p>
 
                         <button
-                            className="text-xs bg-pink-500 hover:bg-pink-600 text-white px-3 py-1 rounded-lg shadow-sm transition"
+                            className="text-xs bg-pink-500 hover:bg-pink-600 text-white px-3 py-1 rounded-lg shadow-sm transition mt-1"
                         >
                             More
                         </button>
@@ -91,25 +91,23 @@ export default function Chart5() {
 
 
             {/* Complaint List */}
-            <div className="space-y-4 max-h-[350px] overflow-y-auto">
+            <div className="space-y-4 max-h-[350px]">
 
                 {sortedData.slice(0, 6).map((item, index) => (
 
                     <motion.div
-                        key={index}
+                       key={index}
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{
+                                once: true,
+                                amount: 0.3
+                            }}
+                            transition={{
+                                duration: 0.5,
+                                delay: index * 0.12
+                            }}
                         className="flex items-center justify-between"
-                        initial={{
-                            opacity: 0,
-                            x: -40
-                        }}
-                        animate={{
-                            opacity: 1,
-                            x: 0
-                        }}
-                        transition={{
-                            duration: 0.5,
-                            delay: index * 0.15
-                        }}
                     >
 
                         {/* Left */}

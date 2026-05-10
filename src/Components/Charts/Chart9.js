@@ -101,16 +101,16 @@ export default function Chart9() {
         <div>
 
           <h3 className="font-bold text-gray-800 text-xl">
-            Complaints
+            Staff Complaints
           </h3>
 
           <div className="flex items-center gap-2">
             <p className="text-sm text-gray-400 mt-1">
-              Branch Wise Complaints
+              Staff Wise Complaints
             </p>
 
             <button
-              className="text-xs bg-pink-500 hover:bg-pink-600 text-white px-3 py-1 rounded-lg shadow-sm transition"
+              className="text-xs bg-pink-500 hover:bg-pink-600 text-white px-3 py-1 rounded-lg shadow-sm transition mt-1"
             >
               More
             </button>
@@ -133,8 +133,7 @@ export default function Chart9() {
         </div>
 
       </div>
-      <div className="min-h-screen p-6 flex justify-center items-center">
-        <div className="w-full max-w-[450px]">
+      <div className="w-full">
 
           {/* Single Sliding Card */}
           <div className="relative overflow-hidden">
@@ -147,10 +146,10 @@ export default function Chart9() {
                 transition={{
                   duration: 0.4,
                 }}
-                className="bg-white rounded-3xl border border-gray-200 overflow-hidden"
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden"
               >
                 {/* Top */}
-                <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-4 text-white">
+                <div className="bg-black p-3 text-white">
                   <div className="flex items-center gap-4">
 
                     <div className="flex-1">
@@ -170,7 +169,7 @@ export default function Chart9() {
                           {item.status}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-300 mt-1">
+                      <p className="text-xs mt-1 opacity-90">
                         Complaint ID : {item.complaint_id}
                       </p>
                     </div>
@@ -178,9 +177,9 @@ export default function Chart9() {
                 </div>
 
                 {/* Details */}
-                <div className="p-4 space-y-4">
+                <div className="p-2 space-y-4">
                   {/* Employee vs Employee / Other */}
-                  <div className="bg-gradient-to-r from-gray-50 to-red-50 border border-gray-100 rounded-3xl p-4">
+                  <div className="bg-gradient-to-r from-gray-50 to-red-50 border border-gray-100 rounded-3xl p-2">
                     <div className="flex items-center justify-between gap-3">
 
                       {/* Suspected Employee */}
@@ -188,10 +187,10 @@ export default function Chart9() {
                         <img
                           src={item.suspected_photo}
                           alt=""
-                          className="w-16 h-16 rounded-2xl object-cover mx-auto border-2 border-red-200"
+                          className="w-8 h-8 rounded-2xl object-cover mx-auto border-2 border-red-200"
                         />
 
-                        <p className="text-sm font-bold text-gray-800 mt-2">
+                        <p className="text-sm text-gray-800 mt-1">
                           {item.suspected_em}
                         </p>
 
@@ -199,14 +198,14 @@ export default function Chart9() {
                           {item.suspected_emp_id}
                         </p>
 
-                        <span className="inline-block mt-2 bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded-full font-medium">
+                        <span className="inline-block mt-2 bg-rose-100 text-red-600 text-[10px] px-2 py-1 rounded-full font-medium">
                           Suspected EM
                         </span>
                       </div>
 
                       {/* VS */}
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white flex items-center justify-center text-sm font-bold shadow-lg">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-t from-pink-400 to-rose-500 text-white flex items-center justify-center text-sm font-bold shadow-lg">
                           VS
                         </div>
 
@@ -221,10 +220,10 @@ export default function Chart9() {
                         <img
                           src={item.against_photo}
                           alt=""
-                          className="w-16 h-16 rounded-2xl object-cover mx-auto border-2 border-orange-200"
+                          className="w-8 h-8 rounded-2xl object-cover mx-auto border-2 border-orange-200"
                         />
 
-                        <p className="text-sm font-bold text-gray-800 mt-2">
+                        <p className="text-sm text-gray-800 mt-1">
                           {item.against_name}
                         </p>
 
@@ -239,7 +238,7 @@ export default function Chart9() {
                     </div>
                   </div>
                   {/* Remark */}
-                  <div className="bg-red-50 border border-red-100 rounded-2xl p-3">
+                  <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3">
                     <div className="flex items-start gap-2">
                       <AlertTriangle
                         size={16}
@@ -260,10 +259,10 @@ export default function Chart9() {
 
                   {/* Date */}
                   <div className="flex items-center gap-3">
-                    <div className="bg-orange-100 p-2 rounded-xl">
+                    <div className="bg-rose-200 p-2 rounded-xl">
                       <CalendarDays
                         size={15}
-                        className="text-orange-600"
+                        className="text-red-600"
                       />
                     </div>
 
@@ -280,7 +279,7 @@ export default function Chart9() {
 
                   {/* Place */}
                   <div className="flex items-center gap-3">
-                    <div className="bg-red-100 p-2 rounded-xl">
+                    <div className="bg-rose-100 p-2 rounded-xl">
                       <MapPin
                         size={15}
                         className="text-red-600"
@@ -299,20 +298,20 @@ export default function Chart9() {
                   </div>
 
                   {/* Footer */}
-                  <div className="border-t border-gray-100 pt-4 flex items-center justify-between">
+                  <div className="border-t border-gray-100 pt-1 flex items-center justify-between">
                     <div>
-                      <p className="text-[11px] text-gray-400">
-                        Complaint Raise By
+                      <p className="text-[12px] text-gray-400">
+                        Complaint Raise By :  <span className="font-semibold text-gray-800">{item.raise_by}</span>
                       </p>
 
-                      <p className="text-sm font-semibold text-gray-800">
+                      {/* <p className="text-sm font-semibold text-gray-800">
                         {item.raise_by}
-                      </p>
+                      </p> */}
                     </div>
 
-                    <button className="bg-gradient-to-r from-red-600 to-orange-500 text-white text-sm px-4 py-2 rounded-xl font-medium shadow-md">
+                    {/* <button className="bg-black text-white text-sm px-4 py-2 rounded-xl font-medium shadow-md">
                       View Details
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </motion.div>
@@ -320,7 +319,7 @@ export default function Chart9() {
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between mt-5">
+          <div className="flex items-center justify-between mt-2">
             <button
               onClick={prevCard}
               disabled={currentIndex === 0}
@@ -341,7 +340,7 @@ export default function Chart9() {
                   key={i}
                   className={`h-2 rounded-full transition-all duration-300
                 ${currentIndex === i
-                      ? "w-6 bg-red-500"
+                      ? "w-6 bg-pink-400"
                       : "w-2 bg-gray-300"
                     }`}
                 />
@@ -354,7 +353,7 @@ export default function Chart9() {
               className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium shadow-md
             ${currentIndex === complaints.length - 1
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-red-600 to-orange-500 text-white"
+                  : "bg-gradient-to-r from-pink-400 to-rose-500 text-white"
                 }`}
             >
               Next
@@ -362,7 +361,6 @@ export default function Chart9() {
             </button>
           </div>
         </div>
-      </div>
     </div>
   );
 }

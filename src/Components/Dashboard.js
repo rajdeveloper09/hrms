@@ -11,6 +11,7 @@ import Chart6 from "./Charts/Chart6";
 import Chart7 from "./Charts/Chart7";
 import Chart8 from "./Charts/Chart8";
 import Chart9 from "./Charts/Chart9";
+import EmployeeAdvance from "./EmployeeAdvance";
 
 export default function Dashboard({ setIsAuth }) {
 
@@ -35,7 +36,7 @@ export default function Dashboard({ setIsAuth }) {
       <SideNav />
       <div className="flex-1 ml-72 p-3 overflow-y-auto">
         <TopBar setIsAuth={setIsAuth} />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           {stats.map((s, i) => (
             <div
               key={i}
@@ -45,69 +46,32 @@ export default function Dashboard({ setIsAuth }) {
               <p className="text-2xl font-bold text-pink-600">{s.value}</p>
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <Chart4 />
           <Chart1 />
           <Chart6 />
 
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Chart5 />
-          <Chart2 />
-          <Chart7 />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">        
+         
+          <Chart9 />
+          <Chart8 />
+          <Chart2 /> 
+          
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Chart8 />
-          <Chart9 />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <Chart5 />
+          <Chart7 />
           <Chart3 />
         </div>
         {/* Charts */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-2xl shadow-md p-5">
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">
-              Employee List
-            </h2>
-
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-gray-500 border-b">
-                  <th className="p-2 text-left">Name</th>
-                  <th>Role</th>
-                  <th>Department</th>
-                  <th>Salary</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {employees.map(emp => (
-                  <tr key={emp.id} className="border-b hover:bg-pink-50 transition">
-                    <td className="p-2 font-medium">{emp.name}</td>
-                    <td>{emp.role}</td>
-                    <td>{emp.dept}</td>
-                    <td>₹{emp.salary}</td>
-                    <td>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs text-white ${emp.status === "Active"
-                          ? "bg-green-400"
-                          : "bg-red-400"
-                          }`}
-                      >
-                        {emp.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <EmployeeAdvance/>
 
 
 

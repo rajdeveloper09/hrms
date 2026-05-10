@@ -81,7 +81,7 @@ export default function Chart4() {
                         </p>
 
                         <button
-                            className="text-xs bg-pink-500 hover:bg-pink-600 text-white px-3 py-1 rounded-lg shadow-sm transition"
+                            className="text-xs bg-pink-500 hover:bg-pink-600 text-white px-3 py-1 rounded-lg shadow-sm transition mt-1"
                         >
                             More
                         </button>

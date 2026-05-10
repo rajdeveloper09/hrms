@@ -6,27 +6,27 @@ export default function Chart6() {
     const trafficData = [
 
         {
-            name: "Total Bonus",
+            name: "Employee Bonus",
             value: 201524,
             color: "bg-rose-200",
         },
         {
-            name: "Total Increment",
+            name: "Employee Increment",
             value: 136254,
             color: "bg-rose-50",
         },
         {
-            name: "Total Reward",
+            name: "Employee Reward",
             value: 465825,
             color: "bg-pink-200",
         },
         {
-            name: "Total Penalty",
+            name: "Employee Penalty",
             value: 123654,
             color: "bg-pink-100",
         },
         {
-            name: "Total Salary",
+            name: "Employee Salary",
             value: 11212500,
             color: "bg-rose-300",
         },

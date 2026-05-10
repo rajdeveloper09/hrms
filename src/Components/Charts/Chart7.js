@@ -38,7 +38,7 @@ export default function Chart7() {
                         </p>
 
                         <button
-                            className="text-xs bg-pink-500 hover:bg-pink-600 text-white px-3 py-1 rounded-lg shadow-sm transition"
+                            className="text-xs bg-pink-500 hover:bg-pink-600 text-white px-3 py-1 rounded-lg shadow-sm transition mt-1"
                         >
                             More
                         </button>
@@ -61,7 +61,7 @@ export default function Chart7() {
                     {/* Sort Button */}
                     <button
                         onClick={() => setSort(sort === "desc" ? "asc" : "desc")}
-                        className="p-2 bg-pink-100 rounded-lg hover:bg-pink-200"
+                        className="text-m border rounded-xl px-3 py-2 bg-pink-100"
                     >
                         ⇅
                     </button>
@@ -73,7 +73,7 @@ export default function Chart7() {
             {/* List */}
             <div className="space-y-3 max-h-[320px] pr-1">
 
-                {sortedData.slice(0,4).map((item, index) => {
+                {sortedData.slice(0, 4).map((item, index) => {
 
                     const percent = (item.increment / maxValue) * 100;
                     const getBarColor = (index) => {
@@ -86,9 +86,16 @@ export default function Chart7() {
                     return (
                         <motion.div
                             key={index}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: index * 0.1 }}
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{
+                                once: true,
+                                amount: 0.3
+                            }}
+                            transition={{
+                                duration: 0.5,
+                                delay: index * 0.12
+                            }}
                             className="bg-pink-50 p-3 rounded-2xl border border-pink-100"
                         >
 
@@ -97,7 +104,8 @@ export default function Chart7() {
 
                                 <div className="flex items-center gap-2">
                                     <p className="text-sm text-black mt-1">
-                                        {item.emp} - {item.emp_id}
+                                        {item.emp?.substring(0, 12)}
+                                        {item.emp?.length > 12 && "..."} - {item.emp_id}
                                     </p>
 
                                     <button

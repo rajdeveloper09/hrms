@@ -44,20 +44,47 @@ export default function Chart2() {
             salary: 35000,
             penalty: 1000,
             status: "Panelty"
+        },
+        {
+            name: "Ravi Sharma",
+            branch: "Mundka - BKD25",
+            post: "Cashier",
+            month: "May",
+            salary: 25000,
+            penalty: 5000,
+            status: "Panelty"
+        },
+        {
+            name: "Neha Singh",
+            branch: "Nangloi BKD14",
+            post: "Accountant",
+            month: "April",
+            salary: 35000,
+            penalty: 1000,
+            status: "Panelty"
+        },
+        {
+            name: "Neha Singh",
+            branch: "Sultanpuri - BKD13",
+            post: "Accountant",
+            month: "April",
+            salary: 35000,
+            penalty: 1000,
+            status: "Panelty"
         }
     ];
 
     const filteredData = useMemo(() => {
-    return payrollData
-        .filter((emp) => {
-            const branchMatch = branch === "All" || emp.branch === branch;
-            const postMatch = post === "All" || emp.post === post;
-            const monthMatch = month === "All" || emp.month === month;
+        return payrollData
+            .filter((emp) => {
+                const branchMatch = branch === "All" || emp.branch === branch;
+                const postMatch = post === "All" || emp.post === post;
+                const monthMatch = month === "All" || emp.month === month;
 
-            return branchMatch && postMatch && monthMatch;
-        })
-        .sort((a, b) => b.penalty - a.penalty);
-}, [branch, post, month]);
+                return branchMatch && postMatch && monthMatch;
+            })
+            .sort((a, b) => b.penalty - a.penalty);
+    }, [branch, post, month]);
 
     return (
         <div className="bg-white rounded-3xl shadow-lg border border-pink-100 p-5 flex flex-col overflow-hidden">
@@ -65,7 +92,7 @@ export default function Chart2() {
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
 
-               <div>
+                <div>
 
                     <h3 className="font-bold text-gray-800 text-xl">
                         Penalty
@@ -75,10 +102,7 @@ export default function Chart2() {
                         <p className="text-sm text-gray-400 mt-1">
                             Employees Penalty
                         </p>
-
-   
                     </div>
-
                 </div>
 
                 <div className="flex gap-2">
@@ -113,24 +137,19 @@ export default function Chart2() {
             {/* Employee List */}
             <div className="space-y-2 pr-1 flex-1">
 
-                {filteredData.map((emp, index) => (
+                {filteredData.slice(0, 6).map((emp, index) => (
 
                     <motion.div
                         key={index}
-                        initial={{
-                            opacity: 0,
-                            y: 40
-                        }}
-                        animate={{
-                            opacity: 1,
-                            y: 0
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{
+                            once: true,
+                            amount: 0.3
                         }}
                         transition={{
                             duration: 0.5,
                             delay: index * 0.12
-                        }}
-                        whileHover={{
-                            scale: 1.02
                         }}
                         className="group flex justify-between items-center bg-gradient-to-r from-pink-50 to-rose-50 hover:from-pink-100 hover:to-fuchsia-100 transition-all duration-300 p-2 rounded-2xl border border-pink-100 shadow-sm"
                     >
@@ -150,7 +169,7 @@ export default function Chart2() {
                                     duration: 0.4,
                                     delay: index * 0.15
                                 }}
-                                className="w-11 h-11 rounded-2xl bg-gradient-to-br from-pink-500 to-fuchsia-600 flex items-center justify-center text-sm font-bold text-white shadow-md"
+                                className="w-11 h-11 rounded-2xl bg-gradient-to-t from-pink-400 to-rose-500 flex items-center justify-center text-sm font-bold text-white shadow-md"
                             >
                                 {emp.name[0]}
                             </motion.div>
@@ -199,8 +218,8 @@ export default function Chart2() {
 
                             <span
                                 className={`inline-block mt-1 text-[11px] px-3 py-1 rounded-full font-medium shadow-sm ${emp.status === "Panelty"
-                                        ? "bg-red-100 text-red-600"
-                                        : "bg-red-100 text-red-500"
+                                    ? "bg-red-100 text-red-600"
+                                    : "bg-red-100 text-red-500"
                                     }`}
                             >
                                 {emp.post}
