@@ -12,6 +12,7 @@ import Chart7 from "./Charts/Chart7";
 import Chart8 from "./Charts/Chart8";
 import Chart9 from "./Charts/Chart9";
 import EmployeeAdvance from "./EmployeeAdvance";
+import Chart10 from "./Charts/Chart10";
 
 export default function Dashboard({ setIsAuth }) {
 
@@ -68,6 +69,7 @@ export default function Dashboard({ setIsAuth }) {
           <Chart5 />
           <Chart7 />
           <Chart3 />
+          <Chart10 /> 
         </div>
         {/* Charts */}
 
