@@ -137,7 +137,7 @@ export default function Chart2() {
             {/* Employee List */}
             <div className="space-y-2 pr-1 flex-1">
 
-                {filteredData.slice(0, 6).map((emp, index) => (
+                {filteredData.slice(0, 5).map((emp, index) => (
 
                     <motion.div
                         key={index}

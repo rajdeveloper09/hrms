@@ -53,7 +53,7 @@ export default function Dashboard({ setIsAuth }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <Chart4 />
           <Chart1 />
-          <Chart6 />
+          <Chart2 /> 
 
         </div>
 
@@ -61,7 +61,8 @@ export default function Dashboard({ setIsAuth }) {
          
           <Chart9 />
           <Chart8 />
-          <Chart2 /> 
+          <Chart6 />
+          
           
         </div>
 
