@@ -22,6 +22,8 @@ function CustomSelect({
 
     if (selectedItem) {
       setSelected(selectedItem.label);
+    } else {
+      setSelected("");
     }
   }, [value, options]);
 
@@ -118,28 +120,22 @@ export default function AddEmployee() {
 
     Promise.all([
 
-      // Duty Hours
-      fetch(`https://ojmee.in/employee/emp_duty_hours`)
+      fetch(`${API_BASE_URL}/emp_duty_hours`)
         .then((res) => res.json()),
 
-      // Monthly Leaves
-      fetch(`https://ojmee.in/employee/emp_monthly_leaves`)
+      fetch(`${API_BASE_URL}/emp_monthly_leaves`)
         .then((res) => res.json()),
 
-      // Yearly Leaves
-      fetch(`https://ojmee.in/employee/emp_yearly_leaves`)
+      fetch(`${API_BASE_URL}/emp_yearly_leaves`)
         .then((res) => res.json()),
 
-      // Branches
-      fetch(`https://ojmee.in/employee/branches`)
+      fetch(`${API_BASE_URL}/branches`)
         .then((res) => res.json()),
 
-      // Shifts
-      fetch(`https://ojmee.in/employee/emp_shifts`)
+      fetch(`${API_BASE_URL}/emp_shifts`)
         .then((res) => res.json()),
 
-      // Overtime
-      fetch(`https://ojmee.in/employee/emp_overtime`)
+      fetch(`${API_BASE_URL}/emp_overtime`)
         .then((res) => res.json())
 
     ])
@@ -153,39 +149,26 @@ export default function AddEmployee() {
         overtimeRes
       ]) => {
 
-        console.log("Duty:", dutyData);
-        console.log("Monthly:", monthlyData);
-        console.log("Yearly:", yearlyData);
-        console.log("Branches:", branchData);
-        console.log("Shifts:", shiftData);
-        console.log("Overtime:", overtimeRes);
-
-        // Duty Hours
         if (dutyData.status) {
           setDutyHours(dutyData.data);
         }
 
-        // Monthly Leaves
         if (monthlyData.status) {
           setMonthlyLeaves(monthlyData.data);
         }
 
-        // Yearly Leaves
         if (yearlyData.status) {
           setYearlyLeaves(yearlyData.data);
         }
 
-        // Branches
         if (branchData.status) {
           setBranches(branchData.data);
         }
 
-        // Shifts
         if (shiftData.status) {
           setShifts(shiftData.data);
         }
 
-        // Overtime
         if (overtimeRes.status) {
           setOvertimeData(overtimeRes.data);
         }
@@ -197,7 +180,6 @@ export default function AddEmployee() {
       });
 
   }, []);
-
 
   const [employee, setEmployee] = useState({
     employee_id: "",
@@ -246,11 +228,21 @@ export default function AddEmployee() {
     rewards: "",
     complaint: "",
     assets: "",
-icard: "",
+    icard: "",
     interview_by: "",
     ot_allow: "",
     shift_time: "",
-    salary_mode: ""
+    salary_mode: "",
+
+    // FILES
+    user_resume: null,
+    kye_form: null,
+    user_photo: null,
+    user_family_photo: null,
+    aadhar_with_family: null,
+    pan_card: null,
+    pcc: null,
+    bank_proff: null
   });
 
   useEffect(() => {
@@ -274,12 +266,12 @@ icard: "",
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files, type } = e.target;
 
-    setForm({
-      ...form,
-      [name]: value
-    });
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "file" ? files[0] : value
+    }));
   };
 
   const handleEmployeeChange = (e) => {
@@ -301,22 +293,77 @@ icard: "",
   };
 
   const handleDepartmentChange = (e) => {
-    const deptId = String(e.target.value);
 
+    const deptId = e.target.value;
+
+    // id ke behalf par find
     const selectedDept = departments.find(
-      (d) => String(d.id) === deptId
+      (d) => String(d.id) === String(deptId)
     );
 
     setForm((prev) => ({
       ...prev,
-      department: deptId,
+
+      // form me department ka NAME save hoga
+      department: selectedDept?.name || "",
+
       designation: ""
     }));
 
+    // designation update
     setDesignations(
-      selectedDept ? selectedDept.designations : []
+      selectedDept?.designations || []
     );
   };
+  function FileUploadBox({
+    label,
+    name,
+    file,
+    onChange,
+    required = false
+  }) {
+    return (
+      <div className="space-y-2">
+        <label className="block text-sm font-bold text-gray-700">
+          {label}
+          {required && (
+            <span className="text-red-500 ml-1">*</span>
+          )}
+        </label>
+
+        <div className="relative border-2 border-dashed border-pink-300 rounded-2xl bg-gradient-to-br from-pink-50 to-rose-50 hover:border-pink-500 transition-all duration-300 p-5">
+
+          <input
+            type="file"
+            name={name}
+            onChange={onChange}
+            className="absolute inset-0 opacity-0 cursor-pointer"
+          />
+
+          <div className="flex flex-col items-center justify-center text-center">
+
+            <div className="w-14 h-14 rounded-full bg-pink-100 flex items-center justify-center mb-3 text-2xl">
+              📁
+            </div>
+
+            <p className="font-semibold text-gray-700">
+              Choose File
+            </p>
+
+            <p className="text-sm text-gray-500 mt-1">
+              PDF, JPG, PNG Allowed
+            </p>
+
+            {file && (
+              <div className="mt-3 px-4 py-2 rounded-xl bg-green-100 text-green-700 text-sm font-medium break-all">
+                {file.name}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // VALIDATION
   const validateStep = () => {
@@ -733,11 +780,11 @@ icard: "",
         return false;
       }
 
-      if (form.assets.trim().length < 2) {
+      if (form.assets.trim().length < 1) {
         toast.error("Invalid Assets Details (T-Shirt)");
         return false;
       }
-if (!form.icard) {
+      if (!form.icard) {
         toast.error("Assets (ID Card) Details Required");
         return false;
       }
@@ -754,6 +801,45 @@ if (!form.icard) {
 
       if (form.interview_by.trim().length < 3) {
         toast.error("Invalid Interviewer Name");
+        return false;
+      }
+      if (!form.user_resume) {
+        toast.error("Upload Resume");
+        return false;
+      }
+
+      if (!form.kye_form) {
+        toast.error("Upload KYE Form");
+        return false;
+      }
+
+      if (!form.user_photo) {
+        toast.error("Upload Employee Photo");
+        return false;
+      }
+
+      if (!form.user_family_photo) {
+        toast.error("Upload Family Photo");
+        return false;
+      }
+
+      if (!form.aadhar_with_family) {
+        toast.error("Upload Aadhaar File");
+        return false;
+      }
+
+      if (!form.pan_card) {
+        toast.error("Upload PAN Card");
+        return false;
+      }
+
+      if (!form.pcc) {
+        toast.error("Upload PCC");
+        return false;
+      }
+
+      if (!form.bank_proff) {
+        toast.error("Upload Bank Proof");
         return false;
       }
 
@@ -787,8 +873,8 @@ if (!form.icard) {
     }
   };
 
-  // SUBMIT
   const handleSubmit = async (e) => {
+
     e.preventDefault();
 
     if (!validateStep()) return;
@@ -796,14 +882,22 @@ if (!form.icard) {
     setLoading(true);
 
     try {
+
+      const formData = new FormData();
+
+      Object.keys(form).forEach((key) => {
+
+        if (form[key] !== null && form[key] !== undefined) {
+          formData.append(key, form[key]);
+        }
+
+      });
+
       const res = await fetch(
         `${API_BASE_URL}/add_employee`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(form)
+          body: formData
         }
       );
 
@@ -811,55 +905,26 @@ if (!form.icard) {
 
       if (data.status === "success") {
 
-        toast.success("Employee Added Successfully");
+        toast.success(data.message);
 
         navigate("/employees-list");
 
       } else {
 
-        // Duplicate Employee ID
-        if (data.message === "Employee ID Already Exists") {
-          toast.error("Employee ID Already Exists");
-        }
+        toast.error(data.message || "Something Went Wrong");
 
-        // Duplicate Mobile
-        else if (data.message === "Mobile Number Already Exists") {
-          toast.error("Mobile Number Already Registered");
-        }
-
-        // Duplicate Email
-        else if (data.message === "Email Already Exists") {
-          toast.error("Email Already Registered");
-        }
-
-        // Duplicate Bank Account
-        else if (data.message === "Bank Account Already Exists") {
-          toast.error("Bank Account Already Registered");
-        }
-
-        // Duplicate Aadhaar
-        else if (data.message === "Aadhaar Number Already Exists") {
-          toast.error("Aadhaar Number Already Registered");
-        }
-
-        // Duplicate PAN
-        else if (data.message === "PAN Number Already Exists") {
-          toast.error("PAN Number Already Registered");
-        }
-
-        // Other Error
-        else {
-          toast.error(data.message || "Something Went Wrong");
-        }
       }
 
     } catch (err) {
+
+      console.log(err);
 
       toast.error("Server Error");
 
     }
 
     setLoading(false);
+
   };
 
 
@@ -943,7 +1008,7 @@ if (!form.icard) {
           className="bg-white p-6 rounded-2xl shadow-lg space-y-8"
         >
 
-          {/* STEP 1 */}
+          {/* ================= STEP 1 : PERSONAL DETAILS ================= */}
           {step === 1 && (
             <div>
 
@@ -952,389 +1017,852 @@ if (!form.icard) {
               </h2>
 
               <div className="grid grid-cols-3 gap-4">
-                <CustomSelect
-                  name="employee_id"
-                  value={form.employee_id}
-                  placeholder="Select Employee"
-                  options={employees.map((emp) => ({
-                    label:
-                      emp.employee_id +
-                      " - " +
-                      emp.employee_name,
-                    value: emp.employee_id
-                  }))}
-                  onChange={handleEmployeeChange}
-                />
 
-                <input
-                  value={employee.employee_name || ""}
-                  readOnly
-                  className="input"
-                  placeholder="Full Name"
-                  style={{ textTransform: 'capitalize' }}
-                />
+                {/* Employee ID */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Employee ID <span className="text-red-500">*</span>
+                  </label>
 
-                <input
-                  name="mobile"
-                  placeholder="Mobile"
-                  className="input"
-                  value={form.mobile}
-                  onChange={handleChange}
-                />
+                  <CustomSelect
+                    name="employee_id"
+                    value={form.employee_id}
+                    placeholder="Select Employee"
+                    options={employees.map((emp) => ({
+                      label: emp.employee_id + " - " + emp.employee_name,
+                      value: emp.employee_id
+                    }))}
+                    onChange={handleEmployeeChange}
+                  />
+                </div>
 
-                <input
-                  name="email"
-                  placeholder="Email"
-                  className="input"
-                  value={form.email}
-                  onChange={handleChange}
-                />
+                {/* Full Name */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
 
-                <CustomSelect
-                  name="gender"
-                  value={form.gender}
-                  placeholder="Gender"
-                  options={[
-                    {
-                      label: "Male",
-                      value: "Male"
-                    },
-                    {
-                      label: "Female",
-                      value: "Female"
-                    }
-                  ]}
-                  onChange={handleChange}
-                />
+                  <input
+                    value={employee.employee_name || ""}
+                    readOnly
+                    className="input"
+                    placeholder="Full Name"
+                    style={{ textTransform: "capitalize" }}
+                  />
+                </div>
 
-                <input
-                  name="aadhaar"
-                  placeholder="Aadhaar"
-                  className="input"
-                  type="number"
-                  inputMode="numeric"
-                  maxLength={12}
-                  value={form.aadhaar}
-                  onChange={handleChange}
-                />
+                {/* Mobile */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Mobile Number <span className="text-red-500">*</span>
+                  </label>
 
-                <input
-                  name="pan"
-                  placeholder="PAN"
-                  className="input"
-                  value={form.pan}
-                  style={{ textTransform: 'uppercase' }}
-                  onChange={handleChange}
-                />
+                  <input
+                    name="mobile"
+                    placeholder="Mobile"
+                    className="input"
+                    value={form.mobile}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                <textarea
-                  name="address"
-                  placeholder="Address"
-                  className="input col-span-3"
-                  style={{ textTransform: 'capitalize' }}
-                  value={form.address}
-                  onChange={handleChange}
-                />
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  maxLength={6}
-                  name="pin"
-                  placeholder="PIN"
-                  className="input"
-                  value={form.pin}
-                  onChange={(e) => {
-                    const value = e.target.value.slice(0, 6);
-                    handleChange({
-                      target: {
-                        name: "pin",
-                        value,
-                      },
-                    });
-                  }}
-                />
+                {/* Email */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    name="email"
+                    placeholder="Email"
+                    className="input"
+                    value={form.email}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* Gender */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Gender <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="gender"
+                    value={form.gender}
+                    placeholder="Gender"
+                    options={[
+                      { label: "Male", value: "Male" },
+                      { label: "Female", value: "Female" }
+                    ]}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* Aadhaar */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Aadhaar Number <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    name="aadhaar"
+                    placeholder="Aadhaar"
+                    className="input"
+                    type="number"
+                    inputMode="numeric"
+                    maxLength={12}
+                    value={form.aadhaar}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* PAN */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    PAN Number <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    name="pan"
+                    placeholder="PAN"
+                    className="input"
+                    value={form.pan}
+                    style={{ textTransform: "uppercase" }}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* DOB */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Date of Birth <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    name="dob"
+                    type="date"
+                    value={form.dob}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  />
+                </div>
+
+                {/* PIN */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    PIN Code <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    maxLength={6}
+                    name="pin"
+                    placeholder="PIN"
+                    className="input"
+                    value={form.pin}
+                    onChange={(e) => {
+                      const value = e.target.value.slice(0, 6);
+
+                      handleChange({
+                        target: {
+                          name: "pin",
+                          value,
+                        },
+                      });
+                    }}
+                  />
+                </div>
+
+                {/* Address */}
+                <div className="flex flex-col gap-2 col-span-3">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Address <span className="text-red-500">*</span>
+                  </label>
+
+                  <textarea
+                    name="address"
+                    placeholder="Address"
+                    className="input"
+                    style={{ textTransform: "capitalize" }}
+                    value={form.address}
+                    onChange={handleChange}
+                  />
+                </div>
 
               </div>
 
             </div>
           )}
 
-          {/* ================= FAMILY ================= */}
+          {/* ================= STEP 2 : FAMILY DETAILS ================= */}
           {step === 2 && (
             <div>
-              <h2 className="font-bold text-lg text-pink-600 mb-3">Family Details</h2>
+
+              <h2 className="font-bold text-lg text-pink-600 mb-3">
+                Family Details
+              </h2>
+
               <div className="grid grid-cols-3 gap-4">
 
-                <input name="father_name" placeholder="Father Name" style={{ textTransform: 'capitalize' }} value={form.father_name} onChange={handleChange} className="input" required />
-                <input name="mother_name" placeholder="Mother Name" style={{ textTransform: 'capitalize' }} value={form.mother_name} onChange={handleChange} className="input" required />
+                {/* Father Name */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Father Name <span className="text-red-500">*</span>
+                  </label>
 
-                <CustomSelect
-                  name="marital_status"
-                  value={form.marital_status}
-                  placeholder="Marital"
-                  options={[
-                    {
-                      label: "Single",
-                      value: "Single"
-                    },
-                    {
-                      label: "Married",
-                      value: "Married"
-                    }
-                  ]}
-                  onChange={handleChange}
-                />
-                <input name="spouse" placeholder="Spouse" style={{ textTransform: 'capitalize' }} value={form.spouse} onChange={handleChange} className="input" required />
-                <CustomSelect
-                  name="children"
-                  value={form.children}
-                  placeholder="Select Children"
-                  readOnly
-                  options={[
-                    {
-                      label: "0",
-                      value: "0"
-                    },
-                    {
-                      label: "1",
-                      value: "1"
-                    },
-                    {
-                      label: "2",
-                      value: "2"
-                    }
-                  ]}
-                  onChange={handleChange}
-                />
-                <input name="emergency_person" placeholder="Emergency Person" style={{ textTransform: 'capitalize' }} value={form.emergency_person} onChange={handleChange} className="input" required />
-                <input name="emergency_number" placeholder="Emergency Number" value={form.emergency_number} onChange={handleChange} className="input" required />
+                  <input
+                    name="father_name"
+                    placeholder="Father Name"
+                    style={{ textTransform: "capitalize" }}
+                    value={form.father_name}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  />
+                </div>
+
+                {/* Mother Name */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Mother Name <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    name="mother_name"
+                    placeholder="Mother Name"
+                    style={{ textTransform: "capitalize" }}
+                    value={form.mother_name}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  />
+                </div>
+
+                {/* Marital Status */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Marital Status <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="marital_status"
+                    value={form.marital_status}
+                    placeholder="Marital"
+                    options={[
+                      { label: "Single", value: "Single" },
+                      { label: "Married", value: "Married" }
+                    ]}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* Spouse */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Spouse Name
+                  </label>
+
+                  <input
+                    name="spouse"
+                    placeholder="Spouse"
+                    style={{ textTransform: "capitalize" }}
+                    value={form.spouse}
+                    onChange={handleChange}
+                    className="input"
+                  />
+                </div>
+
+                {/* Children */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Children
+                  </label>
+
+                  <CustomSelect
+                    name="children"
+                    value={form.children}
+                    placeholder="Select Children"
+                    options={[
+                      { label: "0", value: "0" },
+                      { label: "1", value: "1" },
+                      { label: "2", value: "2" }
+                    ]}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* Emergency Person */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Emergency Person <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    name="emergency_person"
+                    placeholder="Emergency Person"
+                    style={{ textTransform: "capitalize" }}
+                    value={form.emergency_person}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  />
+                </div>
+
+                {/* Emergency Number */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Emergency Number <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    name="emergency_number"
+                    placeholder="Emergency Number"
+                    value={form.emergency_number}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  />
+                </div>
 
               </div>
+
             </div>
           )}
 
           {/* ================= PROFESSIONAL ================= */}
           {step === 3 && (
             <div>
-              <h2 className="font-bold text-lg text-pink-600 mb-3">Professional Details</h2>
+
+              <h2 className="font-bold text-lg text-pink-600 mb-3">
+                Professional Details
+              </h2>
+
               <div className="grid grid-cols-3 gap-4">
 
-                <CustomSelect
-                  name="department"
-                  value={form.department}
-                  placeholder="Select Department"
-                  options={departments.map(dep => ({
-                    label: dep.name,
-                    value: String(dep.name)   // 🔥 IMPORTANT
-                  }))}
-                  onChange={handleDepartmentChange}
-                  required
-                />
-                <CustomSelect
-                  name="designation"
-                  value={form.designation}
-                  placeholder="Select Designation"
-                  options={designations.map(des => ({
-                    label: des.name,
-                    value: String(des.name)
-                  }))}
-                  onChange={handleChange}
-                  required
-                />
-                <CustomSelect
-                  name="work_location"
-                  value={form.work_location}
-                  placeholder="Select Branch"
-                  options={branches.map((item) => ({
-                    label: `${item.branch_name} - ${item.branch_id}`,
-                    value: item.branch_id
-                  }))}
-                  onChange={handleChange}
-                />
-                <input name="reporting_person" placeholder="Reporting Person" style={{ textTransform: 'capitalize' }} value={form.reporting_person} onChange={handleChange} className="input" required />
+                {/* Department */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Department <span className="text-red-500">*</span>
+                  </label>
 
-                <input name="joining_date" type="date" value={form.joining_date} onChange={handleChange} className="input" required />
+                  <CustomSelect
+                    name="department"
+                    value={departments.find(
+                      (d) => d.name === form.department
+                    )?.id || ""}
+                    placeholder="Select Department"
+                    options={departments.map((dep) => ({
+                      label: dep.name,
 
-                <CustomSelect
-                  name="employment_type"
-                  placeholder="Employment Type"
-                  options={[
-                    { label: "Full-time", value: "Full-time" },
-                    { label: "Part-time", value: "Part-time" }
-                  ]}
-                  value={form.employment_type}
-                  onChange={handleChange}
-                  required
-                />
+                      // dropdown me id use hoga
+                      value: dep.id
+                    }))}
+                    onChange={handleDepartmentChange}
+                  />
+                </div>
 
+                {/* Designation */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Designation <span className="text-red-500">*</span>
+                  </label>
 
-                <CustomSelect
-                  name="working_hours"
-                  value={form.working_hours}
-                  placeholder="Select Working Hours"
-                  options={dutyHours.map((item) => ({
-                    label: `${item.duty_hours} Hours`,
-                    value: item.duty_hours
-                  }))}
-                  onChange={handleChange}
-                />
-                <CustomSelect
-                  name="monthly_leaves"
-                  value={form.monthly_leaves}
-                  placeholder="Select Monthly Leaves"
-                  options={monthlyLeaves.map((item) => ({
-                    label: `${item.total_leaves} Leaves`,
-                    value: item.total_leaves
-                  }))}
-                  onChange={handleChange}
-                />
-                <CustomSelect
-                  name="yearly_leaves"
-                  value={form.yearly_leaves}
-                  placeholder="Select Yearly Leaves"
-                  options={yearlyLeaves.map((item) => ({
-                    label: `${item.total_leaves} Leaves`,
-                    value: item.total_leaves
-                  }))}
-                  onChange={handleChange}
-                />
+                  <CustomSelect
+                    name="designation"
+                    value={form.designation}
+                    placeholder="Select Designation"
+                    options={designations.map((des) => ({
+                      label: des.name,
+                      value: des.name
+                    }))}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                <CustomSelect
-                  name="shift_time"
-                  value={form.shift_time}
-                  placeholder="Select Shift"
-                  options={shifts.map((item) => ({
-                    label: `${item.shift_name} - ${item.start_time}`,
-                    value: item.start_time
-                  }))}
-                  onChange={handleChange}
-                />
+                {/* Work Location */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Work Location <span className="text-red-500">*</span>
+                  </label>
 
-                <CustomSelect
-                  name="ot_allow"
-                  value={form.ot_allow}
-                  placeholder="Select OT Type"
-                  options={overtimeData.map((item) => ({
-                    label: `${item.remark} - ${item.overtime_type}`,
-                    value: item.overtime_type
-                  }))}
-                  onChange={handleChange}
-                />
-                <input name="refer_name" placeholder="Refer Name" style={{ textTransform: 'capitalize' }} value={form.refer_name} onChange={handleChange} className="input" />
-                <input name="refer_contact" placeholder="Refer Contact" style={{ textTransform: 'capitalize' }} value={form.refer_contact} onChange={handleChange} className="input" />
+                  <CustomSelect
+                    name="work_location"
+                    value={form.work_location}
+                    placeholder="Select Branch"
+                    options={branches.map((item) => ({
+                      label: `${item.branch_name} - ${item.branch_id}`,
+                      value: item.branch_id
+                    }))}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* Reporting Person */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Reporting Person <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    name="reporting_person"
+                    placeholder="Reporting Person"
+                    style={{ textTransform: "capitalize" }}
+                    value={form.reporting_person}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  />
+                </div>
+
+                {/* Joining Date */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Joining Date <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    name="joining_date"
+                    type="date"
+                    value={form.joining_date}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  />
+                </div>
+
+                {/* Employment Type */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Employment Type <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="employment_type"
+                    placeholder="Employment Type"
+                    options={[
+                      { label: "Full-time", value: "Full-time" },
+                      { label: "Part-time", value: "Part-time" }
+                    ]}
+                    value={form.employment_type}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Working Hours */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Working Hours <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="working_hours"
+                    value={form.working_hours}
+                    placeholder="Select Working Hours"
+                    options={dutyHours.map((item) => ({
+                      label: `${item.duty_hours} Hours`,
+                      value: item.duty_hours
+                    }))}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* Monthly Leaves */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Monthly Leaves <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="monthly_leaves"
+                    value={form.monthly_leaves}
+                    placeholder="Select Monthly Leaves"
+                    options={monthlyLeaves.map((item) => ({
+                      label: `${item.total_leaves} Leaves`,
+                      value: item.total_leaves
+                    }))}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* Yearly Leaves */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Yearly Leaves <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="yearly_leaves"
+                    value={form.yearly_leaves}
+                    placeholder="Select Yearly Leaves"
+                    options={yearlyLeaves.map((item) => ({
+                      label: `${item.total_leaves} Leaves`,
+                      value: item.total_leaves
+                    }))}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* Shift Time */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Shift Time <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="shift_time"
+                    value={form.shift_time}
+                    placeholder="Select Shift"
+                    options={shifts.map((item) => ({
+                      label: `${item.shift_name} - ${item.start_time}`,
+                      value: item.start_time
+                    }))}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* OT Allow */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    OT Allow <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="ot_allow"
+                    value={form.ot_allow}
+                    placeholder="Select OT Type"
+                    options={overtimeData.map((item) => ({
+                      label: `${item.remark} - ${item.overtime_type}`,
+                      value: item.overtime_type
+                    }))}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* Refer Name */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Refer Name
+                  </label>
+
+                  <input
+                    name="refer_name"
+                    placeholder="Refer Name"
+                    style={{ textTransform: "capitalize" }}
+                    value={form.refer_name}
+                    onChange={handleChange}
+                    className="input"
+                  />
+                </div>
+
+                {/* Refer Contact */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Refer Contact
+                  </label>
+
+                  <input
+                    name="refer_contact"
+                    placeholder="Refer Contact"
+                    style={{ textTransform: "capitalize" }}
+                    value={form.refer_contact}
+                    onChange={handleChange}
+                    className="input"
+                  />
+                </div>
 
               </div>
+
             </div>
           )}
 
           {/* ================= SALARY ================= */}
           {step === 4 && (
             <div>
-              <h2 className="font-bold text-lg text-pink-600 mb-3">Salary Details</h2>
+
+              <h2 className="font-bold text-lg text-pink-600 mb-3">
+                Salary & Other Details
+              </h2>
+
               <div className="grid grid-cols-3 gap-4">
 
-                <input name="basic_salary" placeholder="Basic Salary" value={form.basic_salary} onChange={handleChange} className="input" required />
-                <input name="allowances" placeholder="Allowances" value={form.allowances} onChange={handleChange} className="input" required />
+                {/* Basic Salary */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Basic Salary <span className="text-red-500">*</span>
+                  </label>
 
-                <input name="bank_account" placeholder="Bank Account" value={form.bank_account} onChange={handleChange} className="input" required />
-                <input name="ifsc" placeholder="IFSC" style={{ textTransform: 'uppercase' }} value={form.ifsc} onChange={handleChange} className="input" required />
+                  <input
+                    name="basic_salary"
+                    placeholder="Basic Salary"
+                    value={form.basic_salary}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  />
+                </div>
 
-                <CustomSelect
-                  name="salary_type"
-                  placeholder="Salary Type"
-                  options={[
-                    { label: "Bank Transfer", value: "Online" },
-                    { label: "Pay by Cash", value: "Cash" }
-                  ]}
-                  value={form.salary_type}
-                  onChange={handleChange}
-                  required
-                />
+                {/* Allowances */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Allowances <span className="text-red-500">*</span>
+                  </label>
 
+                  <input
+                    name="allowances"
+                    placeholder="Allowances"
+                    value={form.allowances}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  />
+                </div>
 
-                <CustomSelect
-                  name="salary_mode"
-                  placeholder="Salary Mode"
-                  options={[
-                    { label: "Fixed", value: "Fixed" },
-                    { label: "Non-Fixed", value: "Non-Fixed" }
-                  ]}
-                  value={form.salary_mode}
-                  onChange={handleChange}
-                  required
-                />
+                {/* Bank Account */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Bank Account <span className="text-red-500">*</span>
+                  </label>
 
-                {/* <input name="advance_payment" placeholder="Advance" value={form.advance_payment} onChange={handleChange} className="input" required />
-                <input name="penalty" placeholder="Penalty" value={form.penalty} onChange={handleChange} className="input" required />
-                <input name="rewards" placeholder="Rewards" value={form.rewards} onChange={handleChange} className="input" required /> */}
+                  <input
+                    name="bank_account"
+                    placeholder="Bank Account"
+                    value={form.bank_account}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  />
+                </div>
+
+                {/* IFSC */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    IFSC Code <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    name="ifsc"
+                    placeholder="IFSC"
+                    style={{ textTransform: "uppercase" }}
+                    value={form.ifsc}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  />
+                </div>
+
+                {/* Salary Type */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Salary Type <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="salary_type"
+                    placeholder="Salary Type"
+                    options={[
+                      { label: "Online Salary", value: "Online" },
+                      { label: "Cash Salary", value: "Cash" }
+                    ]}
+                    value={form.salary_type}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Salary Mode */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Salary Mode <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="salary_mode"
+                    placeholder="Salary Mode"
+                    options={[
+                      { label: "Fixed", value: "Fixed" },
+                      { label: "Non-Fixed", value: "Non-Fixed" }
+                    ]}
+                    value={form.salary_mode}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Status */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Status <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="status"
+                    placeholder="Status"
+                    options={[
+                      { label: "Active", value: "Active" }
+                    ]}
+                    value={form.status}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Role */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Role <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="role"
+                    placeholder="Role"
+                    options={[
+                      { label: "View", value: "view" }
+                    ]}
+                    value={form.role}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Assets */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Assets (T-Shirt) <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="assets"
+                    placeholder="Select Assets"
+                    options={[
+                      { label: "T Shirt - One Set", value: "1" },
+                      { label: "T Shirt - Two Set", value: "2" }
+                    ]}
+                    value={form.assets}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* ID Card */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    ID Card <span className="text-red-500">*</span>
+                  </label>
+
+                  <CustomSelect
+                    name="icard"
+                    placeholder="Select ID Card"
+                    options={[
+                      { label: "Employee ID Card No", value: "0" },
+                      { label: "Employee ID Card Yes", value: "1" }
+                    ]}
+                    value={form.icard}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Interview By */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Interview By
+                  </label>
+
+                  <input
+                    name="interview_by"
+                    placeholder="Interview By"
+                    style={{ textTransform: "capitalize" }}
+                    value={form.interview_by}
+                    onChange={handleChange}
+                    className="input"
+                  />
+                </div>
 
               </div>
+
             </div>
           )}
 
           {/* ================= OTHER ================= */}
           {step === 5 && (
             <div>
-              <h2 className="font-bold text-lg text-pink-600 mb-3">Other Details</h2>
+
+              <h2 className="font-bold text-lg text-pink-600 mb-3">
+                Other Details
+              </h2>
+
               <div className="grid grid-cols-3 gap-4">
 
-                <CustomSelect
-                  name="status"
-                  placeholder="Status"
-                  options={[
-                    { label: "Active", value: "Active" },
-                  ]}
-                  value={form.status}
+                <FileUploadBox
+                  label="Upload Resume"
+                  name="user_resume"
+                  file={form.user_resume}
                   onChange={handleChange}
                   required
                 />
 
-
-                <CustomSelect
-                  name="role"
-                  placeholder="Role"
-                  options={[
-                    { label: "View", value: "view" },
-                  ]}
-                  value={form.role}
+                <FileUploadBox
+                  label="Upload KYE Form"
+                  name="kye_form"
+                  file={form.kye_form}
                   onChange={handleChange}
                   required
                 />
 
-                <CustomSelect
-                  name="assets"
-                  placeholder="Select Assets (T-Shirt)"
-                  options={[
-                    { label: "One T-Shirt", value: "one" },
-                    { label: "Two T-Shirt", value: "two" },
-                  ]}
-                  value={form.assets}
+                <FileUploadBox
+                  label="Upload Employee Photo"
+                  name="user_photo"
+                  file={form.user_photo}
                   onChange={handleChange}
                   required
                 />
-                <CustomSelect
-                  name="icard"
-                  placeholder="Select Assets (I Card)"
-                  options={[
-                    { label: "Employee ID Card", value: "one" }
-                  ]}
-                  value={form.icard}
-                  onChange={handleChange}
-                  required
-                />
-                <input name="interview_by" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.interview_by} onChange={handleChange} className="input"/>
-<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.user_resume} onChange={handleChange} className="input"/>
-<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.kye_form} onChange={handleChange} className="input"/>
-<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.user_photo} onChange={handleChange} className="input"/>
-<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.user_family_photo} onChange={handleChange} className="input"/>
-<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.aadhar_with_family} onChange={handleChange} className="input"/>
-<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.pan_card} onChange={handleChange} className="input"/>
-<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.pcc} onChange={handleChange} className="input"/>
-<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.bank_proff} onChange={handleChange} className="input"/>
 
-                {/* <textarea name="complaint" placeholder="Complaint" value={form.complaint} onChange={handleChange} className="input col-span-3" required /> */}
+                <FileUploadBox
+                  label="Upload Family Photo"
+                  name="user_family_photo"
+                  file={form.user_family_photo}
+                  onChange={handleChange}
+                  required
+                />
+
+                <FileUploadBox
+                  label="Upload Aadhaar + Family Aadhaar"
+                  name="aadhar_with_family"
+                  file={form.aadhar_with_family}
+                  onChange={handleChange}
+                  required
+                />
+
+                <FileUploadBox
+                  label="Upload PAN Card"
+                  name="pan_card"
+                  file={form.pan_card}
+                  onChange={handleChange}
+                  required
+                />
+
+                <FileUploadBox
+                  label="Upload PCC"
+                  name="pcc"
+                  file={form.pcc}
+                  onChange={handleChange}
+                  required
+                />
+
+                <FileUploadBox
+                  label="Upload Bank Proof"
+                  name="bank_proff"
+                  file={form.bank_proff}
+                  onChange={handleChange}
+                  required
+                />
 
               </div>
+
             </div>
           )}
 
@@ -1375,7 +1903,7 @@ if (!form.icard) {
 
         </form>
 
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
