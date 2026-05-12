@@ -1322,7 +1322,15 @@ if (!form.icard) {
                   onChange={handleChange}
                   required
                 />
-                <input name="interview_by" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.interview_by} onChange={handleChange} className="input" required />
+                <input name="interview_by" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.interview_by} onChange={handleChange} className="input"/>
+<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.user_resume} onChange={handleChange} className="input"/>
+<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.kye_form} onChange={handleChange} className="input"/>
+<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.user_photo} onChange={handleChange} className="input"/>
+<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.user_family_photo} onChange={handleChange} className="input"/>
+<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.aadhar_with_family} onChange={handleChange} className="input"/>
+<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.pan_card} onChange={handleChange} className="input"/>
+<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.pcc} onChange={handleChange} className="input"/>
+<input name="interview_by" type="file" placeholder="Interview By" style={{ textTransform: 'capitalize' }} value={form.bank_proff} onChange={handleChange} className="input"/>
 
                 {/* <textarea name="complaint" placeholder="Complaint" value={form.complaint} onChange={handleChange} className="input col-span-3" required /> */}
 
