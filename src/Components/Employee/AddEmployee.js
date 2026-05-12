@@ -246,6 +246,7 @@ export default function AddEmployee() {
     rewards: "",
     complaint: "",
     assets: "",
+icard: "",
     interview_by: "",
     ot_allow: "",
     shift_time: "",
@@ -728,12 +729,21 @@ export default function AddEmployee() {
       }
 
       if (!form.assets) {
-        toast.error("Assets Details Required");
+        toast.error("Assets (T-Shirt) Details Required");
         return false;
       }
 
       if (form.assets.trim().length < 2) {
-        toast.error("Invalid Assets Details");
+        toast.error("Invalid Assets Details (T-Shirt)");
+        return false;
+      }
+if (!form.icard) {
+        toast.error("Assets (ID Card) Details Required");
+        return false;
+      }
+
+      if (form.icard.trim().length < 1) {
+        toast.error("Invalid Assets Details (ID Card)");
         return false;
       }
 
@@ -1299,6 +1309,16 @@ export default function AddEmployee() {
                     { label: "Two T-Shirt", value: "two" },
                   ]}
                   value={form.assets}
+                  onChange={handleChange}
+                  required
+                />
+                <CustomSelect
+                  name="icard"
+                  placeholder="Select Assets (I Card)"
+                  options={[
+                    { label: "Employee ID Card", value: "one" }
+                  ]}
+                  value={form.icard}
                   onChange={handleChange}
                   required
                 />
