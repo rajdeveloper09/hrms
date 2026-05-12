@@ -123,9 +123,17 @@ export default function EmployeeList() {
         {/* TOP */}
         <div className="flex justify-between items-center mb-6">
 
-          <h1 className="text-3xl font-bold text-gray-800">
-            Employee List
-          </h1>
+          <div className="flex items-center gap-10">
+
+            <h1 className="text-3xl font-bold text-gray-800">
+              Employee List
+            </h1>
+
+            <div className="bg-rose-100 text-rose-600 px-4 py-1 rounded-full text-sm font-semibold shadow-sm mt-1">
+              {employees.length} Employees
+            </div>
+
+          </div>
 
           <button
             onClick={() => navigate("/add-employee")}

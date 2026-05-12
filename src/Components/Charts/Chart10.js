@@ -1,4 +1,6 @@
 import React from "react";
+import { motion } from "framer-motion";
+
 import {
   ResponsiveContainer,
   AreaChart,
@@ -6,7 +8,9 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  ReferenceLine,
 } from "recharts";
+
 import {
   AlertTriangle,
   ShieldAlert,
@@ -14,159 +18,433 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-export default function Chart10() {
-  // Graph data
+export const Chart10 = () => {
+
+  // LAST + RECOMMENDED
+  const lastIncrement = 2000;
+  const recommendationAmount = 2500;
+
+  // GRAPH DATA
   const data = [
-    { name: "Jan", value: 200 },
-    { name: "Feb", value: 500 },
-    { name: "Mar", value: 1700 },
-    { name: "Apr", value: 1500 },
-    { name: "May", value: 2200 },
+    { name: "Jan", value: 1200 },
+    { name: "Feb", value: 1400 },
+    { name: "Mar", value: 1600 },
+    { name: "Apr", value: 1700 },
+    { name: "May", value: 1900 },
     { name: "Jun", value: 2100 },
-    { name: "Jul", value: 3000 },
-    { name: "Aug", value: 2800 },
-    { name: "Sep", value: 4200 },
-    { name: "Oct", value: 4000 },
+    { name: "Jul", value: 2200 },
+    { name: "Aug", value: 2350 },
+    { name: "Sep", value: 2450 },
+    { name: "Oct", value: recommendationAmount },
   ];
 
-  return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white rounded-[35px] shadow-2xl overflow-hidden border border-slate-200">
-
-        {/* TOP GRAPH */}
-        <div className="h-[320px] p-4 relative">
-
-          {/* Recommendation Badge */}
-          <div className="absolute top-5 right-5 z-10 bg-green-100 text-green-700 px-4 py-2 rounded-2xl shadow-md border border-green-200">
-            <div className="text-xs font-medium">
-              Recommendation
-            </div>
-
-            <div className="flex items-center gap-2 mt-1">
-              <TrendingUp size={18} />
-              <span className="font-bold text-lg">
-                ₹2500 (8%)
-              </span>
-            </div>
-          </div>
-
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
-              <defs>
-                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.5} />
-                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0.05} />
-                </linearGradient>
-              </defs>
-
-              <XAxis hide />
-
-              <YAxis
-                ticks={[0, 1000, 2000, 3000, 4000, 5000]}
-                axisLine={false}
-                tickLine={false}
-              />
-
-              <Tooltip />
-
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke="#2563eb"
-                strokeWidth={5}
-                fill="url(#colorValue)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* INFO CARDS */}
-        <div className="grid grid-cols-3 gap-3 px-4 pb-5">
-
-          {/* Complaint */}
-          <div className="bg-red-50 border border-red-100 rounded-2xl p-3 text-center">
-            <div className="flex justify-center mb-2">
-              <AlertTriangle className="text-red-500" size={20} />
-            </div>
-
-            <div className="text-xs text-slate-500">
-              Complaint
-            </div>
-
-            <div className="text-2xl font-bold text-red-600 mt-1">
-              5
-            </div>
-          </div>
-
-          {/* Penalty */}
-          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-3 text-center">
-            <div className="flex justify-center mb-2">
-              <ShieldAlert className="text-orange-500" size={20} />
-            </div>
-
-            <div className="text-xs text-slate-500">
-              Penalty
-            </div>
-
-            <div className="text-2xl font-bold text-orange-600 mt-1">
-              3
-            </div>
-          </div>
-
-          {/* Attendance */}
-          <div className="bg-violet-50 border border-violet-100 rounded-2xl p-3 text-center">
-            <div className="flex justify-center mb-2">
-              <Clock3 className="text-violet-500" size={20} />
-            </div>
-
-            <div className="text-xs text-slate-500">
-              Attendance
-            </div>
-
-            <div className="text-lg font-bold text-violet-600 mt-1">
-              15 Min
-            </div>
-
-            <div className="text-[10px] text-slate-400">
-              Avg Late
-            </div>
-          </div>
-        </div>
-
-        {/* BOTTOM SECTION */}
-        <div className="grid grid-cols-2 border-t border-slate-200">
-
-          {/* Last Increment */}
-          <div className="p-5 border-r border-slate-200">
-            <div className="text-sm text-slate-500">
-              Last Increment
-            </div>
-
-            <div className="mt-3 text-3xl font-bold text-slate-800">
-              ₹2000
-            </div>
-
-            <div className="mt-1 inline-flex bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">
-              10%
-            </div>
-          </div>
-
-          {/* Recommendation */}
-          <div className="p-5">
-            <div className="text-sm text-slate-500">
-              Recommendation
-            </div>
-
-            <div className="mt-3 text-3xl font-bold text-green-600">
-              ₹2500
-            </div>
-
-            <div className="mt-1 inline-flex bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
-              8%
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  // PERFORMANCE %
+  const growthPercent = Math.round(
+    ((recommendationAmount - lastIncrement) / lastIncrement) * 100
   );
-}
+
+  // CARD MOTION
+  const cardMotion = {
+    hidden: {
+      opacity: 0,
+      y: 60,
+    },
+
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+
+      transition: {
+        duration: 0.5,
+        delay: i * 0.12,
+      },
+    }),
+  };
+
+  return (
+
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 70,
+      }}
+
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+
+      transition={{
+        duration: 0.6,
+      }}
+
+      className="w-full bg-white rounded-[35px] shadow-2xl overflow-hidden border border-rose-100 mt-3"
+    >
+
+      <div className="grid grid-cols-12">
+
+        {/* LEFT SIDE */}
+        <div className="col-span-12 xl:col-span-4 p-4 border-r border-rose-100 flex flex-col">
+
+          {/* TOP */}
+          <div>
+
+            {/* HEADING */}
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 30,
+              }}
+
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+
+              transition={{
+                duration: 0.5,
+              }}
+
+              className="flex items-center justify-between mb-4"
+            >
+
+              <div>
+
+                <h2 className="text-2xl font-bold text-slate-800">
+                  Performance
+                </h2>
+
+                <p className="text-sm text-slate-500 mt-1">
+                  AI Recommendation Analysis
+                </p>
+
+              </div>
+
+              <div className="bg-rose-100 text-rose-700 px-3 py-2 rounded-2xl border border-rose-200 shadow-sm">
+
+                <div className="flex items-center gap-2">
+
+                  <TrendingUp size={18} />
+
+                  <span className="font-bold text-sm">
+                    +{growthPercent}%
+                  </span>
+
+                </div>
+
+              </div>
+
+            </motion.div>
+
+            {/* INFO CARDS */}
+            <div className="grid grid-cols-3 gap-3 mt-2">
+
+              {/* COMPLAINT */}
+              <motion.div
+                custom={0}
+                variants={cardMotion}
+                initial="hidden"
+                animate="visible"
+                whileHover={{
+                  scale: 1.05,
+                }}
+
+                className="bg-rose-50 border border-rose-100 rounded-2xl p-3 text-center shadow-sm"
+              >
+
+                <div className="flex justify-center mb-2">
+                  <AlertTriangle
+                    className="text-rose-500"
+                    size={20}
+                  />
+                </div>
+
+                <div className="text-xs text-slate-500">
+                  Complaint
+                </div>
+
+                <div className="text-[14px] font-bold text-rose-600 mt-1">
+                  5
+                </div>
+
+              </motion.div>
+
+              {/* PENALTY */}
+              <motion.div
+                custom={1}
+                variants={cardMotion}
+                initial="hidden"
+                animate="visible"
+                whileHover={{
+                  scale: 1.05,
+                }}
+
+                className="bg-pink-50 border border-pink-100 rounded-2xl p-3 text-center shadow-sm"
+              >
+
+                <div className="flex justify-center mb-2">
+                  <ShieldAlert
+                    className="text-pink-500"
+                    size={20}
+                  />
+                </div>
+
+                <div className="text-xs text-slate-500">
+                  Penalty
+                </div>
+
+                <div className="text-[14px] font-bold text-pink-600 mt-1">
+                  3
+                </div>
+
+              </motion.div>
+
+              {/* ATTENDANCE */}
+              <motion.div
+                custom={2}
+                variants={cardMotion}
+                initial="hidden"
+                animate="visible"
+                whileHover={{
+                  scale: 1.05,
+                }}
+
+                className="bg-red-50 border border-red-100 rounded-2xl p-3 text-center shadow-sm"
+              >
+
+                <div className="flex justify-center mb-2">
+                  <Clock3
+                    className="text-red-500"
+                    size={20}
+                  />
+                </div>
+
+                <div className="text-xs text-slate-500">
+                  Attendance
+                </div>
+
+                <div className="text-[14px] font-bold text-red-600 mt-1">
+                  15 Min
+                </div>
+
+                <div className="text-[10px] text-slate-400">
+                  Avg Late
+                </div>
+
+              </motion.div>
+
+            </div>
+
+          </div>
+
+          {/* BOTTOM */}
+          <div className="grid grid-cols-2 gap-3 mt-5">
+
+            {/* LAST INCREMENT */}
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 60,
+              }}
+
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+
+              transition={{
+                duration: 0.5,
+                delay: 0.4,
+              }}
+
+              whileHover={{
+                y: -5,
+              }}
+
+              className="bg-rose-50 rounded-2xl p-4 border border-rose-100 text-center shadow-sm"
+            >
+
+              <div className="text-[12px] text-slate-500">
+                Last Increment
+              </div>
+
+              <div className="mt-2 text-3xl font-bold text-rose-700">
+                ₹{lastIncrement}
+              </div>
+
+              <div className="mt-2 inline-flex bg-rose-100 text-rose-700 text-xs px-3 py-1 rounded-full">
+                Current
+              </div>
+
+            </motion.div>
+
+            {/* RECOMMENDATION */}
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 60,
+              }}
+
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+
+              transition={{
+                duration: 0.5,
+                delay: 0.55,
+              }}
+
+              whileHover={{
+                y: -5,
+              }}
+
+              className="bg-pink-50 rounded-2xl p-4 border border-pink-100 text-center shadow-sm"
+            >
+
+              <div className="text-[12px] text-slate-500">
+                Recommendation
+              </div>
+
+              <div className="mt-2 text-3xl font-bold text-pink-600">
+                ₹{recommendationAmount}
+              </div>
+
+              <div className="mt-2 inline-flex bg-pink-100 text-pink-700 text-xs px-3 py-1 rounded-full">
+                +{growthPercent}%
+              </div>
+
+            </motion.div>
+
+          </div>
+
+        </div>
+
+        {/* RIGHT CHART */}
+        <motion.div
+          initial={{
+            opacity: 0,
+            x: 80,
+          }}
+
+          animate={{
+            opacity: 1,
+            x: 0,
+          }}
+
+          transition={{
+            duration: 0.7,
+          }}
+
+          className="col-span-12 xl:col-span-8 p-6"
+        >
+
+          {/* HEADER */}
+          <div className="flex items-center justify-between mb-4">
+
+            <div>
+
+              <h2 className="text-2xl font-bold text-slate-800">
+                Increment Growth
+              </h2>
+
+              <p className="text-sm text-slate-500 mt-1">
+                Employee Performance Trend
+              </p>
+
+            </div>
+
+            <div className="bg-rose-50 border border-rose-100 rounded-2xl px-4 py-2">
+
+              <div className="text-xs text-slate-500">
+                Recommended
+              </div>
+
+              <div className="text-lg font-bold text-rose-600">
+                ₹{recommendationAmount}
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* CHART */}
+          <div className="h-[250px] w-full">
+
+            <ResponsiveContainer width="100%" height="100%">
+
+              <AreaChart data={data}>
+
+                <defs>
+
+                  <linearGradient
+                    id="colorValue"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+
+                    <stop
+                      offset="5%"
+                      stopColor="#e11d48"
+                      stopOpacity={0.45}
+                    />
+
+                    <stop
+                      offset="95%"
+                      stopColor="#e11d48"
+                      stopOpacity={0.05}
+                    />
+
+                  </linearGradient>
+
+                </defs>
+
+                {/* RECOMMENDATION LINE */}
+                <ReferenceLine
+                  y={recommendationAmount}
+                  stroke="#ec4899"
+                  strokeDasharray="6 6"
+                  label={{
+                    value: `Recommended ₹${recommendationAmount}`,
+                    position: "insideTopRight",
+                    fill: "#db2777",
+                    fontSize: 12,
+                  }}
+                />
+
+                <XAxis
+                  dataKey="name"
+                  tickLine={false}
+                  axisLine={false}
+                />
+
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                />
+
+                <Tooltip />
+
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#e11d48"
+                  strokeWidth={5}
+                  fill="url(#colorValue)"
+                />
+
+              </AreaChart>
+
+            </ResponsiveContainer>
+
+          </div>
+
+        </motion.div>
+
+      </div>
+
+    </motion.div>
+  );
+};
