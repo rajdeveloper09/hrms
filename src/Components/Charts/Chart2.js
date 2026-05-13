@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function Chart2() {
 
-    const [branch, setBranch] = useState("All");
+    const [branch, setBranch] = useState("");
     const [post, setPost] = useState("All");
     const [month, setMonth] = useState("All");
 

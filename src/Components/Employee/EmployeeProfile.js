@@ -18,7 +18,7 @@ import {
 import SideNav from "../SideNav";
 import { API_BASE_URL } from "../../config/api";
 import { Chart10 } from "../Charts/Chart10";
-
+import EmployeeTabsSection from "./EmployeeTabsSection";
 export default function EmployeeProfile() {
 
   const { employee_id } = useParams();
@@ -26,7 +26,52 @@ export default function EmployeeProfile() {
 
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
+  // TOP STATE
+  const [activeTab, setActiveTab] = useState("Attendance");
 
+  const [filterType, setFilterType] = useState("date");
+  const attendanceData = [
+    {
+      date: "2026-05-13",
+      inTime: "09:00 AM",
+      outTime: "06:00 PM",
+      totalHours: "9h",
+      late: "10 Min",
+    },
+  ];
+
+  const salaryData = [
+    {
+      date: "2026-05-01",
+      amount: "₹25,000",
+      type: "Bank Transfer",
+      status: "Paid",
+    },
+  ];
+
+  const bonusData = [
+    {
+      date: "2026-05-10",
+      amount: "₹2,000",
+      reason: "Performance Bonus",
+    },
+  ];
+
+  const penaltyData = [
+    {
+      date: "2026-05-08",
+      amount: "₹500",
+      reason: "Late Coming",
+    },
+  ];
+
+  const rewardsData = [
+    {
+      date: "2026-05-11",
+      amount: "₹1,000",
+      reason: "Best Employee",
+    },
+  ];
   useEffect(() => {
 
     fetch(
@@ -132,6 +177,30 @@ export default function EmployeeProfile() {
       icon: <Clock3 size={22} />,
       color: "from-rose-400 to-red-400",
     },
+    {
+      title: "Allow Leaves",
+      value: `${employee.monthly_leaves || 0} Hr`,
+      icon: <Clock3 size={22} />,
+      color: "from-rose-400 to-red-400",
+    },
+    {
+      title: "Total Bonous",
+      value: `${employee.working_hours || 0} Hr`,
+      icon: <Clock3 size={22} />,
+      color: "from-rose-400 to-red-400",
+    },
+    {
+      title: "Total Panelty",
+      value: `${employee.working_hours || 0} Hr`,
+      icon: <Clock3 size={22} />,
+      color: "from-rose-400 to-red-400",
+    },
+    {
+      title: "Total Rewards",
+      value: `${employee.working_hours || 0} Hr`,
+      icon: <Clock3 size={22} />,
+      color: "from-rose-400 to-red-400",
+    },
   ];
 
   // DOCUMENTS
@@ -209,9 +278,9 @@ export default function EmployeeProfile() {
                     </p>
                   </div>
 
-                   <div className="bg-white border border-rose-100 shadow-sm rounded-2xl px-4 py-2">
+                  <div className="bg-white border border-rose-100 shadow-sm rounded-2xl px-4 py-2">
                     <p className="text-[14px] text-slate-400 uppercase tracking-wide">
-                     Working Branch : <spam className="text-[14px] font-bold text-slate-700 mt-3 capitalize">{employee.work_location}</spam>
+                      Working Branch : <spam className="text-[14px] font-bold text-slate-700 mt-3 capitalize">{employee.work_location}</spam>
                     </p>
                   </div>
                 </div>
@@ -222,8 +291,8 @@ export default function EmployeeProfile() {
 
             <button
               className={`px-5 py-2 rounded-xl font-semibold ${employee.status === "Active"
-                  ? "bg-emerald-100 text-emerald-600"
-                  : "bg-rose-100 text-rose-600"
+                ? "bg-emerald-100 text-emerald-600"
+                : "bg-rose-100 text-rose-600"
                 }`}
             >
               {employee.status}
@@ -343,7 +412,7 @@ export default function EmployeeProfile() {
           >
 
             {/* STATS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-5">
 
               {stats.map((item, index) => (
 
@@ -358,7 +427,7 @@ export default function EmployeeProfile() {
 
                   <div className="flex items-center justify-between">
 
-                    <h3 className="text-lg font-medium">
+                    <h3 className="text-[14px] font-medium">
                       {item.title}
                     </h3>
 
@@ -366,7 +435,7 @@ export default function EmployeeProfile() {
 
                   </div>
 
-                  <h2 className="text-3xl font-bold mt-8 break-words">
+                  <h2 className="text-[18px] font-bold mt-8 break-words">
                     {item.value}
                   </h2>
 
@@ -390,104 +459,188 @@ export default function EmployeeProfile() {
 
         </div>
 
-        {/* DETAILS */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+        <div className="min-h-screen bg-slate-100 p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[90vh]">
+            {/* Left Content */}
+            <div className="bg-white rounded-2xl border border-slate-300 shadow-sm p-6 flex items-center justify-center">
+              {/* DETAILS */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
 
-          {/* PERSONAL DETAILS */}
+                {/* PERSONAL DETAILS */}
+                <motion.div
+                  initial={{ opacity: 0, y: 60 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-white rounded-3xl shadow-xl overflow-hidden border border-rose-100"
+                >
+
+                  <div className="bg-gradient-to-r from-rose-500 to-pink-500 p-5">
+
+                    <h2 className="text-2xl font-bold text-white">
+                      Personal Details
+                    </h2>
+
+                  </div>
+
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                    {[
+                      ["Gender", employee.gender],
+                      ["Father Name", employee.father_name],
+                      ["Mother Name", employee.mother_name],
+                      ["Marital Status", employee.marital_status],
+                      ["Spouse", employee.spouse],
+                      ["Children", employee.children],
+                      ["DOB", employee.dob],
+                      ["Joining Date", employee.joining_date],
+                      ["Reporting Person", employee.reporting_person],
+                      ["Work Location", employee.work_location],
+                    ].map((item, index) => (
+
+                      <div
+                        key={index}
+                        className="bg-rose-50 rounded-2xl p-4 border border-rose-100"
+                      >
+
+                        <p className="text-sm text-rose-500">
+                          {item[0]}
+                        </p>
+
+                        <h3 className="font-semibold text-slate-800 mt-1 capitalize break-words">
+                          {item[1] || "-"}
+                        </h3>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                </motion.div>
+
+                {/* DOCUMENT DETAILS */}
+                <motion.div
+                  initial={{ opacity: 0, y: 60 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="bg-white rounded-3xl shadow-xl overflow-hidden border border-pink-100"
+                >
+
+                  <div className="bg-gradient-to-r from-pink-500 to-fuchsia-500 p-5">
+
+                    <h2 className="text-2xl font-bold text-white">
+                      Document Details
+                    </h2>
+
+                  </div>
+
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                    {[
+                      ["Aadhaar", employee.aadhaar],
+                      ["PAN", employee.pan],
+                      ["Salary Type", employee.salary_type],
+                      ["Salary Mode", employee.salary_mode],
+                      ["Monthly Leaves", employee.monthly_leaves],
+                      ["Yearly Leaves", employee.yearly_leaves],
+                      ["Assets", employee.assets],
+                      ["Interview By", employee.interview_by],
+                    ].map((item, index) => (
+
+                      <div
+                        key={index}
+                        className="bg-pink-50 rounded-2xl p-4 border border-pink-100"
+                      >
+
+                        <p className="text-sm text-pink-500">
+                          {item[0]}
+                        </p>
+
+                        <h3 className="font-semibold text-slate-800 mt-1 break-words capitalize">
+                          {item[1] || "-"}
+                        </h3>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                </motion.div>
+
+              </div>
+            </div>
+
+
+            <EmployeeTabsSection
+              attendanceData={attendanceData}
+              salaryData={salaryData}
+              bonusData={bonusData}
+              penaltyData={penaltyData}
+              rewardsData={rewardsData}
+            />
+          </div>
+
+          {/* DOCUMENT IMAGES */}
           <motion.div
-            initial={{ opacity: 0, y: 60 }}
+            initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white rounded-3xl shadow-xl overflow-hidden border border-rose-100"
+            transition={{ duration: 0.7 }}
+            className="bg-white rounded-3xl shadow-xl overflow-hidden border border-rose-100 mb-6"
           >
 
-            <div className="bg-gradient-to-r from-rose-500 to-pink-500 p-5">
+            <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 p-5">
 
               <h2 className="text-2xl font-bold text-white">
-                Personal Details
+                Employee Documents
               </h2>
 
             </div>
 
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
 
-              {[
-                ["Gender", employee.gender],
-                ["Father Name", employee.father_name],
-                ["Mother Name", employee.mother_name],
-                ["Marital Status", employee.marital_status],
-                ["Spouse", employee.spouse],
-                ["Children", employee.children],
-                ["DOB", employee.dob],
-                ["Joining Date", employee.joining_date],
-                ["Reporting Person", employee.reporting_person],
-                ["Work Location", employee.work_location],
-              ].map((item, index) => (
+              {documents.map((doc, index) => (
 
-                <div
+                <motion.div
                   key={index}
-                  className="bg-rose-50 rounded-2xl p-4 border border-rose-100"
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  className="border border-rose-100 rounded-2xl overflow-hidden bg-white shadow-md"
                 >
 
-                  <p className="text-sm text-rose-500">
-                    {item[0]}
-                  </p>
+                  <div className="h-52 bg-white flex items-center justify-center overflow-hidden">
 
-                  <h3 className="font-semibold text-slate-800 mt-1 capitalize break-words">
-                    {item[1] || "-"}
-                  </h3>
+                    {
+                      doc.file ? (
 
-                </div>
+                        <img
+                          src={getImageUrl(doc.file)}
+                          alt={doc.title}
+                          className="max-h-full max-w-full object-contain"
+                        />
 
-              ))}
+                      ) : (
 
-            </div>
+                        <div className="w-full h-full flex items-center justify-center text-rose-300">
+                          No File
+                        </div>
 
-          </motion.div>
+                      )
+                    }
 
-          {/* DOCUMENT DETAILS */}
-          <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="bg-white rounded-3xl shadow-xl overflow-hidden border border-pink-100"
-          >
+                  </div>
 
-            <div className="bg-gradient-to-r from-pink-500 to-fuchsia-500 p-5">
+                  <div className="p-3 border-t border-rose-100">
 
-              <h2 className="text-2xl font-bold text-white">
-                Document Details
-              </h2>
+                    <h3 className="font-semibold text-slate-700 text-center">
+                      {doc.title}
+                    </h3>
 
-            </div>
+                  </div>
 
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-
-              {[
-                ["Aadhaar", employee.aadhaar],
-                ["PAN", employee.pan],
-                ["Salary Type", employee.salary_type],
-                ["Salary Mode", employee.salary_mode],
-                ["Monthly Leaves", employee.monthly_leaves],
-                ["Yearly Leaves", employee.yearly_leaves],
-                ["Assets", employee.assets],
-                ["Interview By", employee.interview_by],
-              ].map((item, index) => (
-
-                <div
-                  key={index}
-                  className="bg-pink-50 rounded-2xl p-4 border border-pink-100"
-                >
-
-                  <p className="text-sm text-pink-500">
-                    {item[0]}
-                  </p>
-
-                  <h3 className="font-semibold text-slate-800 mt-1 break-words capitalize">
-                    {item[1] || "-"}
-                  </h3>
-
-                </div>
+                </motion.div>
 
               ))}
 
@@ -497,75 +650,7 @@ export default function EmployeeProfile() {
 
         </div>
 
-        {/* DOCUMENT IMAGES */}
-        <motion.div
-          initial={{ opacity: 0, y: 80 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="bg-white rounded-3xl shadow-xl overflow-hidden border border-rose-100 mb-6"
-        >
-
-          <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 p-5">
-
-            <h2 className="text-2xl font-bold text-white">
-              Employee Documents
-            </h2>
-
-          </div>
-
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-
-            {documents.map((doc, index) => (
-
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-                className="border border-rose-100 rounded-2xl overflow-hidden bg-white shadow-md"
-              >
-
-                <div className="h-52 bg-white flex items-center justify-center overflow-hidden">
-
-                  {
-                    doc.file ? (
-
-                      <img
-                        src={getImageUrl(doc.file)}
-                        alt={doc.title}
-                        className="max-h-full max-w-full object-contain"
-                      />
-
-                    ) : (
-
-                      <div className="w-full h-full flex items-center justify-center text-rose-300">
-                        No File
-                      </div>
-
-                    )
-                  }
-
-                </div>
-
-                <div className="p-3 border-t border-rose-100">
-
-                  <h3 className="font-semibold text-slate-700 text-center">
-                    {doc.title}
-                  </h3>
-
-                </div>
-
-              </motion.div>
-
-            ))}
-
-          </div>
-
-        </motion.div>
-
       </div>
-
     </div>
 
   );
