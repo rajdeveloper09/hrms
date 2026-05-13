@@ -233,14 +233,19 @@ const EmployeeTabsSection = ({
           "Bonus",
           "Penalty",
           "Rewards",
+          "Complaint",
+          "Increment",
+          "Assest",
+          "Overtime",
+          "Meeting",
         ].map((tab, index) => (
 
           <button
             key={index}
             onClick={() => setActiveTab(tab)}
             className={`px-5 py-3 text-sm font-semibold whitespace-nowrap border-r border-slate-200 transition-all duration-300 ${activeTab === tab
-                ? "bg-blue-500 text-white"
-                : "text-slate-600 hover:bg-slate-100"
+              ? "bg-blue-500 text-white"
+              : "text-slate-600 hover:bg-slate-100"
               }`}
           >
             {tab}
@@ -258,8 +263,8 @@ const EmployeeTabsSection = ({
           <button
             onClick={() => setFilterType("date")}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${filterType === "date"
-                ? "bg-blue-500 text-white"
-                : "bg-slate-100 text-slate-700"
+              ? "bg-blue-500 text-white"
+              : "bg-slate-100 text-slate-700"
               }`}
           >
             Single Date
@@ -268,8 +273,8 @@ const EmployeeTabsSection = ({
           <button
             onClick={() => setFilterType("month")}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${filterType === "month"
-                ? "bg-blue-500 text-white"
-                : "bg-slate-100 text-slate-700"
+              ? "bg-blue-500 text-white"
+              : "bg-slate-100 text-slate-700"
               }`}
           >
             Month Wise
@@ -278,8 +283,8 @@ const EmployeeTabsSection = ({
           <button
             onClick={() => setFilterType("year")}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${filterType === "year"
-                ? "bg-blue-500 text-white"
-                : "bg-slate-100 text-slate-700"
+              ? "bg-blue-500 text-white"
+              : "bg-slate-100 text-slate-700"
               }`}
           >
             Year Wise
