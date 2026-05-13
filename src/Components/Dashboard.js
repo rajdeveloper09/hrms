@@ -70,7 +70,6 @@ export default function Dashboard({ setIsAuth }) {
           <Chart5 />
           <Chart7 />
           <Chart3 />
-          <Chart10 /> 
         </div>
         {/* Charts */}
 

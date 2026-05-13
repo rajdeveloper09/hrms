@@ -16,13 +16,20 @@ import {
   ShieldAlert,
   Clock3,
   TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 
 export const Chart10 = () => {
 
   // LAST + RECOMMENDED
   const lastIncrement = 2000;
+
+  // CHANGE THIS VALUE
   const recommendationAmount = 2500;
+
+  // CHECK GROWTH
+  const isGrowth =
+    recommendationAmount >= lastIncrement;
 
   // GRAPH DATA
   const data = [
@@ -40,7 +47,10 @@ export const Chart10 = () => {
 
   // PERFORMANCE %
   const growthPercent = Math.round(
-    ((recommendationAmount - lastIncrement) / lastIncrement) * 100
+    (
+      (recommendationAmount - lastIncrement) /
+      lastIncrement
+    ) * 100
   );
 
   // CARD MOTION
@@ -120,14 +130,29 @@ export const Chart10 = () => {
 
               </div>
 
-              <div className="bg-rose-100 text-rose-700 px-3 py-2 rounded-2xl border border-rose-200 shadow-sm">
+              {/* PERFORMANCE BADGE */}
+              <div
+                className={`
+                  px-3 py-2 rounded-2xl border shadow-sm
+                  ${
+                    isGrowth
+                      ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                      : "bg-rose-100 text-rose-700 border-rose-200"
+                  }
+                `}
+              >
 
                 <div className="flex items-center gap-2">
 
-                  <TrendingUp size={18} />
+                  {isGrowth ? (
+                    <TrendingUp size={18} />
+                  ) : (
+                    <TrendingDown size={18} />
+                  )}
 
                   <span className="font-bold text-sm">
-                    +{growthPercent}%
+                    {growthPercent > 0 ? "+" : ""}
+                    {growthPercent}%
                   </span>
 
                 </div>
@@ -299,19 +324,45 @@ export const Chart10 = () => {
                 y: -5,
               }}
 
-              className="bg-pink-50 rounded-2xl p-4 border border-pink-100 text-center shadow-sm"
+              className={`
+                rounded-2xl p-4 border text-center shadow-sm
+                ${
+                  isGrowth
+                    ? "bg-emerald-50 border-emerald-100"
+                    : "bg-pink-50 border-pink-100"
+                }
+              `}
             >
 
               <div className="text-[12px] text-slate-500">
                 Recommendation
               </div>
 
-              <div className="mt-2 text-3xl font-bold text-pink-600">
+              <div
+                className={`
+                  mt-2 text-3xl font-bold
+                  ${
+                    isGrowth
+                      ? "text-emerald-600"
+                      : "text-pink-600"
+                  }
+                `}
+              >
                 ₹{recommendationAmount}
               </div>
 
-              <div className="mt-2 inline-flex bg-pink-100 text-pink-700 text-xs px-3 py-1 rounded-full">
-                +{growthPercent}%
+              <div
+                className={`
+                  mt-2 inline-flex text-xs px-3 py-1 rounded-full
+                  ${
+                    isGrowth
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-pink-100 text-pink-700"
+                  }
+                `}
+              >
+                {growthPercent > 0 ? "+" : ""}
+                {growthPercent}%
               </div>
 
             </motion.div>
@@ -354,13 +405,31 @@ export const Chart10 = () => {
 
             </div>
 
-            <div className="bg-rose-50 border border-rose-100 rounded-2xl px-4 py-2">
+            <div
+              className={`
+                border rounded-2xl px-4 py-2
+                ${
+                  isGrowth
+                    ? "bg-emerald-50 border-emerald-100"
+                    : "bg-rose-50 border-rose-100"
+                }
+              `}
+            >
 
               <div className="text-xs text-slate-500">
                 Recommended
               </div>
 
-              <div className="text-lg font-bold text-rose-600">
+              <div
+                className={`
+                  text-lg font-bold
+                  ${
+                    isGrowth
+                      ? "text-emerald-600"
+                      : "text-rose-600"
+                  }
+                `}
+              >
                 ₹{recommendationAmount}
               </div>
 
@@ -377,8 +446,9 @@ export const Chart10 = () => {
 
                 <defs>
 
+                  {/* RED */}
                   <linearGradient
-                    id="colorValue"
+                    id="downGradient"
                     x1="0"
                     y1="0"
                     x2="0"
@@ -399,17 +469,46 @@ export const Chart10 = () => {
 
                   </linearGradient>
 
+                  {/* GREEN */}
+                  <linearGradient
+                    id="upGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+
+                    <stop
+                      offset="5%"
+                      stopColor="#16a34a"
+                      stopOpacity={0.45}
+                    />
+
+                    <stop
+                      offset="95%"
+                      stopColor="#16a34a"
+                      stopOpacity={0.05}
+                    />
+
+                  </linearGradient>
+
                 </defs>
 
-                {/* RECOMMENDATION LINE */}
+                {/* REFERENCE */}
                 <ReferenceLine
                   y={recommendationAmount}
-                  stroke="#ec4899"
+                  stroke={
+                    isGrowth
+                      ? "#16a34a"
+                      : "#ec4899"
+                  }
                   strokeDasharray="6 6"
                   label={{
                     value: `Recommended ₹${recommendationAmount}`,
                     position: "insideTopRight",
-                    fill: "#db2777",
+                    fill: isGrowth
+                      ? "#16a34a"
+                      : "#db2777",
                     fontSize: 12,
                   }}
                 />
@@ -427,12 +526,21 @@ export const Chart10 = () => {
 
                 <Tooltip />
 
+                {/* AREA */}
                 <Area
                   type="monotone"
                   dataKey="value"
-                  stroke="#e11d48"
+                  stroke={
+                    isGrowth
+                      ? "#16a34a"
+                      : "#e11d48"
+                  }
                   strokeWidth={5}
-                  fill="url(#colorValue)"
+                  fill={
+                    isGrowth
+                      ? "url(#upGradient)"
+                      : "url(#downGradient)"
+                  }
                 />
 
               </AreaChart>

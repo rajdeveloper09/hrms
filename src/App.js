@@ -7,6 +7,7 @@ import EmployeeList from "./Components/Employee/EmployeeList";
 import AddEmployee from "./Components/Employee/AddEmployee";
 import { Toaster } from "react-hot-toast";
 import EmployeeProfile from "./Components/Employee/EmployeeProfile";
+import AttendanceReport from "./Components/AttendanceReport";
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
@@ -44,6 +45,7 @@ function App() {
           <Route path="/employees-list" element={<EmployeeList />} />
           <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/employee-profile/:employee_id" element={<EmployeeProfile />} />
+           <Route path="/attendance-report" element={<AttendanceReport />} />
         </Routes>
       </Router>
     </>

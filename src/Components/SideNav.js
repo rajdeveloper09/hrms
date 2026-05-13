@@ -135,12 +135,12 @@ export default function SideNav() {
 
             {openMenu === "attendance" && (
               <div className="ml-8 mt-2 space-y-2">
-                <NavLink
+                {/* <NavLink
                   to="/attendance"
                   className={linkClass}
                 >
                   Daily Attendance
-                </NavLink>
+                </NavLink> */}
 
                 <NavLink
                   to="/attendance-report"
