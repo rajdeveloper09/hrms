@@ -160,16 +160,13 @@ export default function EmployeeProfile() {
   // STATS
   const stats = [
     {
-      title: "Basic Salary",
-      value: `₹${Number(employee.basic_salary || 0).toLocaleString("en-IN")}`,
+      title: "Total Salary",
+      value: `₹${(
+        Number(employee.basic_salary || 0) +
+        Number(employee.allowances || 0)
+      ).toLocaleString("en-IN")}`,
       icon: <IndianRupee size={22} />,
-      color: "from-rose-500 to-pink-500",
-    },
-    {
-      title: "Allowances",
-      value: `₹${Number(employee.allowances || 0).toLocaleString("en-IN")}`,
-      icon: <Wallet size={22} />,
-      color: "from-pink-500 to-fuchsia-500",
+      color: "from-emerald-500 to-green-500",
     },
     {
       title: "Working Hours",
