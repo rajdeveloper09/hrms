@@ -652,6 +652,7 @@ const EmployeeTabsSection = ({
             "Assest",
             "Overtime",
             "Meeting",
+"Resignation"
           ].map((tab, index) => (
 
             <button
