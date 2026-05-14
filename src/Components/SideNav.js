@@ -123,7 +123,7 @@ export default function SideNav() {
             >
               <div className="flex items-center gap-3">
                 <CalendarCheck size={20} />
-                <span>Attendance</span>
+                <span>Reports</span>
               </div>
 
               {openMenu === "attendance" ? (
@@ -132,25 +132,8 @@ export default function SideNav() {
                 <ChevronRight size={18} />
               )}
             </button>
-
-            {openMenu === "attendance" && (
-              <div className="ml-8 mt-2 space-y-2">
-                {/* <NavLink
-                  to="/attendance"
-                  className={linkClass}
-                >
-                  Daily Attendance
-                </NavLink> */}
-
-                <NavLink
-                  to="/attendance-report"
-                  className={linkClass}
-                >
-                  Attendance Report
-                </NavLink>
-              </div>
-            )}
           </div>
+
 
           {/* SALARY */}
           <div>
@@ -196,10 +179,22 @@ export default function SideNav() {
             )}
           </div>
 
-          {/* REPORTS */}
-          <NavLink to="/reports" className={linkClass}>
+          <NavLink
+            to="/attendance-report"
+            className={linkClass}
+          >
+             <FileText size={20} />
+            Attendance Report
+          </NavLink>
+
+          <NavLink to="/add-complaint" className={linkClass}>
             <FileText size={20} />
-            Reports
+            Add Complaint
+          </NavLink>
+
+          <NavLink to="/add-assests" className={linkClass}>
+            <FileText size={20} />
+            Add Assests
           </NavLink>
 
           {/* BRANCH */}

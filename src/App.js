@@ -8,6 +8,8 @@ import AddEmployee from "./Components/Employee/AddEmployee";
 import { Toaster } from "react-hot-toast";
 import EmployeeProfile from "./Components/Employee/EmployeeProfile";
 import AttendanceReport from "./Components/AttendanceReport";
+import ComplaintForm from "./Components/Reports/ComplaintForm";
+import EmployeeAssetsForm from "./Components/Reports/EmployeeAssetsForm";
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
@@ -46,6 +48,8 @@ function App() {
           <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/employee-profile/:employee_id" element={<EmployeeProfile />} />
            <Route path="/attendance-report" element={<AttendanceReport />} />
+            <Route path="/add-complaint" element={<ComplaintForm />} />
+            <Route path="/add-assests" element={<EmployeeAssetsForm />} />
         </Routes>
       </Router>
     </>

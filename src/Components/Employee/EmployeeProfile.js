@@ -30,37 +30,159 @@ export default function EmployeeProfile() {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // ATTENDANCE
-  const [empAttendance, setEmpAttendance] = useState([]);
+ const [empAttendance, setEmpAttendance] =
+        useState([]);
 
-  useEffect(() => {
+    const [salaryData, setSalaryData] =
+        useState([]);
 
-    fetch("https://ojmee.in/employee/emp_attendance")
-      .then((res) => res.json())
-      .then((response) => {
+    console.log("salary data" + salaryData)
 
-        console.log("Full API Response:", response);
+    const [bonusData, setBonusData] =
+        useState([]);
 
-        // API ARRAY
-        const attendanceArray = response?.data || [];
+    const [penaltyData, setPenaltyData] =
+        useState([]);
 
-        // FILTER EMPLOYEE DATA
-        const filtered = attendanceArray.filter(
-          (item) => item.employee_id === employee_id
+    const [rewardsData, setRewardsData] =
+        useState([]);
+
+    const [empComplaint, setEmpComplaint] =
+        useState([]);
+
+    const [empIncrement, setEmpIncrement] =
+        useState([]);
+
+    const [empOvertime, setEmpOvertime] =
+        useState([]);
+
+    const [empMeeting, setEmpMeeting] =
+        useState([]);
+
+    const [empResignation, setEmpResignation] =
+        useState([]);
+
+    const [empAssest, setEmpAssest] =
+        useState([]);
+
+
+    useEffect(() => {
+
+        const fetchData = async (
+            url,
+            setter,
+            label
+        ) => {
+
+            try {
+
+                const res = await fetch(url);
+
+                const response =
+                    await res.json();
+
+                console.log(
+                    `${label} Response:`,
+                    response
+                );
+
+                const data =
+                    response?.data ||
+                    response?.result ||
+                    response ||
+                    [];
+
+                setter(
+                    Array.isArray(data)
+                        ? data
+                        : []
+                );
+
+            } catch (err) {
+
+                console.log(
+                    `${label} Error:`,
+                    err
+                );
+
+                setter([]);
+
+            }
+
+        };
+
+        /* =========================================
+            ALL API CALLS
+        ========================================= */
+
+        fetchData(
+            `${API_BASE_URL}/emp_attendance`,
+            setEmpAttendance,
+            "Attendance"
         );
 
-        console.log("Filtered Attendance:", filtered);
+        fetchData(
+            `${API_BASE_URL}/emp_month_salary`,
+            setSalaryData,
+            "Salary"
+        );
 
-        setEmpAttendance(filtered);
+        fetchData(
+            `${API_BASE_URL}/emp_bonus`,
+            setBonusData,
+            "Bonus"
+        );
 
-      })
-      .catch((err) => {
+        fetchData(
+            `${API_BASE_URL}/emp_penalties`,
+            setPenaltyData,
+            "Penalty"
+        );
 
-        console.log("Attendance Error:", err);
+        fetchData(
+            `${API_BASE_URL}/emp_rewards`,
+            setRewardsData,
+            "Rewards"
+        );
 
-      });
+        fetchData(
+            `${API_BASE_URL}/emp_complaints`,
+            setEmpComplaint,
+            "Complaint"
+        );
 
-  }, [employee_id]);
+        fetchData(
+            `${API_BASE_URL}/emp_increments`,
+            setEmpIncrement,
+            "Increment"
+        );
+
+        fetchData(
+            `${API_BASE_URL}/emp_overtime`,
+            setEmpOvertime,
+            "Overtime"
+        );
+
+        fetchData(
+            `${API_BASE_URL}/emp_meetings`,
+            setEmpMeeting,
+            "Meeting"
+        );
+
+        fetchData(
+            `${API_BASE_URL}/emp_resignation`,
+            setEmpResignation,
+            "Resignation"
+        );
+
+        fetchData(
+            `${API_BASE_URL}/employee_assets`,
+            setEmpAssest,
+            "Assest"
+        );
+
+    }, []);
+
 
 
   // EMPLOYEE FETCH
@@ -94,40 +216,6 @@ export default function EmployeeProfile() {
 
     return `${API_BASE_URL}/${path}`;
   };
-
-  // STATIC DATA
-  const salaryData = [
-    {
-      date: "2026-05-01",
-      amount: "₹25,000",
-      type: "Bank Transfer",
-      status: "Paid",
-    },
-  ];
-
-  const bonusData = [
-    {
-      date: "2026-05-10",
-      amount: "₹2,000",
-      reason: "Performance Bonus",
-    },
-  ];
-
-  const penaltyData = [
-    {
-      date: "2026-05-08",
-      amount: "₹500",
-      reason: "Late Coming",
-    },
-  ];
-
-  const rewardsData = [
-    {
-      date: "2026-05-11",
-      amount: "₹1,000",
-      reason: "Best Employee",
-    },
-  ];
 
   // LOADING
   if (loading) {
@@ -428,19 +516,24 @@ export default function EmployeeProfile() {
         {/* DETAILS SECTION */}
         <div className="grid grid-cols-12 gap-6 mb-6">
           {/* LEFT */}
-         
-          <div  className="col-span-12 xl:col-span-8">
+
+          <div className="col-span-12 xl:col-span-8">
             <EmployeeTabsSection
-            attendanceData={empAttendance}
-            salaryData={salaryData}
-            bonusData={bonusData}
-            penaltyData={penaltyData}
-            rewardsData={rewardsData}
-          />
+              attendanceData={empAttendance}
+              salaryData={salaryData}
+              bonusData={bonusData}
+              penaltyData={penaltyData}
+              rewardsData={rewardsData}
+              complaintData={empComplaint}
+              incrementData={empIncrement}
+              overtimeData={empOvertime}
+              meetingData={empMeeting}
+              resignationData={empResignation}
+            />
           </div>
 
           {/* RIGHT */}
-           <div className="space-y-6 col-span-12 xl:col-span-4">
+          <div className="space-y-6 col-span-12 xl:col-span-4">
             {/* PERSONAL DETAILS */}
             <motion.div
               initial={{ opacity: 0, y: 60 }}
@@ -520,7 +613,7 @@ export default function EmployeeProfile() {
               </div>
             </motion.div>
           </div>
-          
+
         </div>
         {/* DOCUMENTS */}
         <motion.div
