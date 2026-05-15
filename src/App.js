@@ -16,6 +16,8 @@ import EmployeeMeetingForm from "./Components/Reports/EmployeeMeetingForm";
 import EmployeeRewardForm from "./Components/Reports/EmployeeRewardForm";
 import EmployeePenaltyForm from "./Components/Reports/EmployeePenaltyForm";
 import EmployeeResignationForm from "./Components/Reports/EmployeeResignationForm";
+import EmployeeOvertimeForm from "./Components/Reports/EmployeeOvertimeForm";
+
 
 
 function App() {
@@ -54,15 +56,16 @@ function App() {
           <Route path="/employees-list" element={<EmployeeList />} />
           <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/employee-profile/:employee_id" element={<EmployeeProfile />} />
-           <Route path="/attendance-report" element={<AttendanceReport />} />
-            <Route path="/add-complaint" element={<ComplaintForm />} />
-            <Route path="/add-assests" element={<EmployeeAssetsForm />} />
-<Route path="/add-bonus" element={<EmployeeBonusForm />} />
-<Route path="/add-increment" element={<EmployeeIncrementForm />} />
-<Route path="/add-meeting" element={<EmployeeMeetingForm />} />
-<Route path="/add-reward" element={<EmployeeRewardForm />} />
-<Route path="/add-penalty" element={<EmployeePenaltyForm />} />
-<Route path="/add-resignation" element={<EmployeeResignationForm />} />
+          <Route path="/attendance-report" element={<AttendanceReport />} />
+          <Route path="/add-complaint" element={<ComplaintForm />} />
+          <Route path="/add-assests" element={<EmployeeAssetsForm />} />
+          <Route path="/add-bonus" element={<EmployeeBonusForm />} />
+          <Route path="/add-increment" element={<EmployeeIncrementForm />} />
+          <Route path="/add-meeting" element={<EmployeeMeetingForm />} />
+          <Route path="/add-reward" element={<EmployeeRewardForm />} />
+          <Route path="/add-penalty" element={<EmployeePenaltyForm />} />
+          <Route path="/add-resignation" element={<EmployeeResignationForm />} />
+          <Route path="/add-overtime" element={<EmployeeOvertimeForm />} />
         </Routes>
       </Router>
     </>

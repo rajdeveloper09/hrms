@@ -197,6 +197,15 @@ export default function SideNav() {
             Add Resignation
           </NavLink>
 
+
+<NavLink
+            to="/add-overtime"
+            className={linkClass}
+          >
+             <FileText size={20} />
+            Add Over Time
+          </NavLink>
+
           <NavLink
             to="/attendance-report"
             className={linkClass}

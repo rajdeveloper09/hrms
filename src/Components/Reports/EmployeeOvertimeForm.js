@@ -1,239 +1,305 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-export default function EmployeeOvertimeForm() {
-  const [formData, setFormData] = useState({
+const API = "https://ojmee.in/employee";
+
+export default function EmployeeOTPage() {
+  const [employees, setEmployees] = useState([]);
+  const [otList, setOtList] = useState([]);
+
+  const emptyForm = {
     emp_id: "",
-    overtime: "True",
-    overtime_type: "1x",
-    overtime_minutes: "",
-    gross_salary: "",
+    emp_name: "",
+    current_salary: "",
+    working_hours: "",
+    shift_time: "",
+    ot_allow: "1",
+    ot_type: "1",
+    ot_start_date: "",
+    ot_end_date: "",
+    approve_by: "",
     remark: "",
-  });
+  };
 
-  const [calculatedOT, setCalculatedOT] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [form, setForm] = useState(emptyForm);
 
-  const API_URL =
-    "https://ojmee.in/employee/emp_overtime_post";
-
-  // Frontend preview calculation (same logic as PHP)
   useEffect(() => {
-    if (formData.overtime === "True") {
-      const perMinute =
-        Number(formData.gross_salary || 0) /
-        30 /
-        8 /
-        60;
+    fetchEmployees();
+    fetchOTList();
+  }, []);
 
-      const multiplier =
-        formData.overtime_type === "2x" ? 2 : 1;
-
-      const total =
-        perMinute *
-        Number(formData.overtime_minutes || 0) *
-        multiplier;
-
-      setCalculatedOT(total);
-    } else {
-      setCalculatedOT(0);
+  const fetchEmployees = async () => {
+    try {
+      const res = await axios.get(`${API}/get_employee`);
+      setEmployees(res.data.data || []);
+    } catch (error) {
+      console.log("Employee API Error:", error);
     }
-  }, [
-    formData.overtime,
-    formData.overtime_type,
-    formData.overtime_minutes,
-    formData.gross_salary,
-  ]);
+  };
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
+  const fetchOTList = async () => {
+    try {
+      const res = await axios.get(`${API}/emp_overtime`);
+      setOtList(res.data.data || []);
+    } catch (error) {
+      console.log("OT List API Error:", error);
+    }
+  };
+
+  const handleEmployeeChange = (e) => {
+    const empId = e.target.value;
+    const emp = employees.find((x) => x.employee_id === empId);
+
+    if (!emp) {
+      setForm(emptyForm);
+      return;
+    }
+
+    const salary =
+      Number(emp.basic_salary || 0) + Number(emp.allowances || 0);
+
+    setForm({
+      ...emptyForm,
+      emp_id: emp.employee_id,
+      emp_name: emp.full_name,
+      current_salary: salary,
+      working_hours: emp.working_hours || "",
+      shift_time: emp.shift_time || "",
+      ot_allow: emp.ot_allow === "0" ? "0" : "1",
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-    setLoading(true);
-    setMessage("");
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
 
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (data.status) {
-        setMessage(
-          `✅ Overtime Added Successfully | ₹${data.overtime_amount}`
-        );
-
-        setFormData({
-          emp_id: "",
-          overtime: "True",
-          overtime_type: "1x",
-          overtime_minutes: "",
-          gross_salary: "",
-          remark: "",
-        });
-
-        setCalculatedOT(0);
-      } else {
-        setMessage("❌ " + data.message);
-      }
-    } catch (error) {
-      console.log(error);
-      setMessage("❌ API Error");
-    }
-
-    setLoading(false);
+      ...(name === "ot_allow" && value === "0"
+        ? {
+            ot_type: "1",
+            ot_start_date: "",
+            ot_end_date: "",
+            approve_by: "",
+            remark: "",
+          }
+        : {}),
+    }));
   };
 
+  const submitOT = async (e) => {
+    e.preventDefault();
+
+    try {
+      const payload = {
+        ...form,
+        ot_type: form.ot_allow === "0" ? "" : form.ot_type,
+        ot_start_date: form.ot_allow === "0" ? "" : form.ot_start_date,
+        ot_end_date: form.ot_allow === "0" ? "" : form.ot_end_date,
+        approve_by: form.ot_allow === "0" ? "" : form.approve_by,
+        remark: form.ot_allow === "0" ? "" : form.remark,
+      };
+
+      const res = await axios.post(`${API}/emp_overtime_post`, payload);
+
+      if (res.data.success) {
+        alert("OT saved successfully");
+        setForm(emptyForm);
+        fetchOTList();
+      } else {
+        alert(res.data.message || "Something went wrong");
+      }
+    } catch (error) {
+      console.log("OT Post API Error:", error);
+      alert("OT Post API not working");
+    }
+  };
+
+  const showOTFields = form.ot_allow === "1";
+
   return (
-    <div className="min-h-screen bg-slate-100 p-5">
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl p-6">
+    <div className="p-6 bg-slate-100 min-h-screen">
+      <h1 className="text-2xl font-bold mb-5">Employee OT Management</h1>
 
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-slate-800 mb-6">
-          Employee Overtime Management
-        </h1>
+      <form
+        onSubmit={submitOT}
+        className="bg-white p-5 rounded-2xl shadow grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+      >
+        <div>
+          <label className="label">Employee</label>
+          <select
+  value={form.emp_id}
+  onChange={handleEmployeeChange}
+  required
+  className="input"
+>
+  <option value="">Select Employee</option>
 
-        {/* Message */}
-        {message && (
-          <div className="mb-5 p-4 bg-slate-100 border rounded-2xl text-slate-700 font-medium">
-            {message}
-          </div>
+  {employees
+    .filter((emp) => {
+      return !otList.some(
+        (ot) => ot.emp_id === emp.employee_id
+      );
+    })
+    .map((emp) => (
+      <option key={emp.employee_id} value={emp.employee_id}>
+        {emp.employee_id} - {emp.full_name}
+      </option>
+    ))}
+</select>
+        </div>
+
+        <div>
+          <label className="label">OT Allow</label>
+          <select
+            name="ot_allow"
+            value={form.ot_allow}
+            onChange={handleChange}
+            required
+            className="input"
+          >
+            <option value="1">Yes / 1</option>
+            <option value="0">No / 0</option>
+          </select>
+        </div>
+
+        {showOTFields && (
+          <>
+            <Input
+              label="Current Salary"
+              name="current_salary"
+              value={form.current_salary}
+              readOnly
+            />
+
+            <Input
+              label="Working Hours"
+              name="working_hours"
+              value={form.working_hours}
+              readOnly
+            />
+
+            <Input
+              label="Shift Time"
+              name="shift_time"
+              value={form.shift_time}
+              readOnly
+            />
+
+            <div>
+              <label className="label">OT Type</label>
+              <select
+                name="ot_type"
+                value={form.ot_type}
+                onChange={handleChange}
+                required={showOTFields}
+                className="input"
+              >
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+              </select>
+            </div>
+
+            <Input
+              label="OT Start Date"
+              type="date"
+              name="ot_start_date"
+              value={form.ot_start_date}
+              onChange={handleChange}
+              required={showOTFields}
+            />
+
+            <Input
+              label="OT End Date"
+              type="date"
+              name="ot_end_date"
+              value={form.ot_end_date}
+              onChange={handleChange}
+            />
+
+            <Input
+              label="Approved By"
+              name="approve_by"
+              value={form.approve_by}
+              onChange={handleChange}
+              required={showOTFields}
+            />
+
+            <div className="md:col-span-3">
+              <label className="label">Remark</label>
+              <textarea
+                name="remark"
+                value={form.remark}
+                onChange={handleChange}
+                className="input h-24"
+                required={showOTFields}
+              />
+            </div>
+          </>
         )}
 
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-5"
-        >
+        <button className="md:col-span-3 bg-blue-600 text-white py-3 rounded-xl font-semibold">
+          Submit OT
+        </button>
+      </form>
 
-          {/* Employee ID */}
-          <div>
-            <label className="font-semibold block mb-2">
-              Employee ID
-            </label>
-            <input
-              name="emp_id"
-              value={formData.emp_id}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-2xl"
-              placeholder="Enter Employee ID"
-              required
-            />
-          </div>
+      <div className="bg-white rounded-2xl shadow overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-900 text-white">
+            <tr>
+              <th className="p-3">Emp ID</th>
+              <th className="p-3">Name</th>
+              <th className="p-3">Salary</th>
+              <th className="p-3">Hours</th>
+              <th className="p-3">OT Allow</th>
+              <th className="p-3">OT Type</th>
+              <th className="p-3">Start Date</th>
+              <th className="p-3">End Date</th>
+              <th className="p-3">Month</th>
+              <th className="p-3">OT Minutes</th>
+              <th className="p-3">OT Amount</th>
+              <th className="p-3">Approved By</th>
+            </tr>
+          </thead>
 
-          {/* Overtime */}
-          <div>
-            <label className="font-semibold block mb-2">
-              Overtime
-            </label>
-            <select
-              name="overtime"
-              value={formData.overtime}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-2xl"
-            >
-              <option value="True">True</option>
-              <option value="False">False</option>
-            </select>
-          </div>
-
-          {/* Overtime Type */}
-          <div>
-            <label className="font-semibold block mb-2">
-              Overtime Type
-            </label>
-            <select
-              name="overtime_type"
-              value={formData.overtime_type}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-2xl"
-            >
-              <option value="1x">1x</option>
-              <option value="2x">2x</option>
-            </select>
-          </div>
-
-          {/* Minutes */}
-          <div>
-            <label className="font-semibold block mb-2">
-              Overtime Minutes
-            </label>
-            <input
-              type="number"
-              name="overtime_minutes"
-              value={formData.overtime_minutes}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-2xl"
-              placeholder="Enter Minutes"
-            />
-          </div>
-
-          {/* Gross Salary */}
-          <div>
-            <label className="font-semibold block mb-2">
-              Gross Salary
-            </label>
-            <input
-              type="number"
-              name="gross_salary"
-              value={formData.gross_salary}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-2xl"
-              placeholder="Enter Salary"
-            />
-          </div>
-
-          {/* Remark */}
-          <div className="md:col-span-2">
-            <label className="font-semibold block mb-2">
-              Remark
-            </label>
-            <textarea
-              name="remark"
-              value={formData.remark}
-              onChange={handleChange}
-              rows={4}
-              className="w-full border p-3 rounded-2xl"
-            />
-          </div>
-
-          {/* Preview */}
-          <div className="md:col-span-2">
-            <div className="bg-blue-50 border rounded-2xl p-5">
-              <p className="text-sm text-slate-500">
-                Overtime Preview Amount
-              </p>
-
-              <h2 className="text-3xl font-bold text-blue-600">
-                ₹
-                {Number(calculatedOT).toLocaleString("en-IN")}
-              </h2>
-            </div>
-          </div>
-
-          {/* Submit */}
-          <div className="md:col-span-2">
-            <button
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold"
-            >
-              {loading ? "Submitting..." : "Submit Overtime"}
-            </button>
-          </div>
-
-        </form>
+          <tbody>
+            {otList.map((item, index) => (
+              <tr key={index} className="border-b text-center">
+                <td className="p-3">{item.emp_id}</td>
+                <td className="p-3">{item.emp_name}</td>
+                <td className="p-3">
+                  ₹{Number(item.current_salary || 0).toLocaleString("en-IN")}
+                </td>
+                <td className="p-3">{item.working_hours || "-"}</td>
+                <td className="p-3">
+                  {item.ot_allow === "0" ? "No" : "Yes"}
+                </td>
+                <td className="p-3">
+                  {item.ot_allow === "0" ? "-" : `${item.ot_type}x`}
+                </td>
+                <td className="p-3">{item.ot_start_date || "-"}</td>
+                <td className="p-3">{item.ot_end_date || "Continue"}</td>
+                <td className="p-3">{item.ot_earn_month || "-"}</td>
+                <td className="p-3">{item.total_ot_minutes || 0}</td>
+                <td className="p-3 font-bold text-green-600">
+                  ₹{Number(item.ot_earn_amount || 0).toLocaleString("en-IN")}
+                </td>
+                <td className="p-3">{item.approve_by || "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+    </div>
+  );
+}
+
+function Input({ label, ...props }) {
+  return (
+    <div>
+      <label className="label">{label}</label>
+      <input {...props} className="input" />
     </div>
   );
 }
