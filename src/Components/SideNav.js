@@ -197,6 +197,26 @@ export default function SideNav() {
             Add Assests
           </NavLink>
 
+<NavLink to="/add-bonus" className={linkClass}>
+            <FileText size={20} />
+            Add Bonus
+          </NavLink>
+
+<NavLink to="/add-increment" className={linkClass}>
+            <FileText size={20} />
+            Add Increment
+          </NavLink>
+
+<NavLink to="/add-meeting" className={linkClass}>
+            <FileText size={20} />
+            Add Meeting
+          </NavLink>
+
+<NavLink to="/add-reward" className={linkClass}>
+            <FileText size={20} />
+            Add Reward
+          </NavLink>
+
           {/* BRANCH */}
           <NavLink to="/branches" className={linkClass}>
             <Building2 size={20} />
