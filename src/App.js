@@ -14,6 +14,8 @@ import EmployeeBonusForm from "./Components/Reports/EmployeeBonusForm";
 import EmployeeIncrementForm from "./Components/Reports/EmployeeIncrementForm";
 import EmployeeMeetingForm from "./Components/Reports/EmployeeMeetingForm";
 import EmployeeRewardForm from "./Components/Reports/EmployeeRewardForm";
+import EmployeePenaltyForm from "./Components/Reports/EmployeePenaltyForm";
+
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
@@ -58,7 +60,7 @@ function App() {
 <Route path="/add-increment" element={<EmployeeIncrementForm />} />
 <Route path="/add-meeting" element={<EmployeeMeetingForm />} />
 <Route path="/add-reward" element={<EmployeeRewardForm />} />
-
+<Route path="/add-penalty" element={<EmployeePenaltyForm />} />
         </Routes>
       </Router>
     </>
