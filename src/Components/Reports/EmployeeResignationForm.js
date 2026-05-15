@@ -11,10 +11,12 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 
 const EMPLOYEE_API = "https://ojmee.in/employee/get_employee";
+const RESIGNATION_GET_API = "https://ojmee.in/employee/emp_resignation";
 const RESIGNATION_POST_API = "https://ojmee.in/employee/emp_resignation_post";
 
 export default function EmployeeResignationForm() {
   const [employees, setEmployees] = useState([]);
+  const [resignations, setResignations] = useState([]);
   const [letterFile, setLetterFile] = useState(null);
 
   const [form, setForm] = useState({
@@ -33,8 +35,12 @@ export default function EmployeeResignationForm() {
   });
 
   useEffect(() => {
-    fetchEmployees();
+    fetchAllData();
   }, []);
+
+  const fetchAllData = async () => {
+    await Promise.all([fetchEmployees(), fetchResignations()]);
+  };
 
   const fetchEmployees = async () => {
     try {
@@ -45,6 +51,23 @@ export default function EmployeeResignationForm() {
       toast.error("Employee data fetch failed");
     }
   };
+
+  const fetchResignations = async () => {
+    try {
+      const res = await fetch(RESIGNATION_GET_API);
+      const json = await res.json();
+      setResignations(json.data || []);
+    } catch (error) {
+      toast.error("Resignation data fetch failed");
+    }
+  };
+
+  const resignedEmpIds = resignations.map((item) => String(item.emp_id));
+
+  const activeEmployees = employees.filter((emp) => {
+    const empId = String(emp.employee_id || emp.emp_id || emp.id || "");
+    return !resignedEmpIds.includes(empId);
+  });
 
   const calculateDays = (joiningDate, startDate) => {
     if (!joiningDate || !startDate) return "";
@@ -61,7 +84,7 @@ export default function EmployeeResignationForm() {
   };
 
   const handleEmployeeSelect = (empId) => {
-    const emp = employees.find(
+    const emp = activeEmployees.find(
       (e) =>
         String(e.employee_id) === String(empId) ||
         String(e.emp_id) === String(empId) ||
@@ -152,6 +175,15 @@ export default function EmployeeResignationForm() {
       return;
     }
 
+    const alreadyResigned = resignations.some(
+      (item) => String(item.emp_id) === String(form.emp_id)
+    );
+
+    if (alreadyResigned) {
+      toast.error("This employee resignation already exists");
+      return;
+    }
+
     const formData = new FormData();
 
     formData.append("emp_id", form.emp_id);
@@ -182,6 +214,7 @@ export default function EmployeeResignationForm() {
       if (json.success) {
         toast.success("Resignation saved successfully");
         resetForm();
+        fetchResignations();
       } else {
         toast.error(json.message || "Resignation save failed");
       }
@@ -217,7 +250,7 @@ export default function EmployeeResignationForm() {
               >
                 <option value="">Select employee</option>
 
-                {employees.map((emp, index) => {
+                {activeEmployees.map((emp, index) => {
                   const id = emp.employee_id || emp.emp_id || emp.id;
                   const name =
                     emp.full_name || emp.employee_name || emp.name || "";
@@ -229,6 +262,12 @@ export default function EmployeeResignationForm() {
                   );
                 })}
               </select>
+
+              {activeEmployees.length === 0 && (
+                <p className="text-sm text-red-600 mt-2">
+                  No employee available. All employees already resigned.
+                </p>
+              )}
             </div>
 
             <div>
@@ -371,7 +410,8 @@ export default function EmployeeResignationForm() {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-7 py-3 rounded-xl font-semibold shadow-lg transition-all"
+              disabled={activeEmployees.length === 0}
+              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-400 text-white px-7 py-3 rounded-xl font-semibold shadow-lg transition-all"
             >
               <Send size={18} />
               Submit Resignation
