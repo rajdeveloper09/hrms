@@ -1,18 +1,20 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   AlertTriangle,
   Building2,
   CalendarDays,
   ClipboardPen,
-  FileText,
   MapPin,
   ShieldAlert,
   User,
   Users,
 } from "lucide-react";
+
 import toast, { Toaster } from "react-hot-toast";
+
 import { API_BASE_URL } from "../../config/api";
+
 import SideNav from "../SideNav";
 
 export default function ComplaintForm() {
@@ -22,18 +24,21 @@ export default function ComplaintForm() {
   const [loadingEmployees, setLoadingEmployees] =
     useState(true);
 
-  const [loading, setLoading] = useState(false);
-
-  const [message, setMessage] = useState("");
+  const [loading, setLoading] =
+    useState(false);
 
   const [formData, setFormData] = useState({
+
     emp_id: "",
     branch_id: "",
 
-    complaint_between: "",
+    complaint_type: "Emp vs Emp",
+
+    second_employee_id: "",
+    other_person_name: "",
+
     suspected_employee: "",
 
-    full_details: "",
     remark: "",
     incident_datetime: "",
     incident_place: "",
@@ -41,11 +46,17 @@ export default function ComplaintForm() {
     status: "Pending",
 
     complaint_raise_by: "",
-    complaint_history: "",
+
   });
 
+  /* ======================================================
+      FETCH EMPLOYEES
+  ====================================================== */
+
   useEffect(() => {
+
     fetchEmployees();
+
   }, []);
 
   const fetchEmployees = async () => {
@@ -60,11 +71,7 @@ export default function ComplaintForm() {
 
       const data = await response.json();
 
-      console.log("EMPLOYEE API:", data);
-
       let employeeList = [];
-
-      /* SUPPORT MULTIPLE API STRUCTURE */
 
       if (Array.isArray(data)) {
 
@@ -74,10 +81,6 @@ export default function ComplaintForm() {
 
         employeeList = data.data;
 
-      } else if (Array.isArray(data.employees)) {
-
-        employeeList = data.employees;
-
       } else if (Array.isArray(data.result)) {
 
         employeeList = data.result;
@@ -86,9 +89,32 @@ export default function ComplaintForm() {
 
       setEmployees(employeeList);
 
+      /* AUTO SELECT FIRST EMPLOYEE */
+
+      if (employeeList.length > 0) {
+
+        const firstEmployee =
+          employeeList[0];
+
+        setFormData((prev) => ({
+
+          ...prev,
+
+          emp_id:
+            getEmployeeId(firstEmployee),
+
+          branch_id:
+            getEmployeeBranch(firstEmployee),
+
+        }));
+
+      }
+
     } catch (error) {
 
-      console.log("Employee Fetch Error:", error);
+      console.log(error);
+
+      toast.error("Failed to load employees");
 
     } finally {
 
@@ -97,6 +123,10 @@ export default function ComplaintForm() {
     }
 
   };
+
+  /* ======================================================
+      HELPERS
+  ====================================================== */
 
   const getEmployeeId = (emp) => {
 
@@ -119,7 +149,7 @@ export default function ComplaintForm() {
       emp.full_name ||
       emp.employee_name ||
       emp.name ||
-      "Unknown"
+      ""
     );
 
   };
@@ -137,91 +167,9 @@ export default function ComplaintForm() {
 
   };
 
-  /* =======================================================
-      SELECT MAIN EMPLOYEE
-  ======================================================= */
-
-  const handleEmployeeSelect = (e) => {
-
-    const selectedEmpId = e.target.value;
-
-    const selectedEmployee = employees.find(
-      (emp) =>
-        getEmployeeId(emp) === selectedEmpId
-    );
-
-    setFormData((prev) => ({
-      ...prev,
-
-      emp_id: selectedEmpId,
-
-      branch_id:
-        getEmployeeBranch(selectedEmployee),
-
-      /* RESET ONLY COMPLAINT BETWEEN */
-      complaint_between: "",
-    }));
-
-  };
-
-  /* =======================================================
-      NORMAL HANDLE CHANGE
-  ======================================================= */
-
-  const handleChange = (e) => {
-
-    const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-  };
-
-  /* =======================================================
-      DROPDOWNS
-  ======================================================= */
-
-  /* EMPLOYEE
-     -> SHOW ALL EMPLOYEES */
-
-  const employeeOptions = useMemo(() => {
-
-    return employees;
-
-  }, [employees]);
-
-  /* COMPLAINT BETWEEN
-     -> REMOVE SELECTED EMPLOYEE */
-
-  const complaintBetweenEmployees =
-    useMemo(() => {
-
-      return employees.filter((emp) => {
-
-        return (
-          getEmployeeId(emp) !==
-          formData.emp_id
-        );
-
-      });
-
-    }, [employees, formData.emp_id]);
-
-  /* SUSPECTED EMPLOYEE
-     -> SHOW ALL EMPLOYEES */
-
-  const suspectedEmployees =
-    useMemo(() => {
-
-      return employees;
-
-    }, [employees]);
-
-  /* =======================================================
-      SELECTED EMPLOYEE BRANCH
-  ======================================================= */
+  /* ======================================================
+      SELECTED EMPLOYEE DATA
+  ====================================================== */
 
   const selectedEmployeeData =
     employees.find(
@@ -235,9 +183,97 @@ export default function ComplaintForm() {
       selectedEmployeeData
     );
 
-  /* =======================================================
+  /* ======================================================
+      MAIN EMPLOYEE CHANGE
+  ====================================================== */
+
+  const handleEmployeeSelect = (e) => {
+
+    const selectedEmpId =
+      e.target.value;
+
+    const selectedEmployee =
+      employees.find(
+        (emp) =>
+          getEmployeeId(emp) ===
+          selectedEmpId
+      );
+
+    setFormData((prev) => ({
+
+      ...prev,
+
+      emp_id: selectedEmpId,
+
+      branch_id:
+        getEmployeeBranch(
+          selectedEmployee
+        ),
+
+      second_employee_id: "",
+      suspected_employee: "",
+
+    }));
+
+  };
+
+  /* ======================================================
+      HANDLE CHANGE
+  ====================================================== */
+
+  const handleChange = (e) => {
+
+    const { name, value } =
+      e.target;
+
+    setFormData((prev) => ({
+
+      ...prev,
+
+      [name]: value,
+
+    }));
+
+  };
+
+  /* ======================================================
+      SECOND EMPLOYEE OPTIONS
+      -> HIDE FIRST EMPLOYEE
+  ====================================================== */
+
+  const secondEmployeeOptions =
+    employees.filter(
+      (emp) =>
+        getEmployeeId(emp) !==
+        formData.emp_id
+    );
+
+  /* ======================================================
+      SUSPECTED EMPLOYEE OPTIONS
+      -> ONLY FIRST + SECOND EMPLOYEE
+  ====================================================== */
+
+  const suspectedEmployeeOptions =
+    employees.filter((emp) => {
+
+      const empId =
+        getEmployeeId(emp);
+
+      return (
+
+        empId ===
+          formData.emp_id ||
+
+        empId ===
+          formData.second_employee_id
+
+      );
+
+    });
+
+  /* ======================================================
       SUBMIT
-  ======================================================= */
+  ====================================================== */
 
   const handleSubmit = async (e) => {
 
@@ -248,44 +284,82 @@ export default function ComplaintForm() {
     try {
 
       const payload = {
+
         ...formData,
+
         branch_id: branchName,
+
+        complaint_between:
+          formData.complaint_type ===
+          "Emp vs Emp"
+            ? formData.second_employee_id
+            : formData.other_person_name,
+
       };
 
-      console.log("SUBMIT PAYLOAD:", payload);
-
-      const response = await fetch(
-        `${API_BASE_URL}/emp_complaints_post`,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify(payload),
-        }
+      console.log(
+        "SUBMIT PAYLOAD:",
+        payload
       );
 
-      const data = await response.json();
+      const response =
+        await fetch(
+          `${API_BASE_URL}/emp_complaints_post`,
+          {
 
-      console.log("SUBMIT RESPONSE:", data);
+            method: "POST",
 
-      if (data.status || data.success) {
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify(
+              payload
+            ),
+
+          }
+        );
+
+      const data =
+        await response.json();
+
+      console.log(data);
+
+      if (
+        data.success ||
+        data.status
+      ) {
 
         toast.success(
           "Complaint Added Successfully"
         );
 
-        setFormData({
-          emp_id: "",
-          branch_id: "",
+        const firstEmployee =
+          employees?.[0];
 
-          complaint_between: "",
+        setFormData({
+
+          emp_id: firstEmployee
+            ? getEmployeeId(
+                firstEmployee
+              )
+            : "",
+
+          branch_id: firstEmployee
+            ? getEmployeeBranch(
+                firstEmployee
+              )
+            : "",
+
+          complaint_type:
+            "Emp vs Emp",
+
+          second_employee_id: "",
+          other_person_name: "",
+
           suspected_employee: "",
 
-          full_details: "",
           remark: "",
           incident_datetime: "",
           incident_place: "",
@@ -293,14 +367,14 @@ export default function ComplaintForm() {
           status: "Pending",
 
           complaint_raise_by: "",
-          complaint_history: "",
+
         });
 
       } else {
 
         toast.error(
           data.message ||
-          "Failed to submit complaint"
+            "Failed to submit complaint"
         );
 
       }
@@ -319,6 +393,9 @@ export default function ComplaintForm() {
 
   };
 
+  /* ======================================================
+      INPUT STYLE
+  ====================================================== */
 
   const inputStyle =
     "w-full border border-slate-200 bg-slate-50 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent transition-all";
@@ -327,6 +404,8 @@ export default function ComplaintForm() {
 
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
 
+      <Toaster />
+
       <SideNav />
 
       <div className="flex-1 p-4 ml-72 overflow-y-auto">
@@ -334,6 +413,7 @@ export default function ComplaintForm() {
         <div className="bg-white rounded-[32px] overflow-hidden shadow-2xl border border-white/40">
 
           {/* HEADER */}
+
           <div className="relative bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 p-8 overflow-hidden">
 
             <div className="absolute -top-20 -right-10 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
@@ -351,12 +431,16 @@ export default function ComplaintForm() {
                 </div>
 
                 <h1 className="text-4xl font-black text-white">
+
                   Complaint Form
+
                 </h1>
 
                 <p className="text-rose-100 mt-3 text-lg">
+
                   Submit disciplinary complaints &
                   incident reports
+
                 </p>
 
               </div>
@@ -371,11 +455,15 @@ export default function ComplaintForm() {
                   />
 
                   <div className="text-white text-2xl font-bold mt-2">
+
                     {employees.length}
+
                   </div>
 
                   <div className="text-rose-100 text-sm">
+
                     Employees
+
                   </div>
 
                 </div>
@@ -388,11 +476,15 @@ export default function ComplaintForm() {
                   />
 
                   <div className="text-white text-2xl font-bold mt-2">
+
                     HR
+
                   </div>
 
                   <div className="text-rose-100 text-sm">
+
                     Complaint Desk
+
                   </div>
 
                 </div>
@@ -403,8 +495,8 @@ export default function ComplaintForm() {
 
           </div>
 
-
           {/* FORM */}
+
           <form
             onSubmit={handleSubmit}
             className="p-6 md:p-8"
@@ -413,6 +505,7 @@ export default function ComplaintForm() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
               {/* EMPLOYEE */}
+
               <div>
 
                 <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
@@ -433,11 +526,11 @@ export default function ComplaintForm() {
 
                   <option value="">
                     {loadingEmployees
-                      ? "Loading Employees..."
+                      ? "Loading..."
                       : "Select Employee"}
                   </option>
 
-                  {employeeOptions.map(
+                  {employees.map(
                     (emp, index) => (
 
                       <option
@@ -459,6 +552,7 @@ export default function ComplaintForm() {
               </div>
 
               {/* BRANCH */}
+
               <div>
 
                 <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
@@ -471,107 +565,207 @@ export default function ComplaintForm() {
 
                 <input
                   type="text"
-                  value={branchName || ""}
                   readOnly
-                  placeholder="Branch Auto Selected"
+                  value={branchName || ""}
                   className={`${inputStyle} bg-slate-200 cursor-not-allowed`}
                 />
 
               </div>
 
-              {/* COMPLAINT BETWEEN */}
+              {/* COMPLAINT TYPE */}
+
               <div>
 
                 <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
 
                   <Users size={18} />
 
-                  Complaint Between
+                  Complaint Type
 
                 </label>
 
                 <select
-                  name="complaint_between"
+                  name="complaint_type"
                   value={
-                    formData.complaint_between
+                    formData.complaint_type
                   }
                   onChange={handleChange}
                   className={inputStyle}
-                  required
                 >
 
-                  <option value="">
-                    Select Other Employee
+                  <option value="Emp vs Emp">
+                    Emp vs Emp
                   </option>
 
-                  {complaintBetweenEmployees.map(
-                    (emp, index) => (
-
-                      <option
-                        key={index}
-                        value={getEmployeeId(emp)}
-                      >
-
-                        {getEmployeeId(emp)}
-                        {" - "}
-                        {getEmployeeName(emp)}
-
-                      </option>
-
-                    )
-                  )}
+                  <option value="Emp vs Other">
+                    Emp vs Other
+                  </option>
 
                 </select>
 
               </div>
 
-              {/* SUSPECTED EMPLOYEE */}
-              <div>
+              {/* EMP VS EMP */}
 
-                <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
+              {formData.complaint_type ===
+                "Emp vs Emp" ? (
 
-                  <AlertTriangle size={18} />
+                <>
+                  {/* SECOND EMPLOYEE */}
 
-                  Suspected Employee
+                  <div>
 
-                </label>
+                    <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
 
-                <select
-                  name="suspected_employee"
-                  value={
-                    formData.suspected_employee
-                  }
-                  onChange={handleChange}
-                  className={inputStyle}
-                  required
-                >
+                      <Users size={18} />
 
-                  <option value="">
-                    Select Suspected Employee
-                  </option>
+                      Complaint Between
 
-                  {suspectedEmployees.map(
-                    (emp, index) => (
+                    </label>
 
-                      <option
-                        key={index}
-                        value={getEmployeeId(emp)}
-                      >
+                    <select
+                      name="second_employee_id"
+                      value={
+                        formData.second_employee_id
+                      }
+                      onChange={handleChange}
+                      className={inputStyle}
+                      required
+                    >
 
-                        {getEmployeeId(emp)}
-                        {" - "}
-                        {getEmployeeName(emp)}
-
+                      <option value="">
+                        Select Second Employee
                       </option>
 
-                    )
-                  )}
+                      {secondEmployeeOptions.map(
+                        (emp, index) => (
 
-                </select>
+                          <option
+                            key={index}
+                            value={getEmployeeId(emp)}
+                          >
 
-              </div>
+                            {getEmployeeId(emp)}
+                            {" - "}
+                            {getEmployeeName(emp)}
 
-              {/* DATE */}
+                          </option>
+
+                        )
+                      )}
+
+                    </select>
+
+                  </div>
+
+                  {/* SUSPECTED EMPLOYEE */}
+
+                  <div>
+
+                    <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
+
+                      <AlertTriangle size={18} />
+
+                      Suspected Employee
+
+                    </label>
+
+                    <select
+                      name="suspected_employee"
+                      value={
+                        formData.suspected_employee
+                      }
+                      onChange={handleChange}
+                      className={inputStyle}
+                      required
+                    >
+
+                      <option value="">
+                        Select Suspected Employee
+                      </option>
+
+                      {suspectedEmployeeOptions.map(
+                        (emp, index) => (
+
+                          <option
+                            key={index}
+                            value={getEmployeeId(emp)}
+                          >
+
+                            {getEmployeeId(emp)}
+                            {" - "}
+                            {getEmployeeName(emp)}
+
+                          </option>
+
+                        )
+                      )}
+
+                    </select>
+
+                  </div>
+                </>
+
+              ) : (
+
+                <>
+                  {/* OTHER PERSON */}
+
+                  <div>
+
+                    <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
+
+                      <Users size={18} />
+
+                      Other Person Name
+
+                    </label>
+
+                    <input
+                      type="text"
+                      name="other_person_name"
+                      value={
+                        formData.other_person_name
+                      }
+                      onChange={handleChange}
+                      placeholder="Enter Other Person Name"
+                      className={inputStyle}
+                      required
+                    />
+
+                  </div>
+
+                  {/* SUSPECTED PERSON */}
+
+                  <div>
+
+                    <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
+
+                      <AlertTriangle size={18} />
+
+                      Suspected Person
+
+                    </label>
+
+                    <input
+                      type="text"
+                      name="suspected_employee"
+                      value={
+                        formData.suspected_employee
+                      }
+                      onChange={handleChange}
+                      placeholder="Enter Suspected Person"
+                      className={inputStyle}
+                      required
+                    />
+
+                  </div>
+                </>
+
+              )}
+
+              {/* INCIDENT DATE */}
+
               <div>
 
                 <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
@@ -594,7 +788,8 @@ export default function ComplaintForm() {
 
               </div>
 
-              {/* PLACE */}
+              {/* INCIDENT PLACE */}
+
               <div>
 
                 <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
@@ -618,29 +813,8 @@ export default function ComplaintForm() {
 
               </div>
 
-              {/* STATUS */}
-              <div>
-
-                <label className="block mb-2 font-semibold text-slate-700">
-                  Status
-                </label>
-
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className={inputStyle}
-                >
-
-                  <option value="Pending">
-                    Pending
-                  </option>
-
-                </select>
-
-              </div>
-
               {/* RAISED BY */}
+
               <div>
 
                 <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
@@ -664,45 +838,47 @@ export default function ComplaintForm() {
 
               </div>
 
-
               {/* REMARK */}
+
               <div className="md:col-span-3">
 
                 <label className="block mb-2 font-semibold text-slate-700">
+
                   Remark
+
                 </label>
 
                 <textarea
                   name="remark"
+                  rows="4"
                   value={formData.remark}
                   onChange={handleChange}
-                  rows="3"
                   placeholder="Enter Remark"
                   className={inputStyle}
                 />
 
               </div>
 
+            </div>
 
-             
+            {/* BUTTON */}
+
+            <div className="pt-8 flex justify-center">
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full md:w-[320px] bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 hover:scale-[1.01] active:scale-[0.99] text-white py-4 rounded-2xl text-lg font-bold shadow-xl transition-all duration-300 disabled:opacity-60"
+              >
+
+                {loading
+                  ? "Submitting..."
+                  : "Submit Complaint"}
+
+              </button>
 
             </div>
- {/* BUTTON */}
-              <div className="md:col-span-2 pt-2 mt-5 flex justify-center">
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full md:w-[320px] bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 hover:scale-[1.01] active:scale-[0.99] text-white py-4 rounded-2xl text-lg font-bold shadow-xl transition-all duration-300 disabled:opacity-60"
-                >
-
-                  {loading
-                    ? "Submitting Complaint..."
-                    : "Submit Complaint"}
-
-                </button>
-
-              </div>
           </form>
 
         </div>
