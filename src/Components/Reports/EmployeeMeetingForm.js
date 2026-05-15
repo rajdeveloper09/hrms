@@ -1,286 +1,366 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import {
+  CalendarDays,
+  Clock,
+  MapPin,
+  Users,
+  ClipboardPen,
+  Send,
+  BriefcaseBusiness,
+} from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
+
+const EMPLOYEE_API = "https://ojmee.in/employee/get_employee";
+const MEETING_POST_API = "https://ojmee.in/employee/emp_meetings_post";
 
 export default function EmployeeMeetingForm() {
-  const [formData, setFormData] = useState({
-    emp_id: "",
-    emp_designation: "",
-    meeting_for: "All",
-    selected_employees: [],
+  const [employees, setEmployees] = useState([]);
+  const [designations, setDesignations] = useState([]);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
+
+  const [form, setForm] = useState({
+    designation: "",
+    employee_ids: [],
+    employee_names: [],
     meeting_date: "",
-    meeting_month: "",
-    meeting_place: "",
+    meeting_time: "",
+    place: "",
+    meeting_attend_by: "",
     remark: "",
   });
 
-  const [employeeInput, setEmployeeInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
 
-  const API_URL =
-    "https://ojmee.in/employee/emp_meetings_post";
+  const fetchEmployees = async () => {
+    try {
+      const res = await fetch(EMPLOYEE_API);
+      const json = await res.json();
+
+      const list = Array.isArray(json) ? json : json.data || [];
+
+      setEmployees(list);
+
+      const uniqueDesignations = [
+        ...new Set(
+          list
+            .map((emp) => emp.designation)
+            .filter((item) => item && item.trim() !== "")
+        ),
+      ];
+
+      setDesignations(uniqueDesignations);
+    } catch (error) {
+      toast.error("Employee data fetch failed");
+    }
+  };
+
+  const handleDesignationChange = (e) => {
+    const designation = e.target.value;
+
+    const filtered = employees.filter(
+      (emp) =>
+        String(emp.designation || "").toLowerCase() ===
+        String(designation || "").toLowerCase()
+    );
+
+    setFilteredEmployees(filtered);
+
+    setForm({
+      ...form,
+      designation,
+      employee_ids: [],
+      employee_names: [],
+    });
+  };
+
+  const handleEmployeeCheckbox = (emp) => {
+    const empId = emp.employee_id || emp.emp_id || emp.id;
+    const empName = emp.full_name || emp.employee_name || emp.name || "";
+
+    const alreadySelected = form.employee_ids.includes(empId);
+
+    if (alreadySelected) {
+      setForm({
+        ...form,
+        employee_ids: form.employee_ids.filter((id) => id !== empId),
+        employee_names: form.employee_names.filter((name) => name !== empName),
+      });
+    } else {
+      setForm({
+        ...form,
+        employee_ids: [...form.employee_ids, empId],
+        employee_names: [...form.employee_names, empName],
+      });
+    }
+  };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setForm({
+      ...form,
       [e.target.name]: e.target.value,
     });
   };
 
-  const addEmployee = () => {
-    if (!employeeInput.trim()) return;
-
-    setFormData((prev) => ({
-      ...prev,
-      selected_employees: [
-        ...prev.selected_employees,
-        employeeInput.trim(),
-      ],
-    }));
-
-    setEmployeeInput("");
-  };
-
-  const removeEmployee = (index) => {
-    const updated = formData.selected_employees.filter(
-      (_, i) => i !== index
-    );
-
-    setFormData({
-      ...formData,
-      selected_employees: updated,
+  const resetForm = () => {
+    setForm({
+      designation: "",
+      employee_ids: [],
+      employee_names: [],
+      meeting_date: "",
+      meeting_time: "",
+      place: "",
+      meeting_attend_by: "",
+      remark: "",
     });
+
+    setFilteredEmployees([]);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setLoading(true);
-    setMessage("");
+    if (
+      !form.designation ||
+      form.employee_ids.length === 0 ||
+      !form.meeting_date ||
+      !form.meeting_time
+    ) {
+      toast.error("Designation, Employee, Date and Time required");
+      return;
+    }
 
     try {
-      const payload = {
-        ...formData,
-      };
-
-      const response = await fetch(API_URL, {
+      const res = await fetch(MEETING_POST_API, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(form),
       });
 
-      const data = await response.json();
+      const json = await res.json();
 
-      if (data.status) {
-        setMessage("✅ Meeting Added Successfully");
-
-        setFormData({
-          emp_id: "",
-          emp_designation: "",
-          meeting_for: "All",
-          selected_employees: [],
-          meeting_date: "",
-          meeting_month: "",
-          meeting_place: "",
-          remark: "",
-        });
+      if (json.success) {
+        toast.success("Meeting created successfully");
+        resetForm();
       } else {
-        setMessage("❌ " + data.message);
+        toast.error(json.message || "Meeting create failed");
       }
     } catch (error) {
-      console.log(error);
-      setMessage("❌ API Error");
+      toast.error("Server error");
     }
-
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-5">
-      <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-xl p-6">
+    <div className="min-h-screen bg-slate-100 p-6">
+      <Toaster position="top-right" />
 
-        <h1 className="text-3xl font-bold text-slate-800 mb-6">
-          Employee Meeting Form
-        </h1>
+      <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-600 to-blue-500 p-6 text-white">
+          <div className="flex items-center gap-3">
+            <Users size={34} />
 
-        {message && (
-          <div className="mb-5 p-4 bg-slate-100 border rounded-2xl text-slate-700 font-medium">
-            {message}
-          </div>
-        )}
-
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-5"
-        >
-
-          {/* Employee ID */}
-          <div>
-            <label className="font-semibold mb-2 block">
-              Employee ID
-            </label>
-            <input
-              name="emp_id"
-              value={formData.emp_id}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-2xl"
-              placeholder="Enter Employee ID"
-              required
-            />
-          </div>
-
-          {/* Designation */}
-          <div>
-            <label className="font-semibold mb-2 block">
-              Designation
-            </label>
-            <input
-              name="emp_designation"
-              value={formData.emp_designation}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-2xl"
-              placeholder="Enter Designation"
-            />
-          </div>
-
-          {/* Meeting For */}
-          <div>
-            <label className="font-semibold mb-2 block">
-              Meeting For
-            </label>
-            <select
-              name="meeting_for"
-              value={formData.meeting_for}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-2xl"
-            >
-              <option value="All">All Employees</option>
-              <option value="Selected">Selected Employees</option>
-            </select>
-          </div>
-
-          {/* Selected Employees Input */}
-          {formData.meeting_for === "Selected" && (
             <div>
-              <label className="font-semibold mb-2 block">
-                Add Employee ID
+              <h1 className="text-2xl font-bold">Meeting Management</h1>
+              <p className="text-sm text-indigo-100">
+                Create meeting designation wise
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="label">
+                <BriefcaseBusiness size={16} /> Meeting Designation
               </label>
 
-              <div className="flex gap-2">
-                <input
-                  value={employeeInput}
-                  onChange={(e) =>
-                    setEmployeeInput(e.target.value)
-                  }
-                  className="w-full border p-3 rounded-2xl"
-                  placeholder="Enter Employee ID"
-                />
+              <select
+                name="designation"
+                value={form.designation}
+                onChange={handleDesignationChange}
+                className="input"
+                required
+              >
+                <option value="">Select designation</option>
 
-                <button
-                  type="button"
-                  onClick={addEmployee}
-                  className="bg-blue-600 text-white px-4 rounded-2xl"
-                >
-                  Add
-                </button>
-              </div>
+                {designations.map((item, index) => (
+                  <option key={index} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              {/* List */}
-              <div className="flex flex-wrap gap-2 mt-3">
-                {formData.selected_employees.map(
-                  (emp, index) => (
-                    <div
-                      key={index}
-                      className="bg-slate-200 px-3 py-1 rounded-full flex items-center gap-2"
-                    >
-                      <span>{emp}</span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          removeEmployee(index)
-                        }
-                        className="text-red-600 font-bold"
+            <div>
+              <label className="label">
+                <Users size={16} /> Selected Employees
+              </label>
+
+              <input
+                value={`${form.employee_ids.length} employee selected`}
+                readOnly
+                className="input bg-slate-100"
+              />
+            </div>
+          </div>
+
+          {form.designation && (
+            <div>
+              <label className="label">
+                <Users size={16} /> Employees
+              </label>
+
+              {filteredEmployees.length === 0 ? (
+                <div className="border border-red-200 bg-red-50 text-red-600 rounded-xl px-4 py-3 text-sm font-semibold">
+                  No employee found for this designation
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border rounded-2xl p-4 bg-slate-50">
+                  {filteredEmployees.map((emp, index) => {
+                    const empId = emp.employee_id || emp.emp_id || emp.id;
+                    const empName =
+                      emp.full_name || emp.employee_name || emp.name || "";
+
+                    return (
+                      <label
+                        key={index}
+                        className="flex items-center gap-3 bg-white border rounded-xl px-4 py-3 cursor-pointer hover:bg-indigo-50"
                       >
-                        ×
-                      </button>
-                    </div>
-                  )
-                )}
-              </div>
+                        <input
+                          type="checkbox"
+                          checked={form.employee_ids.includes(empId)}
+                          onChange={() => handleEmployeeCheckbox(emp)}
+                          className="w-4 h-4"
+                        />
+
+                        <span className="text-sm font-medium text-slate-700">
+                          {empId} - {empName}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Meeting Date */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label className="label">
+                <CalendarDays size={16} /> Meeting Date
+              </label>
+
+              <input
+                type="date"
+                name="meeting_date"
+                value={form.meeting_date}
+                onChange={handleChange}
+                className="input"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="label">
+                <Clock size={16} /> Meeting Time
+              </label>
+
+              <input
+                type="time"
+                name="meeting_time"
+                value={form.meeting_time}
+                onChange={handleChange}
+                className="input"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="label">
+                <MapPin size={16} /> Place
+              </label>
+
+              <input
+                name="place"
+                value={form.place}
+                onChange={handleChange}
+                placeholder="Enter meeting place"
+                className="input"
+              />
+            </div>
+          </div>
+
           <div>
-            <label className="font-semibold mb-2 block">
-              Meeting Date
+            <label className="label">
+              <ClipboardPen size={16} /> Meeting Attend By
             </label>
+
             <input
-              type="date"
-              name="meeting_date"
-              value={formData.meeting_date}
+              name="meeting_attend_by"
+              value={form.meeting_attend_by}
               onChange={handleChange}
-              className="w-full border p-3 rounded-2xl"
+              placeholder="Enter meeting attend by"
+              className="input"
             />
           </div>
 
-          {/* Meeting Month */}
           <div>
-            <label className="font-semibold mb-2 block">
-              Meeting Month
+            <label className="label">
+              <ClipboardPen size={16} /> Remark
             </label>
-            <input
-              type="month"
-              name="meeting_month"
-              value={formData.meeting_month}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-2xl"
-            />
-          </div>
 
-          {/* Meeting Place */}
-          <div>
-            <label className="font-semibold mb-2 block">
-              Meeting Place
-            </label>
-            <input
-              name="meeting_place"
-              value={formData.meeting_place}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-2xl"
-              placeholder="Enter Place"
-            />
-          </div>
-
-          {/* Remark */}
-          <div className="md:col-span-2">
-            <label className="font-semibold mb-2 block">
-              Remark
-            </label>
             <textarea
               name="remark"
-              value={formData.remark}
+              value={form.remark}
               onChange={handleChange}
-              rows={4}
-              className="w-full border p-3 rounded-2xl"
+              rows="4"
+              placeholder="Enter remark"
+              className="input resize-none"
             />
           </div>
 
-          {/* Submit */}
-          <div className="md:col-span-2">
+          <div className="flex justify-end">
             <button
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold"
+              type="submit"
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-7 py-3 rounded-xl font-semibold shadow-lg transition-all"
             >
-              {loading
-                ? "Submitting..."
-                : "Submit Meeting"}
+              <Send size={18} />
+              Submit Meeting
             </button>
           </div>
-
         </form>
       </div>
+
+      <style>{`
+        .label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          color: #334155;
+          margin-bottom: 6px;
+        }
+
+        .input {
+          width: 100%;
+          border: 1px solid #cbd5e1;
+          border-radius: 12px;
+          padding: 12px 14px;
+          outline: none;
+          font-size: 14px;
+          background: white;
+        }
+
+        .input:focus {
+          border-color: #6366f1;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+      `}</style>
     </div>
   );
 }

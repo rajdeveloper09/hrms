@@ -186,6 +186,17 @@ export default function SideNav() {
  <FileText size={20} />
             Add Penalty
 </NavLink>
+
+
+
+ <NavLink
+            to="/add-resignation"
+            className={linkClass}
+          >
+             <FileText size={20} />
+            Add Resignation
+          </NavLink>
+
           <NavLink
             to="/attendance-report"
             className={linkClass}

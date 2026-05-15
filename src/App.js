@@ -15,6 +15,7 @@ import EmployeeIncrementForm from "./Components/Reports/EmployeeIncrementForm";
 import EmployeeMeetingForm from "./Components/Reports/EmployeeMeetingForm";
 import EmployeeRewardForm from "./Components/Reports/EmployeeRewardForm";
 import EmployeePenaltyForm from "./Components/Reports/EmployeePenaltyForm";
+import EmployeeResignationForm from "./Components/Reports/EmployeeResignationForm";
 
 
 function App() {
@@ -61,6 +62,7 @@ function App() {
 <Route path="/add-meeting" element={<EmployeeMeetingForm />} />
 <Route path="/add-reward" element={<EmployeeRewardForm />} />
 <Route path="/add-penalty" element={<EmployeePenaltyForm />} />
+<Route path="/add-resignation" element={<EmployeeResignationForm />} />
         </Routes>
       </Router>
     </>
