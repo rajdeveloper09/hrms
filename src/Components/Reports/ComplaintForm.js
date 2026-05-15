@@ -918,6 +918,7 @@ export default function ComplaintForm() {
                   onChange={handleChange}
                   placeholder="Incident Place"
                   className={inputStyle}
+                  required
                 />
 
               </div>
@@ -943,6 +944,7 @@ export default function ComplaintForm() {
                   onChange={handleChange}
                   placeholder="Raised By"
                   className={inputStyle}
+                  required
                 />
 
               </div>
@@ -964,6 +966,7 @@ export default function ComplaintForm() {
                   onChange={handleChange}
                   placeholder="Enter Remark"
                   className={inputStyle}
+                  required
                 />
 
               </div>

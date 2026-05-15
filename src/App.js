@@ -7,7 +7,7 @@ import EmployeeList from "./Components/Employee/EmployeeList";
 import AddEmployee from "./Components/Employee/AddEmployee";
 import { Toaster } from "react-hot-toast";
 import EmployeeProfile from "./Components/Employee/EmployeeProfile";
-import AttendanceReport from "./Components/AttendanceReport";
+import AllReport from "./Components/Reports/AllReport";
 import ComplaintForm from "./Components/Reports/ComplaintForm";
 import EmployeeAssetsForm from "./Components/Reports/EmployeeAssetsForm";
 import EmployeeBonusForm from "./Components/Reports/EmployeeBonusForm";
@@ -56,7 +56,7 @@ function App() {
           <Route path="/employees-list" element={<EmployeeList />} />
           <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/employee-profile/:employee_id" element={<EmployeeProfile />} />
-          <Route path="/attendance-report" element={<AttendanceReport />} />
+          <Route path="/all-report" element={<AllReport />} />
           <Route path="/add-complaint" element={<ComplaintForm />} />
           <Route path="/add-assests" element={<EmployeeAssetsForm />} />
           <Route path="/add-bonus" element={<EmployeeBonusForm />} />

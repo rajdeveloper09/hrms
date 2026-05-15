@@ -10,10 +10,13 @@ import {
   Send,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import SideNav from "../SideNav";
 
 const COMPLAINT_API = "https://ojmee.in/employee/emp_complaints";
 const EMPLOYEE_API = "https://ojmee.in/employee/get_employee";
-const PENALTY_API = "https://ojmee.in/employee/emp_complaints_post";
+const PENALTY_GET_API = "https://ojmee.in/employee/emp_penalties";
+const PENALTY_API = "https://ojmee.in/employee/emp_penalties_post";
+
 
 export default function EmployeePenaltyForm() {
   const [penaltyType, setPenaltyType] = useState("Complaint");
@@ -27,6 +30,7 @@ export default function EmployeePenaltyForm() {
     emp_name: "",
     branch_id: "",
     complaint_date: "",
+    penalty_date: "",
     penalty_amount: "",
     remark: "",
     reported_by: "",
@@ -40,12 +44,28 @@ export default function EmployeePenaltyForm() {
 
   const fetchComplaints = async () => {
     try {
-      const res = await fetch(COMPLAINT_API);
-      const json = await res.json();
+      const [complaintRes, penaltyRes] = await Promise.all([
+        fetch(COMPLAINT_API),
+        fetch(PENALTY_GET_API),
+      ]);
 
-      const list = Array.isArray(json) ? json : json.data || [];
+      const complaintJson = await complaintRes.json();
+      const penaltyJson = await penaltyRes.json();
 
-      const filtered = list.filter((item) => {
+      const complaintList = Array.isArray(complaintJson)
+        ? complaintJson
+        : complaintJson.data || [];
+
+      const penaltyList = Array.isArray(penaltyJson)
+        ? penaltyJson
+        : penaltyJson.data || [];
+
+
+      const penalizedComplaintIds = penaltyList
+        .filter((p) => p.penalty_type === "Complaint")
+        .map((p) => String(p.complaint_id));
+
+      const filtered = complaintList.filter((item) => {
         const suspected = String(item.suspected_employee || "")
           .trim()
           .toLowerCase();
@@ -54,10 +74,13 @@ export default function EmployeePenaltyForm() {
           .trim()
           .toLowerCase();
 
+        const complaintId = String(item.complaint_id);
+
         return (
           suspected !== "" &&
           suspected !== "other" &&
-          status === "completed"
+          status === "completed" &&
+          !penalizedComplaintIds.includes(complaintId)
         );
       });
 
@@ -97,6 +120,7 @@ export default function EmployeePenaltyForm() {
       emp_name: "",
       branch_id: "",
       complaint_date: "",
+      penalty_date: "",
       penalty_amount: "",
       remark: "",
       reported_by: "",
@@ -146,7 +170,12 @@ export default function EmployeePenaltyForm() {
       ...form,
       emp_id: empId,
       emp_name: emp?.full_name || emp?.employee_name || emp?.name || "",
-      branch_id: emp?.branch_id || emp?.branch || "",
+      branch_id:
+        emp?.branch_id ||
+        emp?.branch ||
+        emp?.branch_name ||
+        emp?.work_location ||
+        "",
     });
   };
 
@@ -165,17 +194,24 @@ export default function EmployeePenaltyForm() {
       return;
     }
 
+    if (penaltyType === "Complaint" && !form.complaint_id) {
+      toast.error("Please select complaint");
+      return;
+    }
+
     const payload = {
       penalty_type: penaltyType,
-      complaint_id: penaltyType === "Complaint" ? form.complaint_id : null,
+      complaint_id: penaltyType === "Complaint" ? form.complaint_id : "",
       emp_id: form.emp_id,
       emp_name: form.emp_name,
       branch_id: form.branch_id,
-      complaint_date: penaltyType === "Complaint" ? form.complaint_date : null,
+      penalty_date: form.penalty_date,
+      complaint_date: penaltyType === "Complaint" ? form.complaint_date : "",
       penalty_amount: form.penalty_amount,
       remark: form.remark,
       reported_by: form.reported_by,
       status: form.status,
+
     };
 
     try {
@@ -191,89 +227,158 @@ export default function EmployeePenaltyForm() {
 
       if (json.success) {
         toast.success("Penalty saved successfully");
-        handlePenaltyTypeChange("Complaint");
+        resetForm();
+        await fetchComplaints();
       } else {
         toast.error(json.message || "Penalty save failed");
       }
     } catch (error) {
+      console.log(error);
       toast.error("Server error");
     }
   };
+
 
   const noCompletedComplaint =
     penaltyType === "Complaint" && complaints.length === 0;
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6">
-      <Toaster position="top-right" />
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
 
-      <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-red-600 to-rose-500 p-6 text-white">
-          <div className="flex items-center gap-3">
-            <AlertTriangle size={34} />
-            <div>
-              <h1 className="text-2xl font-bold">Employee Penalty</h1>
-              <p className="text-sm text-red-100">
-                Complaint reference penalty or new manual penalty
-              </p>
-            </div>
-          </div>
-        </div>
+      <Toaster />
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="label">Penalty Type</label>
-              <select
-                value={penaltyType}
-                onChange={(e) => handlePenaltyTypeChange(e.target.value)}
-                className="input"
-              >
-                <option value="Complaint">Already Complaint</option>
-                <option value="New">New Penalty</option>
-              </select>
-            </div>
+      <SideNav />
+      <div className="flex-1 p-4 ml-72 overflow-y-auto bg-gradient-to-br from-rose-50 via-pink-50 to-red-100 min-h-screen">
 
-            {penaltyType === "Complaint" && !noCompletedComplaint && (
-              <div>
-                <label className="label">Complaint Number</label>
+        <div className="mx-auto">
 
-                <select
-                  value={selectedComplaint}
-                  onChange={(e) => handleComplaintSelect(e.target.value)}
-                  className="input"
-                  required
-                >
-                  <option value="">Select completed complaint</option>
+          {/* TOP HEADER */}
+          <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-r from-red-600 via-rose-500 to-pink-500 p-8 shadow-2xl mb-8">
 
-                  {complaints.map((item) => (
-                    <option key={item.complaint_id} value={item.complaint_id}>
-                      CMP-{item.complaint_id} / {item.suspected_employee} /{" "}
-                      {item.branch_id}
-                    </option>
-                  ))}
-                </select>
+            <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-10 -left-10 w-56 h-56 bg-white/10 rounded-full blur-2xl"></div>
+
+            <div className="relative z-10 flex items-center justify-between flex-wrap gap-5">
+
+              <div className="flex items-center gap-5">
+
+                <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-lg">
+                  <AlertTriangle size={38} className="text-white" />
+                </div>
+
+                <div>
+                  <h1 className="text-4xl font-black text-white tracking-tight">
+                    Employee Penalty
+                  </h1>
+
+                  <p className="text-red-100 mt-2 text-lg">
+                    Complaint reference penalty or new manual penalty
+                  </p>
+                </div>
               </div>
-            )}
+
+              <div className="bg-white/15 border border-white/20 backdrop-blur-xl rounded-3xl px-6 py-4 shadow-lg">
+
+                <div className="text-white text-sm font-medium">
+                  HR Discipline Panel
+                </div>
+
+                <div className="text-white text-3xl font-black">
+                  {complaints.length}
+                </div>
+
+                <div className="text-red-100 text-sm">
+                  Active Complaints
+                </div>
+
+              </div>
+
+            </div>
           </div>
 
-          {noCompletedComplaint ? (
-            <div className="w-full border border-red-200 bg-red-50 text-red-600 rounded-xl px-4 py-4 text-sm font-semibold">
-              No Completed Complaint Found
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* FORM CARD */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-[32px] border border-white shadow-2xl overflow-hidden">
+
+            <form onSubmit={handleSubmit} className="p-8 space-y-8">
+
+              {/* SECTION TITLE */}
+              <div className="flex items-center justify-between border-b border-slate-200 pb-5">
+
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">
+                    Penalty Information
+                  </h2>
+
+                  <p className="text-slate-500 mt-1">
+                    Fill employee penalty details carefully
+                  </p>
+                </div>
+
+                <div className="hidden md:flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-2xl text-sm font-semibold border border-red-100">
+                  <AlertTriangle size={16} />
+                  HR Monitoring
+                </div>
+
+              </div>
+
+              {/* GRID */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+                {/* Penalty Type */}
+                <div className="group">
+                  <label className="label">
+                    <AlertTriangle size={16} />
+                    Penalty Type
+                  </label>
+
+                  <select
+                    value={penaltyType}
+                    onChange={(e) => handlePenaltyTypeChange(e.target.value)}
+                    className="input"
+                  >
+                    <option value="Complaint">Already Complaint</option>
+                    <option value="New">New Penalty</option>
+                  </select>
+                </div>
+
+                {/* Complaint */}
+                {penaltyType === "Complaint" && !noCompletedComplaint && (
+                  <div className="group">
+                    <label className="label">
+                      <FileText size={16} />
+                      Complaint Number
+                    </label>
+
+                    <select
+                      value={selectedComplaint}
+                      onChange={(e) => handleComplaintSelect(e.target.value)}
+                      className="input"
+                      required
+                    >
+                      <option value="">Select completed complaint</option>
+
+                      {complaints.map((item) => (
+                        <option
+                          key={item.complaint_id}
+                          value={item.complaint_id}
+                        >
+                          CMP-{item.complaint_id} / {item.suspected_employee}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Employee */}
                 <div>
                   <label className="label">
-                    <User size={16} /> Employee
+                    <User size={16} />
+                    Employee
                   </label>
 
                   {penaltyType === "Complaint" ? (
                     <input
-                      value={`${form.emp_id} ${
-                        form.emp_name ? "- " + form.emp_name : ""
-                      }`}
+                      value={`${form.emp_id} ${form.emp_name ? "- " + form.emp_name : ""}`}
                       readOnly
                       className="input bg-slate-100"
                     />
@@ -282,14 +387,18 @@ export default function EmployeePenaltyForm() {
                       value={form.emp_id}
                       onChange={(e) => handleEmployeeSelect(e.target.value)}
                       className="input"
-                      required
                     >
                       <option value="">Select employee</option>
 
                       {employees.map((emp, index) => {
-                        const id = emp.employee_id || emp.emp_id || emp.id;
+                        const id =
+                          emp.employee_id || emp.emp_id || emp.id;
+
                         const name =
-                          emp.full_name || emp.employee_name || emp.name || "";
+                          emp.full_name ||
+                          emp.employee_name ||
+                          emp.name ||
+                          "";
 
                         return (
                           <option key={index} value={id}>
@@ -301,42 +410,42 @@ export default function EmployeePenaltyForm() {
                   )}
                 </div>
 
+                {/* Branch */}
                 <div>
                   <label className="label">
-                    <Building2 size={16} /> Branch ID
+                    <Building2 size={16} />
+                    Branch
                   </label>
 
                   <input
-                    name="branch_id"
                     value={form.branch_id}
+                    readOnly
+                    className="input bg-slate-100 cursor-not-allowed"
+                  />
+                </div>
+
+                {/* Date */}
+                <div>
+                  <label className="label">
+                    <CalendarDays size={16} />
+                    Penalty Date
+                  </label>
+
+                  <input
+                    type="date"
+                    name="penalty_date"
+                    value={form.penalty_date}
                     onChange={handleChange}
-                    readOnly={penaltyType === "Complaint"}
-                    className={`input ${
-                      penaltyType === "Complaint" ? "bg-slate-100" : ""
-                    }`}
+                    className="input"
                     required
                   />
                 </div>
 
-                {penaltyType === "Complaint" && (
-                  <div>
-                    <label className="label">
-                      <CalendarDays size={16} /> Complaint Date
-                    </label>
-
-                    <input
-                      value={form.complaint_date}
-                      readOnly
-                      className="input bg-slate-100"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* Amount */}
                 <div>
                   <label className="label">
-                    <IndianRupee size={16} /> Penalty Amount
+                    <IndianRupee size={16} />
+                    Penalty Amount
                   </label>
 
                   <input
@@ -346,13 +455,14 @@ export default function EmployeePenaltyForm() {
                     onChange={handleChange}
                     placeholder="Enter penalty amount"
                     className="input"
-                    required
                   />
                 </div>
 
+                {/* Reported By */}
                 <div>
                   <label className="label">
-                    <ClipboardPen size={16} /> Reported By
+                    <ClipboardPen size={16} />
+                    Reported By
                   </label>
 
                   <input
@@ -364,77 +474,84 @@ export default function EmployeePenaltyForm() {
                   />
                 </div>
 
-                <div>
-                  <label className="label">Status</label>
-
-                  <select
-                    name="status"
-                    value={form.status}
-                    onChange={handleChange}
-                    className="input"
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                </div>
               </div>
 
+              {/* REMARK */}
               <div>
                 <label className="label">
-                  <FileText size={16} /> Remark
+                  <FileText size={16} />
+                  Remark
                 </label>
 
                 <textarea
                   name="remark"
                   value={form.remark}
                   onChange={handleChange}
-                  rows="4"
-                  placeholder="Enter remark"
+                  rows="5"
+                  placeholder="Write detailed remark..."
                   className="input resize-none"
                 />
               </div>
 
-              <div className="flex justify-end">
+              {/* BUTTON */}
+              <div className="flex justify-end pt-3">
+
                 <button
                   type="submit"
-                  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-7 py-3 rounded-xl font-semibold shadow-lg transition-all"
+                  className="group relative overflow-hidden flex items-center gap-3 bg-gradient-to-r from-red-600 to-rose-500 hover:scale-[1.02] active:scale-[0.98] text-white px-10 py-4 rounded-2xl font-bold shadow-2xl transition-all duration-300"
                 >
-                  <Send size={18} />
-                  Submit Penalty
+
+                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition"></div>
+
+                  <Send size={19} className="relative z-10" />
+
+                  <span className="relative z-10">
+                    Submit Penalty
+                  </span>
+
                 </button>
+
               </div>
-            </>
-          )}
-        </form>
+
+            </form>
+          </div>
+        </div>
+
+        <style>{`
+    .label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 10px;
+    }
+
+    .input {
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 14px 16px;
+      outline: none;
+      font-size: 14px;
+      background: white;
+      transition: all 0.25s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .input:hover {
+      border-color: #fda4af;
+    }
+
+    .input:focus {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+      transform: translateY(-1px);
+    }
+  `}</style>
+
       </div>
-
-      <style>{`
-        .label {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 14px;
-          font-weight: 600;
-          color: #334155;
-          margin-bottom: 6px;
-        }
-
-        .input {
-          width: 100%;
-          border: 1px solid #cbd5e1;
-          border-radius: 12px;
-          padding: 12px 14px;
-          outline: none;
-          font-size: 14px;
-          background: white;
-        }
-
-        .input:focus {
-          border-color: #ef4444;
-          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
-        }
-      `}</style>
     </div>
   );
 }

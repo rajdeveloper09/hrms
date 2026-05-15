@@ -115,27 +115,6 @@ export default function SideNav() {
             )}
           </div>
 
-          {/* ATTENDANCE */}
-          <div>
-            <button
-              onClick={() => toggleMenu("attendance")}
-              className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-pink-50"
-            >
-              <div className="flex items-center gap-3">
-                <CalendarCheck size={20} />
-                <span>Reports</span>
-              </div>
-
-              {openMenu === "attendance" ? (
-                <ChevronDown size={18} />
-              ) : (
-                <ChevronRight size={18} />
-              )}
-            </button>
-          </div>
-
-
-          {/* SALARY */}
           <div>
             <button
               onClick={() => toggleMenu("salary")}
@@ -143,7 +122,7 @@ export default function SideNav() {
             >
               <div className="flex items-center gap-3">
                 <Wallet size={20} />
-                <span>Salary</span>
+                <span>Add/Update Reports</span>
               </div>
 
               {openMenu === "salary" ? (
@@ -155,94 +134,64 @@ export default function SideNav() {
 
             {openMenu === "salary" && (
               <div className="ml-8 mt-2 space-y-2">
+                
                 <NavLink
-                  to="/salary-sheet"
+                  to="/all-report"
                   className={linkClass}
                 >
-                  Salary Sheet
+                  All Reports
+                </NavLink>
+                <NavLink
+                  to="/add-penalty"
+                  className={linkClass}
+                >
+                  Add Penalty
                 </NavLink>
 
-                <NavLink
-                  to="/advance-salary"
-                  className={linkClass}
-                >
-                  Advance Salary
-                </NavLink>
 
                 <NavLink
-                  to="/bonus"
+                  to="/add-resignation"
                   className={linkClass}
                 >
-                  Bonus
+                  Add Resignation
                 </NavLink>
+
+
+                <NavLink
+                  to="/add-overtime"
+                  className={linkClass}
+                >
+                  Add Over Time
+                </NavLink>
+
+
+                <NavLink to="/add-complaint" className={linkClass}>
+                  Add Complaint
+                </NavLink>
+
+                <NavLink to="/add-assests" className={linkClass}>
+                  Add Assests
+                </NavLink>
+
+                <NavLink to="/add-bonus" className={linkClass}>
+                  Add Bonus
+                </NavLink>
+
+                <NavLink to="/add-increment" className={linkClass}>
+                  Add Increment
+                </NavLink>
+
+                <NavLink to="/add-meeting" className={linkClass}>
+                  Add Meeting
+                </NavLink>
+
+                <NavLink to="/add-reward" className={linkClass}>
+                  Add Reward
+                </NavLink>
+
               </div>
             )}
           </div>
-
- <NavLink
-            to="/add-penalty"
-            className={linkClass}
-          >
- <FileText size={20} />
-            Add Penalty
-</NavLink>
-
-
-
- <NavLink
-            to="/add-resignation"
-            className={linkClass}
-          >
-             <FileText size={20} />
-            Add Resignation
-          </NavLink>
-
-
-<NavLink
-            to="/add-overtime"
-            className={linkClass}
-          >
-             <FileText size={20} />
-            Add Over Time
-          </NavLink>
-
-          <NavLink
-            to="/attendance-report"
-            className={linkClass}
-          >
-             <FileText size={20} />
-            Attendance Report
-          </NavLink>
-
-          <NavLink to="/add-complaint" className={linkClass}>
-            <FileText size={20} />
-            Add Complaint
-          </NavLink>
-
-          <NavLink to="/add-assests" className={linkClass}>
-            <FileText size={20} />
-            Add Assests
-          </NavLink>
-
-<NavLink to="/add-bonus" className={linkClass}>
-            <FileText size={20} />
-            Add Bonus
-          </NavLink>
-
-<NavLink to="/add-increment" className={linkClass}>
-            <FileText size={20} />
-            Add Increment
-          </NavLink>
-
-<NavLink to="/add-meeting" className={linkClass}>
-            <FileText size={20} />
-            Add Meeting
-          </NavLink>
-
-<NavLink to="/add-reward" className={linkClass}>
-            <FileText size={20} />
-            Add Reward
-          </NavLink>
 
           {/* BRANCH */}
           <NavLink to="/branches" className={linkClass}>

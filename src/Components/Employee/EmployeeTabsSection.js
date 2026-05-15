@@ -351,23 +351,34 @@ const EmployeeTabsSection = ({
           <tr>
 
             <th className="text-left px-4 py-3 border-b">
-              Employee
+              Incident Date
+            </th>
+
+            <th className="text-left px-4 py-3 border-b">
+              Emp 1st
+            </th>
+
+            <th className="text-left px-4 py-3 border-b">
+              Complaint Type
+            </th>
+
+            <th className="text-left px-4 py-3 border-b">
+              Emp 2nd/Other
             </th>
 
             <th className="text-left px-4 py-3 border-b">
               Suspected
             </th>
+            <th className="text-left px-4 py-3 border-b">
+              Complaint Raise
+            </th>
 
             <th className="text-left px-4 py-3 border-b">
-              Type
+              Remark
             </th>
 
             <th className="text-left px-4 py-3 border-b">
               Status
-            </th>
-
-            <th className="text-left px-4 py-3 border-b">
-              Date
             </th>
 
           </tr>
@@ -404,25 +415,35 @@ const EmployeeTabsSection = ({
 
         return (
           <tr>
+            <th className="text-left px-4 py-3 border-b">
+              Bonus Date
+            </th>
 
             <th className="text-left px-4 py-3 border-b">
               Employee
             </th>
 
             <th className="text-left px-4 py-3 border-b">
-              Suspected
+              Bonus Type
             </th>
 
             <th className="text-left px-4 py-3 border-b">
-              Type
+              Bonus Name
+            </th>
+
+            <th className="text-left px-4 py-3 border-b">
+              Bonus Amount
+            </th>
+            <th className="text-left px-4 py-3 border-b">
+              Bonus Allowed
+            </th>
+
+            <th className="text-left px-4 py-3 border-b">
+              Remark
             </th>
 
             <th className="text-left px-4 py-3 border-b">
               Status
-            </th>
-
-            <th className="text-left px-4 py-3 border-b">
-              Date
             </th>
 
           </tr>
@@ -434,23 +455,33 @@ const EmployeeTabsSection = ({
           <tr>
 
             <th className="text-left px-4 py-3 border-b">
+              Penalty Date
+            </th>
+
+            <th className="text-left px-4 py-3 border-b">
               Employee
             </th>
 
             <th className="text-left px-4 py-3 border-b">
-              Suspected
+              Branch
             </th>
 
             <th className="text-left px-4 py-3 border-b">
-              Type
+              Complaint ID
+            </th>
+
+            <th className="text-left px-4 py-3 border-b">
+              Penalty Type
+            </th>
+            <th className="text-left px-4 py-3 border-b">
+              Penalty Amount
+            </th>
+            <th className="text-left px-4 py-3 border-b">
+              Remark
             </th>
 
             <th className="text-left px-4 py-3 border-b">
               Status
-            </th>
-
-            <th className="text-left px-4 py-3 border-b">
-              Date
             </th>
 
           </tr>
@@ -461,23 +492,30 @@ const EmployeeTabsSection = ({
           <tr>
 
             <th className="text-left px-4 py-3 border-b">
+              Reward Date
+            </th>
+
+            <th className="text-left px-4 py-3 border-b">
               Employee
             </th>
 
             <th className="text-left px-4 py-3 border-b">
-              Suspected
+              Current Salary
             </th>
 
             <th className="text-left px-4 py-3 border-b">
-              Type
+              Reward Amount
+            </th>
+
+            <th className="text-left px-4 py-3 border-b">
+              Order By
+            </th>
+             <th className="text-left px-4 py-3 border-b">
+              Remark
             </th>
 
             <th className="text-left px-4 py-3 border-b">
               Status
-            </th>
-
-            <th className="text-left px-4 py-3 border-b">
-              Date
             </th>
 
           </tr>
@@ -823,7 +861,27 @@ const EmployeeTabsSection = ({
             >
 
               <td className="px-4 py-4 border-b">
+                {new Date(item.incident_datetime).toLocaleDateString("en-GB")}
+              </td>
+
+              <td className="px-4 py-4 border-b">
                 {item.emp_id}
+              </td>
+
+              <td className="px-4 py-4 border-b">
+                {
+                  item.complaint_type
+                }
+              </td>
+
+              <td className="px-4 py-4 border-b">
+                {
+                  item.second_employee_id ? (
+                    <>{item.second_employee_id}</>
+                  ) : (
+                    <>{item.other_person_name}</>
+                  )
+                }
               </td>
 
               <td className="px-4 py-4 border-b">
@@ -831,20 +889,19 @@ const EmployeeTabsSection = ({
                   item.suspected_employee
                 }
               </td>
-
               <td className="px-4 py-4 border-b">
                 {
-                  item.complaint_between
+                  item.complaint_raise_by
                 }
               </td>
 
               <td className="px-4 py-4 border-b">
-                {item.status}
+                {item.remark}
               </td>
 
               <td className="px-4 py-4 border-b">
                 {
-                  item.incident_datetime
+                  item.status
                 }
               </td>
 
@@ -871,7 +928,7 @@ const EmployeeTabsSection = ({
               </td>
 
               <td className="px-4 py-4 border-b">
-               {item.emp_id}
+                {item.emp_id}
               </td>
 
               <td className="px-4 py-4 border-b">
@@ -905,23 +962,40 @@ const EmployeeTabsSection = ({
             >
 
               <td className="px-4 py-4 border-b">
-                {item.emp_id}
+                {new Date(item.bonus_date).toLocaleDateString("en-GB")}
               </td>
 
               <td className="px-4 py-4 border-b">
-                {item.emp_id}
+                {item.emp_id} - {item.emp_name}
               </td>
 
               <td className="px-4 py-4 border-b">
-                {item.emp_id}
+                {item.bonus_type}
               </td>
 
               <td className="px-4 py-4 border-b">
-               {item.emp_id}
+                 {
+                  item.fixed_bonus_name ? (
+                    <>{item.fixed_bonus_name}</>
+                  ) : (
+                    <>{item.custom_bonus_name}</>
+                  )
+                }
               </td>
 
               <td className="px-4 py-4 border-b">
-               {item.emp_id}
+                ₹{Math.round(item.total_bonus_amount)}
+              </td>
+              <td className="px-4 py-4 border-b">
+                {item.allowed_by}
+              </td>
+
+              <td className="px-4 py-4 border-b">
+                {item.remark}
+              </td>
+
+              <td className="px-4 py-4 border-b">
+                {item.status}
               </td>
 
             </tr>
@@ -942,23 +1016,33 @@ const EmployeeTabsSection = ({
             >
 
               <td className="px-4 py-4 border-b">
-                {item.emp_id}
+                {new Date(item.penalty_date).toLocaleDateString("en-GB")}
               </td>
 
               <td className="px-4 py-4 border-b">
-               {item.emp_id}
+                {item.emp_id} - {item.emp_name}
               </td>
 
               <td className="px-4 py-4 border-b">
-                {item.emp_id}
+                {item.branch_id}
               </td>
 
               <td className="px-4 py-4 border-b">
-               {item.emp_id}
+                {item.complaint_id}
               </td>
 
               <td className="px-4 py-4 border-b">
-               {item.emp_id}
+                {item.penalty_type}
+              </td>
+               <td className="px-4 py-4 border-b">
+                ₹{Math.round(item.penalty_amount)}
+              </td>
+              <td className="px-4 py-4 border-b">
+                {item.remark}
+              </td>
+
+              <td className="px-4 py-4 border-b">
+                {item.status}
               </td>
 
             </tr>
@@ -979,23 +1063,29 @@ const EmployeeTabsSection = ({
             >
 
               <td className="px-4 py-4 border-b">
-                {item.emp_id}
+                {new Date(item.reward_date).toLocaleDateString("en-GB")}
               </td>
 
               <td className="px-4 py-4 border-b">
-                {item.emp_id}
+                {item.emp_id} - {item.emp_name}
               </td>
 
               <td className="px-4 py-4 border-b">
-                {item.emp_id}
+                ₹{Math.round(item.current_salary)}
               </td>
 
               <td className="px-4 py-4 border-b">
-                {item.emp_id}
+                ₹{Math.round(item.total_reward_amount)}
               </td>
 
               <td className="px-4 py-4 border-b">
-                {item.emp_id}
+                {item.order_by}
+              </td>
+                <td className="px-4 py-4 border-b">
+                {item.remark}
+              </td>
+                <td className="px-4 py-4 border-b">
+                {item.status}
               </td>
 
             </tr>
@@ -1027,7 +1117,7 @@ const EmployeeTabsSection = ({
               </td>
 
               <td className="px-4 py-4 border-b">
-               {item.emp_id}
+                {item.emp_id}
               </td>
 
               <td className="px-4 py-4 border-b">
@@ -1059,15 +1149,15 @@ const EmployeeTabsSection = ({
               </td>
 
               <td className="px-4 py-4 border-b">
-                 {item.asset_number}
+                {item.asset_number}
               </td>
 
               <td className="px-4 py-4 border-b">
-                 {item.no_of_assets}
+                {item.no_of_assets}
               </td>
 
               <td className="px-4 py-4 border-b">
-                 {item.start_date}
+                {item.start_date}
               </td>
 
             </tr>
@@ -1092,7 +1182,7 @@ const EmployeeTabsSection = ({
               </td>
 
               <td className="px-4 py-4 border-b">
-               {item.overtime_id}
+                {item.overtime_id}
               </td>
 
               <td className="px-4 py-4 border-b">
@@ -1100,7 +1190,7 @@ const EmployeeTabsSection = ({
               </td>
 
               <td className="px-4 py-4 border-b">
-               {item.overtime_id}
+                {item.overtime_id}
               </td>
 
               <td className="px-4 py-4 border-b">

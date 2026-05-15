@@ -10,6 +10,7 @@ import {
   Gift,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import SideNav from "../SideNav";
 
 const EMPLOYEE_API = "https://ojmee.in/employee/get_employee";
 const BONUS_POST_API = "https://ojmee.in/employee/emp_bonus_post";
@@ -256,297 +257,343 @@ export default function EmployeeBonusForm() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6">
-      <Toaster position="top-right" />
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-100 flex">
+      <Toaster />
+      <SideNav />
 
-      <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-purple-600 to-fuchsia-500 p-6 text-white">
-          <div className="flex items-center gap-3">
-            <Gift size={34} />
-            <div>
-              <h1 className="text-2xl font-bold">Employee Bonus</h1>
-              <p className="text-sm text-purple-100">
-                Fixed or custom bonus with amount or percentage
-              </p>
+      <div className="flex-1 ml-72 p-4 overflow-y-auto min-h-screen">
+        <div className="mx-auto space-y-8">
+
+          {/* HEADER */}
+          <div className="relative overflow-hidden rounded-[34px] bg-gradient-to-r from-purple-700 via-fuchsia-600 to-pink-500 p-8 shadow-2xl">
+            <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/20 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-24 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="flex items-center gap-5">
+                <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center shadow-xl">
+                  <Gift size={40} className="text-white" />
+                </div>
+
+                <div>
+                  <p className="inline-flex px-4 py-1 rounded-full bg-white/20 text-white text-sm font-semibold mb-3">
+                    HR Bonus Management
+                  </p>
+
+                  <h1 className="text-4xl font-black text-white">
+                    Employee Bonus
+                  </h1>
+
+                  <p className="text-purple-100 mt-2 text-lg">
+                    Fixed or custom bonus with amount or percentage
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl px-6 py-4 text-white shadow-xl">
+                  <p className="text-sm text-purple-100">Employees</p>
+                  <h2 className="text-3xl font-black">{employees.length}</h2>
+                </div>
+
+                <div className="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl px-6 py-4 text-white shadow-xl">
+                  <p className="text-sm text-purple-100">Mode</p>
+                  <h2 className="text-2xl font-black">{form.bonus_type}</h2>
+                </div>
+              </div>
             </div>
+          </div>
+
+          {/* FORM CARD */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-[34px] border border-white shadow-2xl overflow-hidden">
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                  <div>
+                    <label className="label">
+                      <User size={16} /> Employee
+                    </label>
+
+                    <select
+                      value={form.emp_id}
+                      onChange={(e) => handleEmployeeSelect(e.target.value)}
+                      className="input"
+                      required
+                    >
+                      <option value="">Select employee</option>
+
+                      {employees.map((emp, index) => {
+                        const id = emp.employee_id || emp.emp_id || emp.id;
+                        const name =
+                          emp.full_name || emp.employee_name || emp.name || "";
+
+                        return (
+                          <option key={index} value={id}>
+                            {id} - {name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="label">
+                      <IndianRupee size={16} /> Current Salary
+                    </label>
+
+                    <input
+                      value={form.current_salary}
+                      readOnly
+                      className="input bg-slate-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">Bonus Type</label>
+
+                    <select
+                      name="bonus_type"
+                      value={form.bonus_type}
+                      onChange={handleChange}
+                      className="input"
+                      required
+                    >
+                      <option value="Fixed">Fixed</option>
+                      <option value="Custom">Custom</option>
+                    </select>
+                  </div>
+                  
+                {form.bonus_type === "Fixed" ? (
+                  <div>
+                    <label className="label">Fixed Bonus Name</label>
+
+                    <select
+                      name="fixed_bonus_name"
+                      value={form.fixed_bonus_name}
+                      onChange={handleChange}
+                      className="input"
+                      required
+                    >
+                      {fixedBonusOptions.map((item, index) => (
+                        <option key={index} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="label">Custom Bonus Name</label>
+
+                    <input
+                      name="custom_bonus_name"
+                      value={form.custom_bonus_name}
+                      onChange={handleChange}
+                      placeholder="Enter custom bonus name"
+                      className="input"
+                      required
+                    />
+                  </div>
+                )}
+
+                
+                <div>
+                  <label className="label">Calculation Type</label>
+
+                  <select
+                    name="calculation_type"
+                    value={form.calculation_type}
+                    onChange={handleChange}
+                    className="input"
+                    required
+                  >
+                    <option value="Amount">Fixed Amount</option>
+                    <option value="Percentage">Percentage</option>
+                  </select>
+                </div>
+                </div>
+
+
+
+                {form.calculation_type === "Amount" ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="label">
+                        <IndianRupee size={16} /> Fixed Amount
+                      </label>
+
+                      <input
+                        type="number"
+                        name="fixed_amount"
+                        value={form.fixed_amount}
+                        onChange={handleChange}
+                        placeholder="Enter fixed amount"
+                        className="input"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label">
+                        <IndianRupee size={16} /> Total Bonus Amount
+                      </label>
+
+                      <input
+                        value={form.total_bonus_amount}
+                        readOnly
+                        className="input bg-slate-100"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="label">
+                        <Percent size={16} /> Percentage
+                      </label>
+
+                      <input
+                        type="number"
+                        name="percentage_value"
+                        value={form.percentage_value}
+                        onChange={handleChange}
+                        placeholder="Enter percentage"
+                        className="input"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label">
+                        <IndianRupee size={16} /> Total Percentage Amount
+                      </label>
+
+                      <input
+                        value={form.total_bonus_amount}
+                        readOnly
+                        className="input bg-slate-100"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                  <div>
+                    <label className="label">
+                      <CalendarDays size={16} /> Date
+                    </label>
+
+                    <input
+                      type="date"
+                      name="bonus_date"
+                      value={form.bonus_date}
+                      onChange={handleChange}
+                      className="input"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">Month</label>
+
+                    <input
+                      value={form.bonus_month}
+                      readOnly
+                      className="input bg-slate-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">
+                      <ClipboardPen size={16} /> Allowed By
+                    </label>
+
+                    <input
+                      name="allowed_by"
+                      value={form.allowed_by}
+                      onChange={handleChange}
+                      placeholder="Allowed by"
+                      className="input"
+                      required
+                    />
+                  </div>
+                  <div>
+                  <label className="label">
+                    <Upload size={16} /> Image Upload
+                  </label>
+
+                  <input
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    onChange={(e) => setBonusImage(e.target.files[0])}
+                    className="input"
+                  />
+                </div>
+                </div>
+
+                
+
+                <div>
+                  <label className="label">
+                    <ClipboardPen size={16} /> Remark
+                  </label>
+
+                  <textarea
+                    name="remark"
+                    value={form.remark}
+                    onChange={handleChange}
+                    rows="4"
+                    placeholder="Enter remark"
+                    className="input resize-none"
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-7 py-3 rounded-xl font-semibold shadow-lg transition-all"
+                  >
+                    <Send size={18} />
+                    Submit Bonus
+                  </button>
+                </div>
+              </form>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div>
-              <label className="label">
-                <User size={16} /> Employee
-              </label>
+        <style>{`
+      .label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 10px;
+      }
 
-              <select
-                value={form.emp_id}
-                onChange={(e) => handleEmployeeSelect(e.target.value)}
-                className="input"
-                required
-              >
-                <option value="">Select employee</option>
+      .input {
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 14px 16px;
+        outline: none;
+        font-size: 14px;
+        background: white;
+        transition: all 0.25s ease;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      }
 
-                {employees.map((emp, index) => {
-                  const id = emp.employee_id || emp.emp_id || emp.id;
-                  const name =
-                    emp.full_name || emp.employee_name || emp.name || "";
+      .input:hover {
+        border-color: #d946ef;
+      }
 
-                  return (
-                    <option key={index} value={id}>
-                      {id} - {name}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-
-            <div>
-              <label className="label">
-                <IndianRupee size={16} /> Current Salary
-              </label>
-
-              <input
-                value={form.current_salary}
-                readOnly
-                className="input bg-slate-100"
-              />
-            </div>
-
-            <div>
-              <label className="label">Bonus Type</label>
-
-              <select
-                name="bonus_type"
-                value={form.bonus_type}
-                onChange={handleChange}
-                className="input"
-                required
-              >
-                <option value="Fixed">Fixed</option>
-                <option value="Custom">Custom</option>
-              </select>
-            </div>
-          </div>
-
-          {form.bonus_type === "Fixed" ? (
-            <div>
-              <label className="label">Fixed Bonus Name</label>
-
-              <select
-                name="fixed_bonus_name"
-                value={form.fixed_bonus_name}
-                onChange={handleChange}
-                className="input"
-                required
-              >
-                {fixedBonusOptions.map((item, index) => (
-                  <option key={index} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ) : (
-            <div>
-              <label className="label">Custom Bonus Name</label>
-
-              <input
-                name="custom_bonus_name"
-                value={form.custom_bonus_name}
-                onChange={handleChange}
-                placeholder="Enter custom bonus name"
-                className="input"
-                required
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="label">Calculation Type</label>
-
-            <select
-              name="calculation_type"
-              value={form.calculation_type}
-              onChange={handleChange}
-              className="input"
-              required
-            >
-              <option value="Amount">Fixed Amount</option>
-              <option value="Percentage">Percentage</option>
-            </select>
-          </div>
-
-          {form.calculation_type === "Amount" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className="label">
-                  <IndianRupee size={16} /> Fixed Amount
-                </label>
-
-                <input
-                  type="number"
-                  name="fixed_amount"
-                  value={form.fixed_amount}
-                  onChange={handleChange}
-                  placeholder="Enter fixed amount"
-                  className="input"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="label">
-                  <IndianRupee size={16} /> Total Bonus Amount
-                </label>
-
-                <input
-                  value={form.total_bonus_amount}
-                  readOnly
-                  className="input bg-slate-100"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className="label">
-                  <Percent size={16} /> Percentage
-                </label>
-
-                <input
-                  type="number"
-                  name="percentage_value"
-                  value={form.percentage_value}
-                  onChange={handleChange}
-                  placeholder="Enter percentage"
-                  className="input"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="label">
-                  <IndianRupee size={16} /> Total Percentage Amount
-                </label>
-
-                <input
-                  value={form.total_bonus_amount}
-                  readOnly
-                  className="input bg-slate-100"
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div>
-              <label className="label">
-                <CalendarDays size={16} /> Date
-              </label>
-
-              <input
-                type="date"
-                name="bonus_date"
-                value={form.bonus_date}
-                onChange={handleChange}
-                className="input"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="label">Month</label>
-
-              <input
-                value={form.bonus_month}
-                readOnly
-                className="input bg-slate-100"
-              />
-            </div>
-
-            <div>
-              <label className="label">
-                <ClipboardPen size={16} /> Allowed By
-              </label>
-
-              <input
-                name="allowed_by"
-                value={form.allowed_by}
-                onChange={handleChange}
-                placeholder="Allowed by"
-                className="input"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="label">
-              <Upload size={16} /> Image Upload
-            </label>
-
-            <input
-              type="file"
-              accept=".jpg,.jpeg,.png,.webp"
-              onChange={(e) => setBonusImage(e.target.files[0])}
-              className="input"
-            />
-          </div>
-
-          <div>
-            <label className="label">
-              <ClipboardPen size={16} /> Remark
-            </label>
-
-            <textarea
-              name="remark"
-              value={form.remark}
-              onChange={handleChange}
-              rows="4"
-              placeholder="Enter remark"
-              className="input resize-none"
-            />
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-7 py-3 rounded-xl font-semibold shadow-lg transition-all"
-            >
-              <Send size={18} />
-              Submit Bonus
-            </button>
-          </div>
-        </form>
+      .input:focus {
+        border-color: #9333ea;
+        box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.15);
+        transform: translateY(-1px);
+      }
+    `}</style>
       </div>
-
-      <style>{`
-        .label {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 14px;
-          font-weight: 600;
-          color: #334155;
-          margin-bottom: 6px;
-        }
-
-        .input {
-          width: 100%;
-          border: 1px solid #cbd5e1;
-          border-radius: 12px;
-          padding: 12px 14px;
-          outline: none;
-          font-size: 14px;
-          background: white;
-        }
-
-        .input:focus {
-          border-color: #9333ea;
-          box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.15);
-        }
-      `}</style>
     </div>
   );
 }

@@ -223,14 +223,7 @@ export default function AddEmployee() {
     pin: "",
     status: "",
     role: "",
-    advance_payment: "",
-    penalty: "",
-    rewards: "",
-    complaint: "",
-    assets: "",
-    icard: "",
     interview_by: "",
-    ot_allow: "",
     shift_time: "",
     salary_mode: "",
 
@@ -670,10 +663,6 @@ export default function AddEmployee() {
         return false;
       }
 
-      if (!form.ot_allow) {
-        toast.error("Select OT Allow");
-        return false;
-      }
 
       if (!form.refer_name) {
         toast.error("Reference Name Required");
@@ -783,26 +772,6 @@ export default function AddEmployee() {
         toast.error("Select Role");
         return false;
       }
-
-      if (!form.assets) {
-        toast.error("Assets (T-Shirt) Details Required");
-        return false;
-      }
-
-      if (form.assets.trim().length < 1) {
-        toast.error("Invalid Assets Details (T-Shirt)");
-        return false;
-      }
-      if (!form.icard) {
-        toast.error("Assets (ID Card) Details Required");
-        return false;
-      }
-
-      if (form.icard.trim().length < 1) {
-        toast.error("Invalid Assets Details (ID Card)");
-        return false;
-      }
-
       if (!form.interview_by) {
         toast.error("Interviewer Name Required");
         return false;
@@ -1533,24 +1502,6 @@ export default function AddEmployee() {
                   />
                 </div>
 
-                {/* OT Allow */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-gray-700">
-                    OT Allow <span className="text-red-500">*</span>
-                  </label>
-
-                  <CustomSelect
-                    name="ot_allow"
-                    value={form.ot_allow}
-                    placeholder="Select OT Type"
-                    options={overtimeData.map((item) => ({
-                      label: `${item.remark} - ${item.overtime_type}`,
-                      value: item.overtime_type
-                    }))}
-                    onChange={handleChange}
-                  />
-                </div>
-
                 {/* Refer Name */}
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-gray-700">
@@ -1732,44 +1683,6 @@ export default function AddEmployee() {
                       { label: "View", value: "view" }
                     ]}
                     value={form.role}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                {/* Assets */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-gray-700">
-                    Assets (T-Shirt) <span className="text-red-500">*</span>
-                  </label>
-
-                  <CustomSelect
-                    name="assets"
-                    placeholder="Select Assets"
-                    options={[
-                      { label: "T Shirt - One Set", value: "1" },
-                      { label: "T Shirt - Two Set", value: "2" }
-                    ]}
-                    value={form.assets}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                {/* ID Card */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-gray-700">
-                    ID Card <span className="text-red-500">*</span>
-                  </label>
-
-                  <CustomSelect
-                    name="icard"
-                    placeholder="Select ID Card"
-                    options={[
-                      { label: "Employee ID Card No", value: "0" },
-                      { label: "Employee ID Card Yes", value: "1" }
-                    ]}
-                    value={form.icard}
                     onChange={handleChange}
                     required
                   />

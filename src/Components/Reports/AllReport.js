@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
-import SideNav from "./SideNav";
-import EmployeeTabsSection from "./Employee/EmployeeTabsSection";
-import { API_BASE_URL } from "../config/api";
+import SideNav from "../SideNav";
+import EmployeeTabsSection from "../Employee/EmployeeTabsSection";
+import { API_BASE_URL } from "../../config/api";
 
-export default function AttendanceReport() {
+export default function AllReport() {
 
 
     const [empAttendance, setEmpAttendance] =
