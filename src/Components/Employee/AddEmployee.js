@@ -260,7 +260,16 @@ export default function AddEmployee() {
       .then((res) => res.json())
       .then((data) => {
         if (data.status) {
-          setEmployees(data.data);
+          const uniqueEmployees = Array.from(
+            new Map(
+              data.data.map((emp) => [
+                emp.employee_id,
+                emp
+              ])
+            ).values()
+          );
+
+          setEmployees(uniqueEmployees);
         }
       });
   }, []);
