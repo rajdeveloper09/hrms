@@ -37,6 +37,8 @@ export default function ComplaintForm() {
     second_employee_id: "",
     other_person_name: "",
 
+    suspected_type: "Employee",
+
     suspected_employee: "",
 
     remark: "",
@@ -48,7 +50,6 @@ export default function ComplaintForm() {
     complaint_raise_by: "",
 
   });
-
   /* ======================================================
       FETCH EMPLOYEES
   ====================================================== */
@@ -91,24 +92,6 @@ export default function ComplaintForm() {
 
       /* AUTO SELECT FIRST EMPLOYEE */
 
-      if (employeeList.length > 0) {
-
-        const firstEmployee =
-          employeeList[0];
-
-        setFormData((prev) => ({
-
-          ...prev,
-
-          emp_id:
-            getEmployeeId(firstEmployee),
-
-          branch_id:
-            getEmployeeBranch(firstEmployee),
-
-        }));
-
-      }
 
     } catch (error) {
 
@@ -204,7 +187,7 @@ export default function ComplaintForm() {
       ...prev,
 
       emp_id: selectedEmpId,
-
+      suspected_type: "Employee",
       branch_id:
         getEmployeeBranch(
           selectedEmployee
@@ -223,23 +206,49 @@ export default function ComplaintForm() {
 
   const handleChange = (e) => {
 
-    const { name, value } =
-      e.target;
+    const { name, value } = e.target;
 
-    setFormData((prev) => ({
+    setFormData((prev) => {
 
-      ...prev,
+      /* =====================================
+         SUSPECTED TYPE CHANGE
+      ===================================== */
 
-      [name]: value,
+      if (name === "suspected_type") {
 
-    }));
+        return {
+
+          ...prev,
+
+          suspected_type: value,
+
+          /* AUTO SET */
+
+          suspected_employee:
+            value === "Other"
+              ? "Other"
+              : "",
+
+        };
+
+      }
+
+      return {
+
+        ...prev,
+
+        [name]: value,
+
+      };
+
+    });
 
   };
 
   /* ======================================================
-      SECOND EMPLOYEE OPTIONS
-      -> HIDE FIRST EMPLOYEE
-  ====================================================== */
+    SECOND EMPLOYEE OPTIONS
+    -> HIDE FIRST EMPLOYEE
+====================================================== */
 
   const secondEmployeeOptions =
     employees.filter(
@@ -249,27 +258,59 @@ export default function ComplaintForm() {
     );
 
   /* ======================================================
-      SUSPECTED EMPLOYEE OPTIONS
-      -> ONLY FIRST + SECOND EMPLOYEE
-  ====================================================== */
+     SUSPECTED EMPLOYEE OPTIONS
+ ====================================================== */
 
-  const suspectedEmployeeOptions =
-    employees.filter((emp) => {
+  let suspectedEmployeeOptions = [];
 
-      const empId =
-        getEmployeeId(emp);
+  /* =========================================
+     EMP vs EMP
+     -> SHOW FIRST + SECOND EMPLOYEE
+  ========================================= */
 
-      return (
+  if (
+    formData.complaint_type ===
+    "Emp vs Emp"
+  ) {
 
-        empId ===
+    suspectedEmployeeOptions =
+      employees.filter((emp) => {
+
+        const empId =
+          getEmployeeId(emp);
+
+        return (
+
+          empId ===
           formData.emp_id ||
 
-        empId ===
+          empId ===
           formData.second_employee_id
 
-      );
+        );
 
-    });
+      });
+
+  }
+
+  /* =========================================
+     EMP vs OTHER
+     -> SHOW ONLY FIRST EMPLOYEE
+  ========================================= */
+
+  else {
+
+    suspectedEmployeeOptions =
+      employees.filter((emp) => {
+
+        return (
+          getEmployeeId(emp) ===
+          formData.emp_id
+        );
+
+      });
+
+  }
 
   /* ======================================================
       SUBMIT
@@ -291,7 +332,7 @@ export default function ComplaintForm() {
 
         complaint_between:
           formData.complaint_type ===
-          "Emp vs Emp"
+            "Emp vs Emp"
             ? formData.second_employee_id
             : formData.other_person_name,
 
@@ -342,14 +383,14 @@ export default function ComplaintForm() {
 
           emp_id: firstEmployee
             ? getEmployeeId(
-                firstEmployee
-              )
+              firstEmployee
+            )
             : "",
 
           branch_id: firstEmployee
             ? getEmployeeBranch(
-                firstEmployee
-              )
+              firstEmployee
+            )
             : "",
 
           complaint_type:
@@ -374,7 +415,7 @@ export default function ComplaintForm() {
 
         toast.error(
           data.message ||
-            "Failed to submit complaint"
+          "Failed to submit complaint"
         );
 
       }
@@ -394,8 +435,15 @@ export default function ComplaintForm() {
   };
 
   /* ======================================================
-      INPUT STYLE
+      FILTER EMPLOYEES
   ====================================================== */
+
+  const filteredEmployees =
+    employees.filter(
+      (emp) =>
+        getEmployeeId(emp) !==
+        formData.emp_id
+    );
 
   const inputStyle =
     "w-full border border-slate-200 bg-slate-50 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent transition-all";
@@ -672,9 +720,7 @@ export default function ComplaintForm() {
 
                     <select
                       name="suspected_employee"
-                      value={
-                        formData.suspected_employee
-                      }
+                      value={formData.suspected_employee}
                       onChange={handleChange}
                       className={inputStyle}
                       required
@@ -684,22 +730,20 @@ export default function ComplaintForm() {
                         Select Suspected Employee
                       </option>
 
-                      {suspectedEmployeeOptions.map(
-                        (emp, index) => (
+                      {suspectedEmployeeOptions.map((emp) => (
 
-                          <option
-                            key={index}
-                            value={getEmployeeId(emp)}
-                          >
+                        <option
+                          key={getEmployeeId(emp)}
+                          value={getEmployeeId(emp)}
+                        >
 
-                            {getEmployeeId(emp)}
-                            {" - "}
-                            {getEmployeeName(emp)}
+                          {getEmployeeId(emp)}
+                          {" - "}
+                          {getEmployeeName(emp)}
 
-                          </option>
+                        </option>
 
-                        )
-                      )}
+                      ))}
 
                     </select>
 
@@ -735,7 +779,7 @@ export default function ComplaintForm() {
 
                   </div>
 
-                  {/* SUSPECTED PERSON */}
+                  {/* SUSPECTED TYPE */}
 
                   <div>
 
@@ -743,21 +787,86 @@ export default function ComplaintForm() {
 
                       <AlertTriangle size={18} />
 
-                      Suspected Person
+                      Suspected Type
 
                     </label>
 
-                    <input
-                      type="text"
-                      name="suspected_employee"
-                      value={
-                        formData.suspected_employee
-                      }
+                    <select
+                      name="suspected_type"
+                      value={formData.suspected_type}
                       onChange={handleChange}
-                      placeholder="Enter Suspected Person"
                       className={inputStyle}
-                      required
-                    />
+                    >
+
+                      <option value="Employee">
+                        Employee
+                      </option>
+
+                      <option value="Other">
+                        Other
+                      </option>
+
+                    </select>
+
+                  </div>
+
+                  {/* SUSPECTED EMPLOYEE / OTHER */}
+
+                  <div>
+
+                    <label className="flex items-center gap-2 mb-2 font-semibold text-slate-700">
+
+                      <AlertTriangle size={18} />
+
+                      Suspected Employee
+
+                    </label>
+
+                    {formData.suspected_type === "Employee" ? (
+
+                      <select
+                        name="suspected_employee"
+                        value={formData.suspected_employee}
+                        onChange={handleChange}
+                        className={inputStyle}
+                        required
+                      >
+
+                        <option value="">
+                          Select Employee
+                        </option>
+
+                        {suspectedEmployeeOptions.map((emp) => (
+
+                          <option
+                            key={emp.id}
+                            value={getEmployeeId(emp)}
+                          >
+
+                            {getEmployeeId(emp)}
+                            {" - "}
+                            {getEmployeeName(emp)}
+
+                          </option>
+
+                        ))}
+
+                      </select>
+
+                    ) : (
+
+                      <input
+                        type="text"
+                        name="suspected_employee"
+                        value={formData.suspected_employee}
+                        onChange={handleChange}
+                        placeholder="Enter Suspected Person"
+                        className={inputStyle}
+                        required
+                        readOnly
+                      />
+
+                    )}
 
                   </div>
                 </>
