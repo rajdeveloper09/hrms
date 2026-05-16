@@ -17,6 +17,10 @@ import EmployeeRewardForm from "./Components/Reports/EmployeeRewardForm";
 import EmployeePenaltyForm from "./Components/Reports/EmployeePenaltyForm";
 import EmployeeResignationForm from "./Components/Reports/EmployeeResignationForm";
 import EmployeeOvertimeForm from "./Components/Reports/EmployeeOvertimeForm";
+import EmployeeTransferForm from "./Components/Reports/EmployeeTransferForm";
+import EmployeeAdvanceForm from "./Components/Reports/EmployeeAdvanceForm";
+import EmployeeExpensesForm from "./Components/Reports/EmployeeExpensesForm";
+import AreaManagerBranchForm from "./Components/Reports/AreaManagerBranchForm";
 
 
 
@@ -66,6 +70,11 @@ function App() {
           <Route path="/add-penalty" element={<EmployeePenaltyForm />} />
           <Route path="/add-resignation" element={<EmployeeResignationForm />} />
           <Route path="/add-overtime" element={<EmployeeOvertimeForm />} />
+          <Route path="/add-transfer" element={<EmployeeTransferForm />} />
+          <Route path="/add-advance" element={<EmployeeAdvanceForm />} />
+          <Route path="/add-expenses" element={<EmployeeExpensesForm />} />
+          <Route path="/add-areaManagerBranch" element={<AreaManagerBranchForm />} />
+
         </Routes>
       </Router>
     </>

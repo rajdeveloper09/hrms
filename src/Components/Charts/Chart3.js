@@ -27,7 +27,7 @@ export default function Chart3() {
      <div className="bg-white rounded-2xl shadow-md p-4">
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-semibold text-gray-700">
-                Branch Wise Complaints
+                Employee Transfer
               </h3>
               <select
                 className="text-xs border border-gray-300 rounded-lg px-3 py-1 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400"

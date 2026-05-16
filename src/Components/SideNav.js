@@ -134,12 +134,24 @@ export default function SideNav() {
 
             {openMenu === "salary" && (
               <div className="ml-8 mt-2 space-y-2">
-                
+
                 <NavLink
                   to="/all-report"
                   className={linkClass}
                 >
                   All Reports
+                </NavLink>
+
+                <NavLink to="/add-areaManagerBranch" className={linkClass}>
+                  Add Area Manager Branch
+                </NavLink>
+                 <NavLink to="/add-expenses" className={linkClass}>
+                  Add Expenses
+                </NavLink>
+                
+
+                <NavLink to="/add-advance" className={linkClass}>
+                  Add Advance
                 </NavLink>
                 <NavLink
                   to="/add-penalty"
@@ -165,6 +177,9 @@ export default function SideNav() {
                 </NavLink>
 
 
+                <NavLink to="/add-transfer" className={linkClass}>
+                  Add Transfer
+                </NavLink>
                 <NavLink to="/add-complaint" className={linkClass}>
                   Add Complaint
                 </NavLink>
