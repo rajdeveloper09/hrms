@@ -141,14 +141,16 @@ export default function SideNav() {
                 >
                   All Reports
                 </NavLink>
-
+                <NavLink to="/add-increment" className={linkClass}>
+                  Add Increment
+                </NavLink>
                 <NavLink to="/add-areaManagerBranch" className={linkClass}>
                   Add Area Manager Branch
                 </NavLink>
-                 <NavLink to="/add-expenses" className={linkClass}>
+                <NavLink to="/add-expenses" className={linkClass}>
                   Add Expenses
                 </NavLink>
-                
+
 
                 <NavLink to="/add-advance" className={linkClass}>
                   Add Advance
@@ -192,9 +194,7 @@ export default function SideNav() {
                   Add Bonus
                 </NavLink>
 
-                <NavLink to="/add-increment" className={linkClass}>
-                  Add Increment
-                </NavLink>
+
 
                 <NavLink to="/add-meeting" className={linkClass}>
                   Add Meeting

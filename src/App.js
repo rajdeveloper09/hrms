@@ -74,6 +74,7 @@ function App() {
           <Route path="/add-advance" element={<EmployeeAdvanceForm />} />
           <Route path="/add-expenses" element={<EmployeeExpensesForm />} />
           <Route path="/add-areaManagerBranch" element={<AreaManagerBranchForm />} />
+          <Route path="/add-areaManagerBranch" element={<AreaManagerBranchForm />} />
 
         </Routes>
       </Router>
