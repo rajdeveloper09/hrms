@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import SideNav from "../SideNav";
+import { Search, Send, ArrowRightLeft, User } from "lucide-react";
 
 const API = "https://ojmee.in/employee";
 
@@ -30,6 +32,7 @@ export default function EmployeeTransferForm() {
   const [transferList, setTransferList] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editMode, setEditMode] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchEmployees();
@@ -74,6 +77,34 @@ export default function EmployeeTransferForm() {
     }
   };
 
+  const filteredTransferList = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return transferList;
+
+    return transferList.filter((item) =>
+      [
+        item.transfer_id,
+        item.emp_id,
+        item.emp_name,
+        item.branch_id,
+        item.branch_name,
+        item.new_branch_id,
+        item.start_date,
+        item.end_date,
+        item.difference_day,
+        item.department,
+        item.new_department,
+        item.designation,
+        item.new_designation,
+        item.transfer_by,
+        item.remark,
+      ]
+        .map((v) => String(v || "").toLowerCase())
+        .join(" ")
+        .includes(q)
+    );
+  }, [transferList, search]);
+
   const calculateDifference = (startDate, endDate) => {
     if (!endDate) return "Working";
 
@@ -82,8 +113,7 @@ export default function EmployeeTransferForm() {
 
     if (end < start) return "Invalid Date";
 
-    const diffDays =
-      Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
     return `${diffDays} Days`;
   };
@@ -100,9 +130,9 @@ export default function EmployeeTransferForm() {
     setForm({
       ...emptyForm,
       emp_id: emp.employee_id,
-      emp_name: emp.full_name,
-      branch_id: emp.work_location || "",
-      branch_name: emp.work_location || "",
+      emp_name: emp.full_name || emp.employee_name || emp.name || "",
+      branch_id: emp.work_location || emp.branch_id || "",
+      branch_name: emp.work_location || emp.branch_name || emp.branch_id || "",
       start_date: emp.joining_date || "",
       department: emp.department || "",
       designation: emp.designation || "",
@@ -112,10 +142,7 @@ export default function EmployeeTransferForm() {
 
   const handleNewDepartmentChange = (e) => {
     const deptName = e.target.value;
-
-    const selectedDept = departments.find(
-      (dept) => dept.name === deptName
-    );
+    const selectedDept = departments.find((dept) => dept.name === deptName);
 
     setNewDesignations(selectedDept?.designations || []);
 
@@ -136,10 +163,7 @@ export default function EmployeeTransferForm() {
       };
 
       if (name === "end_date") {
-        updated.difference_day = calculateDifference(
-          updated.start_date,
-          value
-        );
+        updated.difference_day = calculateDifference(updated.start_date, value);
       }
 
       return updated;
@@ -172,7 +196,6 @@ export default function EmployeeTransferForm() {
         alert(res.data.message || "Something went wrong");
       }
     } catch (error) {
-      console.log("Submit Error:", error);
       alert(error.response?.data?.message || error.message || "API not working");
     }
   };
@@ -183,7 +206,6 @@ export default function EmployeeTransferForm() {
     );
 
     setNewDesignations(selectedDept?.designations || []);
-
     setEditMode(true);
 
     setForm({
@@ -215,202 +237,310 @@ export default function EmployeeTransferForm() {
   };
 
   return (
-    <div className="p-6 bg-slate-100 min-h-screen">
-      <h1 className="text-3xl font-bold text-slate-800 mb-6">
-        Employee Transfer Form
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
+      <SideNav />
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-2xl shadow p-6 grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
-      >
-        <div>
-          <label className="label">Employee</label>
-          <select
-            value={form.emp_id}
-            onChange={handleEmployeeChange}
-            disabled={editMode}
-            required
-            className="input"
-          >
-            <option value="">Select Employee</option>
-            {employees.map((emp) => (
-              <option key={emp.employee_id} value={emp.employee_id}>
-                {emp.employee_id} - {emp.full_name}
-              </option>
-            ))}
-          </select>
+      <div className="flex-1 ml-72 p-4 overflow-y-auto min-h-screen">
+        <div className="rounded-3xl bg-gradient-to-r from-violet-700 via-indigo-700 to-sky-600 p-6 text-white shadow-xl mb-6">
+          <h1 className="text-3xl font-black">Employee Transfer</h1>
+          <p className="text-indigo-100 mt-1">
+            Manage employee branch, department and designation transfer
+          </p>
         </div>
 
-        <Input label="Employee Name" value={form.emp_name} readOnly />
-        <Input label="Current Branch ID" value={form.branch_id} readOnly />
-        <Input label="Current Branch Name" value={form.branch_name} readOnly />
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          {/* LEFT FORM */}
+          <div className="bg-white rounded-3xl shadow-xl border border-indigo-100 overflow-hidden">
+            <div className="p-5 bg-indigo-50 border-b border-indigo-100">
+              <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                <ArrowRightLeft size={22} />{" "}
+                {editMode ? "Update Transfer" : "Transfer Form"}
+              </h2>
+              <p className="text-sm text-slate-500">
+                Fill employee transfer details carefully
+              </p>
+            </div>
 
-        <div>
-          <label className="label">New Branch ID</label>
-          <select
-            name="new_branch_id"
-            value={form.new_branch_id}
-            onChange={handleChange}
-            required
-            className="input"
-          >
-            <option value="">Select New Branch</option>
-            {branches.map((branch) => (
-              <option key={branch.branch_id} value={branch.branch_id}>
-                {branch.branch_name} - {branch.branch_id}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <Input label="Current Branch Joining Date" type="date" value={form.start_date} readOnly />
-
-        <Input
-          label="New Branch Start Date"
-          type="date"
-          name="end_date"
-          value={form.end_date}
-          onChange={handleChange}
-        />
-
-        <Input label="Difference Day" value={form.difference_day} readOnly />
-
-        <Input label="Current Department" value={form.department} readOnly />
-
-        <div>
-          <label className="label">New Department</label>
-          <select
-            name="new_department"
-            value={form.new_department}
-            onChange={handleNewDepartmentChange}
-            required
-            className="input"
-          >
-            <option value="">Select New Department</option>
-            {departments.map((dept) => (
-              <option key={dept.id} value={dept.name}>
-                {dept.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <Input label="Current Designation" value={form.designation} readOnly />
-
-        <div>
-          <label className="label">New Designation</label>
-          <select
-            name="new_designation"
-            value={form.new_designation}
-            onChange={handleChange}
-            required
-            className="input"
-          >
-            <option value="">Select New Designation</option>
-            {newDesignations.map((des) => (
-              <option key={des.id} value={des.name}>
-                {des.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <Input
-          label="Transfer By"
-          name="transfer_by"
-          value={form.transfer_by}
-          onChange={handleChange}
-          required
-        />
-
-        <div className="md:col-span-3">
-          <label className="label">Remark</label>
-          <textarea
-            name="remark"
-            value={form.remark}
-            onChange={handleChange}
-            className="input h-24"
-            placeholder="Enter remark"
-          />
-        </div>
-
-        <div className="md:col-span-3 flex gap-3">
-          <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold">
-            {editMode ? "Update Transfer" : "Submit Transfer"}
-          </button>
-
-          {editMode && (
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="bg-slate-500 hover:bg-slate-600 text-white px-8 py-3 rounded-xl font-semibold"
+            <form
+              onSubmit={handleSubmit}
+              className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
             >
-              Cancel
-            </button>
-          )}
+              <div>
+                <label className="label">
+                  <User size={16} /> Employee
+                </label>
+                <select
+                  value={form.emp_id}
+                  onChange={handleEmployeeChange}
+                  disabled={editMode}
+                  required
+                  className="input"
+                >
+                  <option value="">Select Employee</option>
+                  {employees.map((emp) => (
+                    <option key={emp.employee_id} value={emp.employee_id}>
+                      {emp.employee_id} - {emp.full_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <Input label="Employee Name" value={form.emp_name} readOnly />
+              <Input label="Current Branch ID" value={form.branch_id} readOnly />
+              <Input label="Current Branch Name" value={form.branch_name} readOnly />
+
+              <div>
+                <label className="label">New Branch ID</label>
+                <select
+                  name="new_branch_id"
+                  value={form.new_branch_id}
+                  onChange={handleChange}
+                  required
+                  className="input"
+                >
+                  <option value="">Select New Branch</option>
+                  {branches.map((branch) => (
+                    <option key={branch.branch_id} value={branch.branch_id}>
+                      {branch.branch_name} - {branch.branch_id}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <Input
+                label="Current Branch Joining Date"
+                type="date"
+                value={form.start_date}
+                readOnly
+              />
+
+              <Input
+                label="New Branch Start Date"
+                type="date"
+                name="end_date"
+                value={form.end_date}
+                onChange={handleChange}
+              />
+
+              <Input label="Difference Day" value={form.difference_day} readOnly />
+              <Input label="Current Department" value={form.department} readOnly />
+
+              <div>
+                <label className="label">New Department</label>
+                <select
+                  name="new_department"
+                  value={form.new_department}
+                  onChange={handleNewDepartmentChange}
+                  required
+                  className="input"
+                >
+                  <option value="">Select New Department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.name}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <Input label="Current Designation" value={form.designation} readOnly />
+
+              <div>
+                <label className="label">New Designation</label>
+                <select
+                  name="new_designation"
+                  value={form.new_designation}
+                  onChange={handleChange}
+                  required
+                  className="input"
+                >
+                  <option value="">Select New Designation</option>
+                  {newDesignations.map((des) => (
+                    <option key={des.id} value={des.name}>
+                      {des.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <Input
+                label="Transfer By"
+                name="transfer_by"
+                value={form.transfer_by}
+                onChange={handleChange}
+                required
+              />
+
+              <div className="md:col-span-2">
+                <label className="label">Remark</label>
+                <textarea
+                  name="remark"
+                  value={form.remark}
+                  onChange={handleChange}
+                  className="input h-24 resize-none"
+                  placeholder="Enter remark"
+                />
+              </div>
+
+              <div className="md:col-span-2 flex gap-3">
+                <button className="flex-1 bg-gradient-to-r from-violet-700 to-sky-600 hover:from-violet-800 hover:to-sky-700 text-white py-3 rounded-2xl font-black shadow-lg">
+                  {editMode ? "Update Transfer" : "Submit Transfer"}
+                </button>
+
+                {editMode && (
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="bg-slate-600 hover:bg-slate-700 text-white px-8 py-3 rounded-2xl font-black"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          {/* RIGHT LIST */}
+          <div className="bg-white rounded-3xl shadow-xl border border-indigo-100 overflow-hidden">
+            <div className="p-5 bg-slate-900 text-white">
+              <h2 className="text-xl font-black">Transfer History</h2>
+              <p className="text-sm text-slate-300">
+                Search and manage employee transfer records
+              </p>
+
+              <div className="relative mt-4">
+                <Search
+                  size={18}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by employee, branch, department..."
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl text-slate-800 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto max-h-[780px] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-indigo-50 text-slate-700 sticky top-0 z-10">
+                  <tr>
+                    <th className="p-3">Employee</th>
+                    <th className="p-3">Branch</th>
+                    <th className="p-3">Department</th>
+                    <th className="p-3">Designation</th>
+                    <th className="p-3">Days</th>
+                    <th className="p-3">Action</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filteredTransferList.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="p-8 text-center text-slate-500">
+                        No transfer data found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredTransferList.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="border-b text-center hover:bg-indigo-50/60"
+                      >
+                        <td className="p-3">
+                          <div className="font-black text-slate-800">
+                            {item.emp_id}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {item.emp_name}
+                          </div>
+                        </td>
+
+                        <td className="p-3">
+                          <div className="text-xs text-slate-500">
+                            Old: {item.branch_name || item.branch_id}
+                          </div>
+                          <div className="font-bold text-indigo-700">
+                            New: {item.new_branch_id || "-"}
+                          </div>
+                        </td>
+
+                        <td className="p-3">
+                          <div className="text-xs text-slate-500">
+                            Old: {item.department || "-"}
+                          </div>
+                          <div className="font-bold text-indigo-700">
+                            New: {item.new_department || "-"}
+                          </div>
+                        </td>
+
+                        <td className="p-3">
+                          <div className="text-xs text-slate-500">
+                            Old: {item.designation || "-"}
+                          </div>
+                          <div className="font-bold text-indigo-700">
+                            New: {item.new_designation || "-"}
+                          </div>
+                        </td>
+
+                        <td className="p-3">
+                          <div>{item.start_date || "-"}</div>
+                          <div className="text-xs text-slate-500">
+                            {item.end_date || "Working"}
+                          </div>
+                          <div className="font-bold text-emerald-600">
+                            {item.difference_day || "Working"}
+                          </div>
+                        </td>
+
+                        <td className="p-3">
+                          <button
+                            onClick={() => handleEdit(item)}
+                            className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-bold"
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </form>
 
-      <div className="bg-white rounded-2xl shadow overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-900 text-white">
-            <tr>
-              <th className="p-3">Transfer ID</th>
-              <th className="p-3">Emp ID</th>
-              <th className="p-3">Name</th>
-              <th className="p-3">Old Branch</th>
-              <th className="p-3">New Branch</th>
-              <th className="p-3">Start Date</th>
-              <th className="p-3">End Date</th>
-              <th className="p-3">Days</th>
-              <th className="p-3">Old Department</th>
-              <th className="p-3">New Department</th>
-              <th className="p-3">Old Designation</th>
-              <th className="p-3">New Designation</th>
-              <th className="p-3">Transfer By</th>
-              <th className="p-3">Remark</th>
-              {/* <th className="p-3">Action</th> */}
-            </tr>
-          </thead>
+        <style>{`
+          .label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 6px;
+          }
 
-          <tbody>
-            {transferList.length === 0 ? (
-              <tr>
-                <td colSpan="15" className="p-5 text-center text-slate-500">
-                  No transfer data found
-                </td>
-              </tr>
-            ) : (
-              transferList.map((item) => (
-                <tr key={item.id} className="border-b text-center">
-                  <td className="p-3 font-semibold">{item.transfer_id}</td>
-                  <td className="p-3">{item.emp_id}</td>
-                  <td className="p-3">{item.emp_name}</td>
-                  <td className="p-3">{item.branch_name || item.branch_id}</td>
-                  <td className="p-3">{item.new_branch_id || "-"}</td>
-                  <td className="p-3">{item.start_date}</td>
-                  <td className="p-3">{item.end_date || "Working"}</td>
-                  <td className="p-3">{item.difference_day || "Working"}</td>
-                  <td className="p-3">{item.department}</td>
-                  <td className="p-3">{item.new_department || "-"}</td>
-                  <td className="p-3">{item.designation}</td>
-                  <td className="p-3">{item.new_designation || "-"}</td>
-                  <td className="p-3">{item.transfer_by}</td>
-                  <td className="p-3">{item.remark || "-"}</td>
-                  {/* <td className="p-3">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="bg-amber-500 text-white px-4 py-2 rounded-lg"
-                    >
-                      Edit
-                    </button>
-                  </td> */}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+          .input {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 14px;
+            padding: 12px 14px;
+            outline: none;
+            font-size: 14px;
+            background: white;
+          }
+
+          .input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+          }
+
+          .input[readonly] {
+            background: #f8fafc;
+          }
+        `}</style>
       </div>
     </div>
   );

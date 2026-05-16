@@ -47,7 +47,7 @@ export default function SideNav() {
         className={`
     fixed top-0 left-0 h-screen w-72 bg-white shadow-2xl z-50
     transform transition-transform duration-300
-    overflow-hidden
+    overflow-y-auto
     ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
     md:translate-x-0
   `}
@@ -70,6 +70,14 @@ export default function SideNav() {
             <LayoutDashboard size={20} />
             Dashboard
           </NavLink>
+
+          <NavLink
+            to="/all-report"
+            className={linkClass}
+          >
+            All Reports
+          </NavLink>
+
 
           {/* EMPLOYEE MENU */}
           <div>
@@ -135,12 +143,6 @@ export default function SideNav() {
             {openMenu === "salary" && (
               <div className="ml-8 mt-2 space-y-2">
 
-                <NavLink
-                  to="/all-report"
-                  className={linkClass}
-                >
-                  All Reports
-                </NavLink>
                 <NavLink to="/add-increment" className={linkClass}>
                   Add Increment
                 </NavLink>

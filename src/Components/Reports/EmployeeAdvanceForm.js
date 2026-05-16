@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import SideNav from "../SideNav";
 
 const API = "https://ojmee.in/employee";
 
@@ -24,6 +25,7 @@ export default function EmployeeAdvanceForm() {
   const [advanceList, setAdvanceList] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editMode, setEditMode] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchEmployees();
@@ -48,6 +50,30 @@ export default function EmployeeAdvanceForm() {
     }
   };
 
+  const filteredAdvanceList = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return advanceList;
+
+    return advanceList.filter((item) =>
+      [
+        item.advance_id,
+        item.emp_id,
+        item.emp_name,
+        item.employee_name,
+        item.full_name,
+        item.advance_amount,
+        item.advance_type,
+        item.order_by,
+        item.approve_by,
+        item.status,
+        item.remark,
+      ]
+        .map((v) => String(v || "").toLowerCase())
+        .join(" ")
+        .includes(q)
+    );
+  }, [advanceList, search]);
+
   const getAcceptedAdvanceTotal = (empId) => {
     return advanceList
       .filter((item) => item.emp_id === empId && item.status === "Accepted")
@@ -70,7 +96,7 @@ export default function EmployeeAdvanceForm() {
     setForm({
       ...emptyForm,
       emp_id: emp.employee_id,
-      emp_name: emp.full_name,
+      emp_name: emp.full_name || emp.emp_name || emp.employee_name || "",
       current_salary: salary,
       salary_balance: balance,
       status: "Pending",
@@ -96,64 +122,35 @@ export default function EmployeeAdvanceForm() {
     }));
   };
 
+  const formatMoney = (amount) =>
+    `₹${Number(amount || 0).toLocaleString("en-IN")}`;
+
   const generateAdvanceLetterHTML = (data) => {
     return `
       <html>
       <head>
         <title>Advance Salary Letter</title>
         <style>
-          body {
-            font-family: Arial, sans-serif;
-            padding: 40px;
-            color: #111827;
-          }
-          .box {
-            border: 2px solid #111827;
-            padding: 30px;
-            border-radius: 12px;
-          }
-          h1 {
-            text-align: center;
-            margin-bottom: 30px;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-          }
-          td {
-            padding: 10px;
-            border: 1px solid #d1d5db;
-          }
-          .signatures {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 80px;
-          }
-          .sign {
-            width: 40%;
-            text-align: center;
-            border-top: 1px solid #111827;
-            padding-top: 10px;
-          }
-          @media print {
-            button {
-              display: none;
-            }
-          }
+          body { font-family: Arial, sans-serif; padding: 40px; color: #111827; }
+          .box { border: 2px solid #111827; padding: 30px; border-radius: 12px; }
+          h1 { text-align: center; margin-bottom: 30px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          td { padding: 10px; border: 1px solid #d1d5db; }
+          .signatures { display: flex; justify-content: space-between; margin-top: 80px; }
+          .sign { width: 40%; text-align: center; border-top: 1px solid #111827; padding-top: 10px; }
         </style>
       </head>
       <body>
         <div class="box">
           <h1>Advance Salary Request</h1>
-
           <table>
             <tr><td><b>Advance ID</b></td><td>${data.advance_id || "-"}</td></tr>
             <tr><td><b>Employee ID</b></td><td>${data.emp_id || "-"}</td></tr>
             <tr><td><b>Employee Name</b></td><td>${data.emp_name || "-"}</td></tr>
-            <tr><td><b>Current Salary</b></td><td>₹${Number(data.current_salary || 0).toLocaleString("en-IN")}</td></tr>
-            <tr><td><b>Salary Balance</b></td><td>₹${Number(data.salary_balance || 0).toLocaleString("en-IN")}</td></tr>
-            <tr><td><b>Advance Amount</b></td><td>₹${Number(data.advance_amount || 0).toLocaleString("en-IN")}</td></tr>
+            <tr><td><b>Current Salary</b></td><td>${formatMoney(data.current_salary)}</td></tr>
+            <tr><td><b>Salary Balance</b></td><td>${formatMoney(data.salary_balance)}</td></tr>
+            <tr><td><b>Advance Amount</b></td><td>${formatMoney(data.advance_amount)}</td></tr>
+            <tr><td><b>Advance Amount</b></td><td>${(new Date(data.created_at).toLocaleDateString("en-GB"))}</td></tr>
             <tr><td><b>Advance Type</b></td><td>${data.advance_type || "-"}</td></tr>
             <tr><td><b>Order By</b></td><td>${data.order_by || "-"}</td></tr>
             <tr><td><b>Status</b></td><td>${data.status || "Pending"}</td></tr>
@@ -236,7 +233,6 @@ export default function EmployeeAdvanceForm() {
         alert(res.data.message || "Something went wrong");
       }
     } catch (error) {
-      console.log("Create Error:", error);
       alert(error.response?.data?.message || error.message || "API not working");
     }
   };
@@ -255,6 +251,8 @@ export default function EmployeeAdvanceForm() {
       formData.append("id", form.id);
       formData.append("approve_by", form.approve_by);
       formData.append("order_by", form.order_by);
+      formData.append("created_at", form.created_at);
+      formData.append("remark", form.remark);
       formData.append("remark", form.remark);
       formData.append("status", form.status);
 
@@ -262,10 +260,7 @@ export default function EmployeeAdvanceForm() {
         formData.append("signature_document", form.signature_document);
       }
 
-      const res = await axios.post(
-        `${API}/emp_advance_salary_update`,
-        formData
-      );
+      const res = await axios.post(`${API}/emp_advance_salary_update`, formData);
 
       if (res.data.status) {
         alert(res.data.message);
@@ -276,7 +271,6 @@ export default function EmployeeAdvanceForm() {
         alert(res.data.message || "Something went wrong");
       }
     } catch (error) {
-      console.log("Update Error:", error);
       alert(error.response?.data?.message || error.message || "API not working");
     }
   };
@@ -309,260 +303,291 @@ export default function EmployeeAdvanceForm() {
   };
 
   return (
-    <div className="p-6 bg-slate-100 min-h-screen">
-      <h1 className="text-3xl font-bold text-slate-800 mb-6">
-        Employee Advance Salary
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
+      <SideNav />
 
-      {!editMode ? (
-        <form
-          onSubmit={createAdvance}
-          className="bg-white rounded-2xl shadow p-6 grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
-        >
-          <div>
-            <label className="label">Employee</label>
-            <select
-              value={form.emp_id}
-              onChange={handleEmployeeChange}
-              required
-              className="input"
+      <div className="flex-1 ml-72 p-4 overflow-y-auto min-h-screen">
+        <div className="rounded-3xl bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-600 p-6 text-white shadow-xl mb-6">
+          <h1 className="text-3xl font-black">Employee Advance Salary</h1>
+          <p className="text-blue-100 mt-1">
+            Create, approve, print and manage advance salary requests
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          {/* LEFT HISTORY */}
+          <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
+            <div className="p-5 border-b bg-blue-50">
+              <h2 className="text-xl font-black text-slate-800">
+                {!editMode ? "Create Advance" : "Approve / Update Advance"}
+              </h2>
+              <p className="text-sm text-slate-500">
+                Fill advance salary details carefully
+              </p>
+            </div>
+
+            <form
+              onSubmit={!editMode ? createAdvance : updateAdvance}
+              className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
             >
-              <option value="">Select Employee</option>
-              {employees.map((emp) => (
-                <option key={emp.employee_id} value={emp.employee_id}>
-                  {emp.employee_id} - {emp.full_name}
-                </option>
-              ))}
-            </select>
+              {!editMode ? (
+                <>
+                  <div>
+                    <label className="label">Employee</label>
+                    <select
+                      value={form.emp_id}
+                      onChange={handleEmployeeChange}
+                      required
+                      className="input"
+                    >
+                      <option value="">Select Employee</option>
+                      {employees.map((emp) => (
+                        <option key={emp.employee_id} value={emp.employee_id}>
+                          {emp.employee_id} - {emp.full_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <Input label="Employee Name" value={form.emp_name} readOnly />
+                  <Input label="Current Salary" value={form.current_salary} readOnly />
+                  <Input label="Salary Balance" value={form.salary_balance} readOnly />
+
+                  <Input
+                    label="Advance Amount"
+                    type="number"
+                    name="advance_amount"
+                    value={form.advance_amount}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  <div>
+                    <label className="label">Advance Type</label>
+                    <select
+                      name="advance_type"
+                      value={form.advance_type}
+                      onChange={handleChange}
+                      required
+                      className="input"
+                    >
+                      <option value="">Select Advance Type</option>
+                      <option value="Bulk amount">Bulk amount</option>
+                      <option value="Salary Advance">Salary Advance</option>
+                    </select>
+                  </div>
+
+                  <Input
+                    label="Order By"
+                    name="order_by"
+                    value={form.order_by}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  <Input label="Status" value="Pending" readOnly />
+                </>
+              ) : (
+                <>
+                  <Input label="Advance ID" value={form.advance_id} readOnly />
+                  <Input label="Employee ID" value={form.emp_id} readOnly />
+                  <Input label="Employee Name" value={form.emp_name} readOnly />
+                  <Input label="Advance Amount" value={form.advance_amount} readOnly />
+                  <Input label="Advance Type" value={form.advance_type} readOnly />
+
+                  <Input
+                    label="Approve By"
+                    name="approve_by"
+                    value={form.approve_by}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  <Input
+                    label="Order By"
+                    name="order_by"
+                    value={form.order_by}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  <div>
+                    <label className="label">Status</label>
+                    <select
+                      name="status"
+                      value={form.status}
+                      onChange={handleChange}
+                      required
+                      className="input"
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Accepted">Accepted</option>
+                      <option value="Rejected">Rejected</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="label">Upload Signed Document</label>
+                    <input
+                      type="file"
+                      name="signature_document"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp"
+                      onChange={handleChange}
+                      className="input"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="md:col-span-2">
+                <label className="label">Remark</label>
+                <textarea
+                  name="remark"
+                  value={form.remark}
+                  onChange={handleChange}
+                  className="input h-24"
+                  placeholder="Enter remark"
+                />
+              </div>
+
+              <div className="md:col-span-2 flex gap-3">
+                <button className="flex-1 bg-gradient-to-r from-indigo-700 to-cyan-600 text-white py-3 rounded-2xl font-black shadow-lg">
+                  {!editMode ? "Create Advance & Print" : "Update Advance"}
+                </button>
+
+                {editMode && (
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="bg-slate-600 text-white px-8 py-3 rounded-2xl font-black"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </form>
           </div>
 
-          <Input label="Employee Name" value={form.emp_name} readOnly />
-          <Input label="Current Salary" value={form.current_salary} readOnly />
-          <Input label="Salary Balance" value={form.salary_balance} readOnly />
+          {/* RIGHT FORM */}
 
-          <Input
-            label="Advance Amount"
-            type="number"
-            name="advance_amount"
-            value={form.advance_amount}
-            onChange={handleChange}
-            required
-          />
+          <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
+            <div className="p-5 bg-slate-900 text-white">
+              <h2 className="text-xl font-black">Advance History</h2>
+              <p className="text-sm text-slate-300">
+                Search employee advance salary records
+              </p>
 
-          <div>
-            <label className="label">Advance Type</label>
-            <select
-              name="advance_type"
-              value={form.advance_type}
-              onChange={handleChange}
-              required
-              className="input"
-            >
-              <option value="">Select Advance Type</option>
-              <option value="Bulk amount">Bulk amount</option>
-              <option value="Salary Advance">Salary Advance</option>
-            </select>
-          </div>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by employee name, ID, amount, status..."
+                className="mt-4 w-full px-4 py-3 rounded-2xl text-slate-800 outline-none"
+              />
+            </div>
 
-          <Input
-            label="Order By"
-            name="order_by"
-            value={form.order_by}
-            onChange={handleChange}
-            required
-          />
+            <div className="overflow-x-auto max-h-[760px] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-blue-50 text-slate-700 sticky top-0 z-10">
+                  <tr>
+                    <th className="p-3">ID</th>
+                    <th className="p-3">Employee</th>
+                    <th className="p-3">Advance</th>
+                    <th className="p-3">Balance</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">Action</th>
+                  </tr>
+                </thead>
 
-          <Input label="Status" value="Pending" readOnly />
-
-          <div className="md:col-span-3">
-            <label className="label">Remark</label>
-            <textarea
-              name="remark"
-              value={form.remark}
-              onChange={handleChange}
-              className="input h-24"
-              placeholder="Enter remark"
-            />
-          </div>
-
-          <button className="md:col-span-3 bg-blue-600 text-white py-3 rounded-xl font-semibold">
-            Create Advance & Print
-          </button>
-        </form>
-      ) : (
-        <form
-          onSubmit={updateAdvance}
-          className="bg-white rounded-2xl shadow p-6 grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
-        >
-          <Input label="Advance ID" value={form.advance_id} readOnly />
-          <Input label="Employee ID" value={form.emp_id} readOnly />
-          <Input label="Employee Name" value={form.emp_name} readOnly />
-          <Input label="Advance Amount" value={form.advance_amount} readOnly />
-          <Input label="Advance Type" value={form.advance_type} readOnly />
-
-          <Input
-            label="Approve By"
-            name="approve_by"
-            value={form.approve_by}
-            onChange={handleChange}
-            required
-          />
-
-          <Input
-            label="Order By"
-            name="order_by"
-            value={form.order_by}
-            onChange={handleChange}
-            required
-          />
-
-          <div>
-            <label className="label">Status</label>
-            <select
-              name="status"
-              value={form.status}
-              onChange={handleChange}
-              required
-              className="input"
-            >
-              <option value="Pending">Pending</option>
-              <option value="Accepted">Accepted</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="label">Upload Signed Document</label>
-            <input
-              type="file"
-              name="signature_document"
-              accept=".pdf,.jpg,.jpeg,.png,.webp"
-              onChange={handleChange}
-              className="input"
-            />
-          </div>
-
-          <div className="md:col-span-3">
-            <label className="label">Remark</label>
-            <textarea
-              name="remark"
-              value={form.remark}
-              onChange={handleChange}
-              className="input h-24"
-            />
-          </div>
-
-          <div className="md:col-span-3 flex gap-3">
-            <button className="flex-1 bg-green-600 text-white py-3 rounded-xl font-semibold">
-              Update Advance
-            </button>
-
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="bg-slate-500 text-white px-8 py-3 rounded-xl font-semibold"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-
-      <div className="bg-white rounded-2xl shadow overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-900 text-white">
-            <tr>
-              <th className="p-3">Advance ID</th>
-              <th className="p-3">Emp ID</th>
-              <th className="p-3">Name</th>
-              <th className="p-3">Salary</th>
-              <th className="p-3">Balance</th>
-              <th className="p-3">Advance</th>
-              <th className="p-3">Type</th>
-              <th className="p-3">Order By</th>
-              <th className="p-3">Approve By</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Document</th>
-              <th className="p-3">Remark</th>
-              <th className="p-3">Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {advanceList.length === 0 ? (
-              <tr>
-                <td colSpan="13" className="p-5 text-center text-slate-500">
-                  No advance salary data found
-                </td>
-              </tr>
-            ) : (
-              advanceList.map((item) => (
-                <tr key={item.id} className="border-b text-center">
-                  <td className="p-3 font-semibold">{item.advance_id}</td>
-                  <td className="p-3">{item.emp_id}</td>
-                  <td className="p-3">{item.emp_name}</td>
-                  <td className="p-3">
-                    ₹{Number(item.current_salary || 0).toLocaleString("en-IN")}
-                  </td>
-                  <td className="p-3">
-                    ₹{Number(item.salary_balance || 0).toLocaleString("en-IN")}
-                  </td>
-                  <td className="p-3 font-bold text-green-600">
-                    ₹{Number(item.advance_amount || 0).toLocaleString("en-IN")}
-                  </td>
-                  <td className="p-3">{item.advance_type}</td>
-                  <td className="p-3">{item.order_by}</td>
-                  <td className="p-3">{item.approve_by || "-"}</td>
-                  <td className="p-3">{item.status}</td>
-                  <td className="p-3">
-                    {item.signature_document ? (
-                      <a
-                        href={`${API}/${item.signature_document}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 underline"
+                <tbody>
+                  {filteredAdvanceList.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="p-8 text-center text-slate-500">
+                        No advance salary data found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredAdvanceList.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="border-b text-center hover:bg-blue-50/50"
                       >
-                        View
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td className="p-3">{item.remark || "-"}</td>
+                        <td className="p-3 font-black">{item.advance_id}</td>
 
-                  <td className="p-3">
-                    {item.status === "Pending" && (
-                      <div className="flex flex-wrap gap-2 justify-center">
+                        <td className="p-3">
+                          <div className="font-black text-slate-800">
+                            {item.emp_id}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {item.emp_name || item.employee_name || item.full_name || "-"}
+                          </div>
+                        </td>
 
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className="bg-amber-500 text-white px-4 py-2 rounded-lg"
-                        >
-                          Edit
-                        </button>
+                        <td className="p-3 font-black text-emerald-600">
+                          {formatMoney(item.advance_amount)}
+                        </td>
 
-                        <button
-                          onClick={() => printAdvanceLetter(item)}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-                        >
-                          Print
-                        </button>
+                        <td className="p-3 font-bold text-blue-700">
+                          {formatMoney(item.salary_balance)}
+                        </td>
 
-                        <button
-                          onClick={() => downloadAdvanceLetter(item)}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg"
-                        >
-                          Download
-                        </button>
+                        <td className="p-3">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-black ${item.status === "Accepted"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : item.status === "Rejected"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-amber-100 text-amber-700"
+                              }`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
 
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                        <td className="p-3">
+                          <div className="flex flex-wrap gap-2 justify-center">
+                            {item.status === "Pending" && (
+                              <button
+                                onClick={() => handleEdit(item)}
+                                className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold"
+                              >
+                                Edit
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => printAdvanceLetter(item)}
+                              className="bg-blue-600 text-white px-3 py-2 rounded-xl font-bold"
+                            >
+                              Print
+                            </button>
+
+                            <button
+                              onClick={() => downloadAdvanceLetter(item)}
+                              className="bg-emerald-600 text-white px-3 py-2 rounded-xl font-bold"
+                            >
+                              Download
+                            </button>
+
+                            {item.signature_document && (
+                              <a
+                                href={`${API}/${item.signature_document}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="bg-slate-700 text-white px-3 py-2 rounded-xl font-bold"
+                              >
+                                View
+                              </a>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

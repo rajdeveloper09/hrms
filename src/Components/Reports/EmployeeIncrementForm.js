@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   User,
   IndianRupee,
@@ -7,22 +7,43 @@ import {
   ShieldAlert,
   TrendingUp,
   Save,
+  CheckCircle2,
+  CalendarDays,
+  Search,
+  Sparkles,
 } from "lucide-react";
+import SideNav from "../SideNav";
 
 const API_BASE = "https://ojmee.in/employee";
 
-export default function EmployeeIncrementForm() {
+export default function EmployeeIncrementDashboard() {
   const [employees, setEmployees] = useState([]);
-  const [empId, setEmpId] = useState("");
+  const [recommendations, setRecommendations] = useState({});
+  const [completed, setCompleted] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savingId, setSavingId] = useState("");
+  const [search, setSearch] = useState("");
 
-  const [data, setData] = useState(null);
-  const [remark, setRemark] = useState("");
+  const [forms, setForms] = useState({});
 
   useEffect(() => {
-    fetchEmployees();
+    loadPage();
   }, []);
+
+
+  const filteredCompleted = useMemo(() => {
+    return completed.filter((item) => {
+      return (
+        item.emp_id?.toLowerCase().includes(search.toLowerCase()) ||
+        item.emp_name?.toLowerCase().includes(search.toLowerCase())
+      );
+    });
+  }, [completed, search]);
+  const loadPage = async () => {
+    setLoading(true);
+    await Promise.all([fetchEmployees(), fetchCompleted()]);
+    setLoading(false);
+  };
 
   const fetchEmployees = async () => {
     try {
@@ -30,65 +51,155 @@ export default function EmployeeIncrementForm() {
       const json = await res.json();
 
       if (json.status || json.success) {
-        setEmployees(json.data || []);
+        const list = json.data || [];
+        setEmployees(list);
+
+        list.forEach((emp) => {
+          fetchRecommendation(emp.employee_id);
+        });
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       alert("Employee API error");
     }
   };
 
-  const fetchRecommendation = async (selectedEmpId) => {
-    if (!selectedEmpId) return;
-
-    setLoading(true);
-    setData(null);
-
+  const fetchCompleted = async () => {
     try {
-      const url = `${API_BASE}/get_increment_recommendation?emp_id=${selectedEmpId}`;
+      const res = await fetch(`${API_BASE}/get_completed_increments`);
+      const json = await res.json();
 
-      const res = await fetch(url);
+      if (json.success) {
+        setCompleted(json.data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchRecommendation = async (empId) => {
+    try {
+      const res = await fetch(
+        `${API_BASE}/get_increment_recommendation?emp_id=${empId}`
+      );
+
       const text = await res.text();
-
-      console.log("API RAW RESPONSE:", text);
-
       let json;
 
       try {
         json = JSON.parse(text);
-      } catch (e) {
-        alert("API JSON nahi de rahi. Console check karo.");
+      } catch {
+        console.log("Invalid JSON:", text);
         return;
       }
 
       if (json.success) {
-        setData(json.data);
-      } else {
-        alert(json.message || "Recommendation not found");
+        setRecommendations((prev) => ({
+          ...prev,
+          [empId]: json.data,
+        }));
+
+        setForms((prev) => ({
+          ...prev,
+          [empId]: {
+            custom_increment_type: "auto",
+            custom_increment_value: "",
+            remark: "",
+          },
+        }));
       }
-    } catch (error) {
-      console.error("Recommendation API error:", error);
-      alert("Recommendation API error");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const handleEmployeeChange = (e) => {
-    const value = e.target.value;
-    setEmpId(value);
-    fetchRecommendation(value);
+  const completedMap = useMemo(() => {
+    const map = {};
+    completed.forEach((item) => {
+      if (!map[item.emp_id]) map[item.emp_id] = item;
+    });
+    return map;
+  }, [completed]);
+
+  const upcomingEmployees = useMemo(() => {
+    return employees.filter((emp) => {
+      const last = completedMap[emp.employee_id];
+
+      const match =
+        emp.employee_id?.toLowerCase().includes(search.toLowerCase()) ||
+        emp.full_name?.toLowerCase().includes(search.toLowerCase());
+
+      if (!match) return false;
+
+      if (!last) return true;
+
+      if (!last.next_increment_date) return true;
+
+      return new Date() >= new Date(last.next_increment_date);
+    });
+  }, [employees, completedMap, search]);
+
+  const handleFormChange = (empId, name, value) => {
+    setForms((prev) => ({
+      ...prev,
+      [empId]: {
+        ...prev[empId],
+        [name]: value,
+      },
+    }));
   };
 
-  const saveRecommendation = async () => {
-    if (!data) return;
+  const getPreview = (empId) => {
+    const rec = recommendations[empId];
+    const form = forms[empId];
 
-    setSaving(true);
+    if (!rec || !form) {
+      return {
+        currentPercent: 0,
+        amount: 0,
+      };
+    }
+
+    const salary = Number(rec.current_salary || 0);
+    const type = form.custom_increment_type;
+    const value = Number(form.custom_increment_value || 0);
+
+    let currentPercent = Number(rec.final_recommend_percent || 0);
+    let amount = Number(rec.final_recommend_amount || 0);
+
+    if (type === "percentage") {
+      currentPercent = value;
+      amount = (salary * value) / 100;
+    }
+
+    if (type === "amount") {
+      amount = value;
+      currentPercent = salary > 0 ? (value / salary) * 100 : 0;
+    }
+
+    return {
+      currentPercent: Number(currentPercent.toFixed(2)),
+      amount: Number(amount.toFixed(2)),
+    };
+  };
+
+  const saveIncrement = async (empId) => {
+    const rec = recommendations[empId];
+    const form = forms[empId];
+
+    if (!rec || !form) {
+      alert("Recommendation not loaded");
+      return;
+    }
+
+    setSavingId(empId);
 
     try {
       const payload = {
-        ...data,
-        remark,
+        ...rec,
+        custom_increment_type: form.custom_increment_type,
+        custom_increment_value: Number(form.custom_increment_value || 0),
+        remark: form.remark,
       };
 
       const res = await fetch(`${API_BASE}/save_increment_recommendation`, {
@@ -102,16 +213,16 @@ export default function EmployeeIncrementForm() {
       const json = await res.json();
 
       if (json.success) {
-        alert("Recommendation saved successfully");
-        setRemark("");
+        alert("Increment completed successfully");
+        await fetchCompleted();
       } else {
         alert(json.message || "Save failed");
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       alert("Save API error");
     } finally {
-      setSaving(false);
+      setSavingId("");
     }
   };
 
@@ -121,165 +232,310 @@ export default function EmployeeIncrementForm() {
       currency: "INR",
     });
 
-  const statusColor =
-    Number(data?.final_recommend_percent || 0) >= 0
-      ? "text-emerald-600"
-      : "text-red-600";
-
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-          <div className="p-6 bg-gradient-to-r from-indigo-600 to-blue-600 text-white">
-            <h1 className="text-2xl md:text-3xl font-bold">
-              Employee Increment Recommendation
-            </h1>
-            <p className="text-sm text-blue-100 mt-1">
-              Attendance, complaints, penalty aur salary ke behalf par auto
-              calculation
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
+      <SideNav/>
+      <div className="flex-1 ml-72 p-4 overflow-y-auto min-h-screen">
+        <div className="rounded-[28px] overflow-hidden bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-600 p-6 text-white shadow-xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles size={26} />
+                <h1 className="text-2xl md:text-3xl font-black">
+                  Increment Management Dashboard
+                </h1>
+              </div>
+              <p className="text-blue-100 mt-1">
+                Upcoming increment &  Completed increment history
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <TopStat title="Upcoming" value={upcomingEmployees.length} />
+              <TopStat title="Completed" value={completed.length} />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-6">
+          {/* LEFT */}
+          <div className="xl:col-span-8 bg-white/80 backdrop-blur rounded-[28px] border border-white shadow-xl overflow-hidden">
+            <div className="p-5 border-b bg-white sticky top-0 z-10">
+              <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-slate-800">
+                    Upcoming Increment
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Next increment after 6 month later
+                  </p>
+                </div>
+
+                <div className="relative">
+                  <Search
+                    size={18}
+                    className="absolute left-3 top-3 text-slate-400"
+                  />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search employee..."
+                    className="h-11 w-full md:w-72 rounded-xl border border-slate-200 pl-10 pr-3 outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 max-h-[75vh] overflow-y-auto">
+              {loading && (
+                <div className="text-center py-10 font-semibold text-blue-600">
+                  Loading employees...
+                </div>
+              )}
+
+              {!loading && upcomingEmployees.length === 0 && (
+                <div className="text-center py-10 text-slate-500">
+                  No upcoming increment available
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {upcomingEmployees.map((emp) => {
+                  const rec = recommendations[emp.employee_id];
+                  const form = forms[emp.employee_id] || {};
+                  const preview = getPreview(emp.employee_id);
+
+                  return (
+                    <div
+                      key={emp.employee_id}
+                      className="rounded-[24px] border border-slate-200 bg-white shadow-sm hover:shadow-xl transition-all overflow-hidden"
+                    >
+                      <div className="p-5 bg-gradient-to-r from-slate-900 to-slate-700 text-white">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-black text-lg">
+                              {emp.employee_id} - {emp.full_name}
+                            </h3>
+                            <p className="text-xs text-slate-300">
+                              Joining: {emp.joining_date || "N/A"}
+                            </p>
+                          </div>
+                          <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center">
+                            <User size={24} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {!rec ? (
+                        <div className="p-5 text-sm text-slate-500">
+                          Recommendation loading...
+                        </div>
+                      ) : (
+                        <div className="p-5 space-y-4">
+                          <div className="grid grid-cols-2 gap-3">
+                            <MiniBox
+                              icon={<IndianRupee size={17} />}
+                              title="Salary"
+                              value={formatMoney(rec.current_salary)}
+                            />
+                            <MiniBox
+                              icon={<Clock size={17} />}
+                              title="Shift"
+                              value={rec.shift_time}
+                            />
+                            <MiniBox
+                              icon={<AlertTriangle size={17} />}
+                              title="Complaints"
+                              value={rec.complaint_count}
+                            />
+                            <MiniBox
+                              icon={<ShieldAlert size={17} />}
+                              title="Penalty"
+                              value={rec.penalty_count}
+                            />
+                          </div>
+
+                          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm text-slate-500">
+                                Auto Recommendation
+                              </p>
+                              <p
+                                className={`font-black text-xl ${Number(rec.final_recommend_percent) >= 0
+                                    ? "text-emerald-600"
+                                    : "text-red-600"
+                                  }`}
+                              >
+                                {rec.final_recommend_percent}%
+                              </p>
+                            </div>
+
+                            <p className="text-xs text-slate-400 mt-1">
+                              Amount: {formatMoney(rec.final_recommend_amount)}
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-bold text-slate-600">
+                                Increment Type
+                              </label>
+                              <select
+                                value={form.custom_increment_type || "auto"}
+                                onChange={(e) =>
+                                  handleFormChange(
+                                    emp.employee_id,
+                                    "custom_increment_type",
+                                    e.target.value
+                                  )
+                                }
+                                className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="auto">Auto Recommendation</option>
+                                <option value="percentage">Custom Percentage</option>
+                                <option value="amount">Custom Amount</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-bold text-slate-600">
+                                Custom Value
+                              </label>
+                              <input
+                                type="number"
+                                disabled={form.custom_increment_type === "auto"}
+                                value={form.custom_increment_value || ""}
+                                onChange={(e) =>
+                                  handleFormChange(
+                                    emp.employee_id,
+                                    "custom_increment_value",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder={
+                                  form.custom_increment_type === "amount"
+                                    ? "Amount"
+                                    : "Percentage"
+                                }
+                                className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+                            <p className="text-xs text-blue-600 font-bold">
+                              Selected Increment Preview
+                            </p>
+                            <div className="flex items-end justify-between mt-1">
+                              <h3 className="text-2xl font-black text-blue-700">
+                                {preview.currentPercent}%
+                              </h3>
+                              <p className="font-bold text-slate-700">
+                                {formatMoney(preview.amount)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <textarea
+                            value={form.remark || ""}
+                            onChange={(e) =>
+                              handleFormChange(
+                                emp.employee_id,
+                                "remark",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Remark..."
+                            rows="2"
+                            className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+
+                          <button
+                            onClick={() => saveIncrement(emp.employee_id)}
+                            disabled={savingId === emp.employee_id}
+                            className="w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-black flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
+                          >
+                            <Save size={18} />
+                            {savingId === emp.employee_id
+                              ? "Saving..."
+                              : "Complete Increment"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          <div className="p-6">
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Select Employee
-            </label>
+          {/* RIGHT */}
+          <div className="xl:col-span-4 bg-white/80 backdrop-blur rounded-[28px] border border-white shadow-xl overflow-hidden">
+            <div className="p-5 border-b bg-white sticky top-0 z-10">
+              <h2 className="text-xl font-black text-slate-800">
+                Completed Increment
+              </h2>
+              <p className="text-sm text-slate-500">
+                Completed employee increment list
+              </p>
+            </div>
 
-            <select
-              value={empId}
-              onChange={handleEmployeeChange}
-              className="w-full h-12 rounded-xl border border-slate-300 px-4 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              <option value="">Select employee</option>
-              {employees.map((emp) => (
-                <option key={emp.employee_id} value={emp.employee_id}>
-                  {emp.employee_id} - {emp.full_name}
-                </option>
-              ))}
-            </select>
-
-            {loading && (
-              <div className="mt-6 text-center text-blue-600 font-semibold">
-                Calculating recommendation...
-              </div>
-            )}
-
-            {data && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
-                  <Card
-                    title="Employee"
-                    value={`${data.emp_id} - ${data.emp_name}`}
-                    icon={<User />}
-                  />
-
-                  <Card
-                    title="Current Salary"
-                    value={formatMoney(data.current_salary)}
-                    icon={<IndianRupee />}
-                  />
-
-                  <Card
-                    title="Shift Time"
-                    value={data.shift_time}
-                    icon={<Clock />}
-                  />
-
-                  <Card
-                    title="Last Increment Date"
-                    value={data.last_increment_date}
-                    icon={<TrendingUp />}
-                  />
+            <div className="p-5 max-h-[75vh] overflow-y-auto space-y-4">
+              {completed.length === 0 && (
+                <div className="text-center py-10 text-slate-500">
+                  No completed increment
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                  <CalculationCard
-                    title="Average Late"
-                    main={`${data.avg_late_minutes} min`}
-                    sub={`Deduction: -${data.late_deduction_percent}%`}
-                    icon={<Clock />}
-                    color="amber"
-                  />
-
-                  <CalculationCard
-                    title="Complaints"
-                    main={data.complaint_count}
-                    sub={`Deduction: -${data.complaint_deduction_percent}%`}
-                    icon={<AlertTriangle />}
-                    color="red"
-                  />
-
-                  <CalculationCard
-                    title="Penalty"
-                    main={data.penalty_count}
-                    sub={`Deduction: -${data.penalty_deduction_percent}%`}
-                    icon={<ShieldAlert />}
-                    color="rose"
-                  />
-                </div>
-
-                <div className="mt-8 bg-slate-50 rounded-3xl border border-slate-200 p-6">
-                  <h2 className="text-xl font-bold text-slate-800 mb-4">
-                    Final Calculation
-                  </h2>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="bg-white rounded-2xl p-5 border">
-                      <p className="text-sm text-slate-500">
-                        Base Increment Percentage
-                      </p>
-                      <h3 className="text-3xl font-bold text-blue-600 mt-1">
-                        +{data.base_increment_percent}%
+              {filteredCompleted.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-black text-slate-800">
+                        {item.emp_id} - {item.emp_name}
                       </h3>
+                      <p className="text-xs text-slate-400">
+                        {item.created_at}
+                      </p>
                     </div>
 
-                    <div className="bg-white rounded-2xl p-5 border">
-                      <p className="text-sm text-slate-500">
-                        Final Recommended Percentage
-                      </p>
-                      <h3 className={`text-3xl font-bold mt-1 ${statusColor}`}>
-                        {data.final_recommend_percent}%
-                      </h3>
-                    </div>
-
-                    <div className="bg-white rounded-2xl p-5 border md:col-span-2">
-                      <p className="text-sm text-slate-500">
-                        Final Recommended Amount
-                      </p>
-                      <h3 className={`text-4xl font-bold mt-1 ${statusColor}`}>
-                        {formatMoney(data.final_recommend_amount)}
-                      </h3>
-
-                      <p className="text-sm text-slate-500 mt-3">
-                        Formula: Salary × Final Percentage ÷ 100
-                      </p>
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                      <CheckCircle2 size={21} />
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-6">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Remark
-                  </label>
-                  <textarea
-                    value={remark}
-                    onChange={(e) => setRemark(e.target.value)}
-                    rows="4"
-                    placeholder="Enter remark..."
-                    className="w-full rounded-xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <HistoryBox
+                      title="Current"
+                      value={`${item.current_recommendation_percent || item.final_recommend_percent}%`}
+                    />
+                    <HistoryBox
+                      title="Final"
+                      value={`${item.final_increment_percent || item.final_recommend_percent}%`}
+                    />
+                    <HistoryBox
+                      title="Amount"
+                      value={formatMoney(
+                        item.final_increment_amount || item.final_recommend_amount
+                      )}
+                    />
+                    <HistoryBox
+                      title="Next Date"
+                      value={item.next_increment_date || "N/A"}
+                    />
+                  </div>
 
-                <button
-                  onClick={saveRecommendation}
-                  disabled={saving}
-                  className="mt-6 h-12 px-6 rounded-xl bg-blue-600 text-white font-bold flex items-center gap-2 hover:bg-blue-700 disabled:opacity-60"
-                >
-                  <Save size={18} />
-                  {saving ? "Saving..." : "Save Recommendation"}
-                </button>
-              </>
-            )}
+                  {item.remark && (
+                    <p className="mt-3 text-xs text-slate-500 bg-slate-50 rounded-xl p-3">
+                      {item.remark}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -287,40 +543,32 @@ export default function EmployeeIncrementForm() {
   );
 }
 
-function Card({ title, value, icon }) {
+function TopStat({ title, value }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-          {React.cloneElement(icon, { size: 22 })}
-        </div>
-        <div>
-          <p className="text-sm text-slate-500">{title}</p>
-          <h3 className="font-bold text-slate-800">{value}</h3>
-        </div>
-      </div>
+    <div className="rounded-2xl bg-white/15 px-5 py-3">
+      <p className="text-xs text-blue-100">{title}</p>
+      <h3 className="text-2xl font-black">{value}</h3>
     </div>
   );
 }
 
-function CalculationCard({ title, main, sub, icon, color }) {
-  const colors = {
-    amber: "bg-amber-100 text-amber-700",
-    red: "bg-red-100 text-red-700",
-    rose: "bg-rose-100 text-rose-700",
-  };
-
+function MiniBox({ title, value, icon }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-      <div
-        className={`w-12 h-12 rounded-xl flex items-center justify-center ${colors[color]}`}
-      >
-        {React.cloneElement(icon, { size: 24 })}
+    <div className="rounded-2xl bg-slate-50 border border-slate-100 p-3">
+      <div className="flex items-center gap-2 text-slate-500">
+        {icon}
+        <p className="text-xs font-bold">{title}</p>
       </div>
+      <h4 className="font-black text-slate-800 mt-1 truncate">{value}</h4>
+    </div>
+  );
+}
 
-      <p className="text-sm text-slate-500 mt-4">{title}</p>
-      <h3 className="text-3xl font-bold text-slate-800 mt-1">{main}</h3>
-      <p className="text-sm font-semibold text-red-500 mt-1">{sub}</p>
+function HistoryBox({ title, value }) {
+  return (
+    <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+      <p className="text-[11px] text-slate-500 font-bold">{title}</p>
+      <h4 className="font-black text-slate-800 text-sm mt-1">{value}</h4>
     </div>
   );
 }
