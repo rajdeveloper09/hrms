@@ -90,7 +90,7 @@ export default function Login({ setIsAuth }) {
 
         {/* LEFT SIDE */}
         <div className="hidden md:flex relative min-h-[640px] items-center justify-center p-10 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-500/90 via-rose-500/90 to-orange-400/90" />
+          <div className="absolute inset-0 bg-gradient-to-r from-rose-600 to-pink-600" />
 
           <div className="absolute -top-20 -left-20 w-72 h-72 bg-white/20 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-80 h-80 bg-black/20 rounded-full blur-3xl" />
@@ -141,7 +141,7 @@ export default function Login({ setIsAuth }) {
         <div className="flex items-center justify-center p-5 sm:p-8 bg-white">
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
-              <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg">
+              <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-r from-rose-600 to-pink-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg">
                 👤
               </div>
 
@@ -173,7 +173,7 @@ export default function Login({ setIsAuth }) {
                 </label>
                 <input
                   type="text"
-                  placeholder="Example: HO129"
+                  placeholder="Example: HO01"
                   value={employeeId}
                   style={{ textTransform: "uppercase" }}
                   onChange={(e) => setEmployeeId(e.target.value)}
@@ -216,7 +216,7 @@ export default function Login({ setIsAuth }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-3 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 hover:from-pink-600 hover:to-rose-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-pink-200 transition disabled:opacity-60"
+                className="w-full mt-3 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-pink-600 hover:to-rose-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-pink-200 transition disabled:opacity-60"
               >
                 {loading ? "Authenticating..." : "Login Securely"}
               </button>
