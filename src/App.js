@@ -21,6 +21,7 @@ import EmployeeTransferForm from "./Components/Reports/EmployeeTransferForm";
 import EmployeeAdvanceForm from "./Components/Reports/EmployeeAdvanceForm";
 import EmployeeExpensesForm from "./Components/Reports/EmployeeExpensesForm";
 import AreaManagerBranchForm from "./Components/Reports/AreaManagerBranchForm";
+import Welcome from "./Components/Welcome";
 
 
 
@@ -48,15 +49,18 @@ function App() {
               isAuth ? <Navigate to="/dashboard" /> : <Login setIsAuth={setIsAuth} />
             }
           />
-
           <Route
             path="/dashboard"
             element={
               isAuth ? <Dashboard setIsAuth={setIsAuth} /> : <Navigate to="/" />
             }
           >
-
           </Route>
+
+          <Route path="/login" element={<Login setIsAuth={setIsAuth} />} />
+          <Route path="/welcome" element={isAuth ? <Welcome /> : <Navigate to="/login" />} />
+          <Route path="/dashboard" element={isAuth ? <Dashboard /> : <Navigate to="/login" />} />
+
           <Route path="/employees-list" element={<EmployeeList />} />
           <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/employee-profile/:employee_id" element={<EmployeeProfile />} />

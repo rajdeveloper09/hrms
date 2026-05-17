@@ -12,10 +12,13 @@ import {
   Settings,
   FileText,
   Sparkles,
+  LogOut,
+  UserCircle,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 export default function SideNav() {
+  const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -31,6 +34,13 @@ export default function SideNav() {
 
   const toggleMenu = (menu) => {
     setOpenMenu(openMenu === menu ? "" : menu);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("login");
+    localStorage.removeItem("emp_id");
+
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -59,13 +69,13 @@ export default function SideNav() {
           bg-white/95 backdrop-blur-xl shadow-2xl
           border-r border-rose-100
           transform transition-transform duration-300
-          overflow-y-auto
+          flex flex-col overflow-hidden
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0
         `}
       >
         {/* LOGO */}
-        <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-xl border-b border-rose-100 p-5">
+        <div className="shrink-0 bg-white/95 backdrop-blur-xl border-b border-rose-100 p-5">
           <NavLink to="/dashboard" className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-rose-600 via-pink-600 to-fuchsia-600 text-white flex items-center justify-center shadow-lg shadow-pink-200">
               <Sparkles size={23} />
@@ -82,8 +92,8 @@ export default function SideNav() {
           </NavLink>
         </div>
 
-        {/* MENU */}
-        <div className="p-4 space-y-2 pb-32">
+        {/* ONLY MENU SCROLL */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 sidebar-scroll">
           <NavLink to="/dashboard" end className={linkClass}>
             <LayoutDashboard size={20} />
             Dashboard
@@ -93,9 +103,12 @@ export default function SideNav() {
             <FileText size={20} />
             All Reports
           </NavLink>
+          <NavLink to="/employees-list" className={linkClass}>
+            <Users size={20} />
+            Employee List
+          </NavLink>
 
-          {/* EMPLOYEE MENU */}
-          <MenuGroup
+          {/* <MenuGroup
             title="Employees"
             icon={<Users size={20} />}
             open={openMenu === "employee"}
@@ -108,13 +121,8 @@ export default function SideNav() {
             <NavLink to="/add-employee" className={subLinkClass}>
               Add Employee
             </NavLink>
+          </MenuGroup> */}
 
-            <NavLink to="/employee-transfer" className={subLinkClass}>
-              Transfer Employee
-            </NavLink>
-          </MenuGroup>
-
-          {/* ADD UPDATE REPORTS */}
           <MenuGroup
             title="Add/Update Reports"
             icon={<Wallet size={20} />}
@@ -174,7 +182,7 @@ export default function SideNav() {
             </NavLink>
           </MenuGroup>
 
-          <NavLink to="/branches" className={linkClass}>
+          {/* <NavLink to="/branches" className={linkClass}>
             <Building2 size={20} />
             Branches
           </NavLink>
@@ -187,7 +195,35 @@ export default function SideNav() {
           <NavLink to="/settings" className={linkClass}>
             <Settings size={20} />
             Settings
-          </NavLink>
+          </NavLink> */}
+        </div>
+
+        {/* FIXED BOTTOM PROFILE */}
+        <div className="shrink-0 p-4 bg-white/95 backdrop-blur-xl border-t border-rose-100">
+          <div className="rounded-3xl bg-gradient-to-r from-rose-50 via-pink-50 to-fuchsia-50 border border-rose-100 p-4 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 text-white flex items-center justify-center shadow-lg shadow-pink-200">
+                <UserCircle size={28} />
+              </div>
+
+              <div className="flex-1 overflow-hidden">
+                <h3 className="text-sm font-black text-slate-800 truncate">
+                  Admin User
+                </h3>
+                <p className="text-xs font-semibold text-slate-400 truncate">
+                  admin@gmail.com
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={logout}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 text-white font-black shadow-lg shadow-pink-200 hover:scale-[1.03] active:scale-95 transition-all duration-300"
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 
@@ -207,22 +243,17 @@ function MenuGroup({ title, icon, open, onClick, children }) {
     <div className="rounded-2xl">
       <button
         onClick={onClick}
-        className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all duration-300 ${
-          open
-            ? "bg-gradient-to-r from-rose-50 to-pink-50 text-rose-600"
-            : "text-slate-600 hover:bg-rose-50 hover:text-rose-600"
-        }`}
+        className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all duration-300 ${open
+          ? "bg-gradient-to-r from-rose-50 to-pink-50 text-rose-600"
+          : "text-slate-600 hover:bg-rose-50 hover:text-rose-600"
+          }`}
       >
         <div className="flex items-center gap-3 font-bold">
           {icon}
           <span>{title}</span>
         </div>
 
-        <div
-          className={`transition-transform duration-300 ${
-            open ? "rotate-180" : ""
-          }`}
-        >
+        <div className={`transition-transform duration-300 ${open ? "rotate-180" : ""}`}>
           {open ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
         </div>
       </button>

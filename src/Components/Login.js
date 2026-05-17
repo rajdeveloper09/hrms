@@ -13,11 +13,12 @@ export default function Login({ setIsAuth }) {
 
   const users = [
     { id: "HO129", pin: "9212" },
-    { id: "BKD001", pin: "1234" }
+    { id: "BKD001", pin: "1234" },
   ];
 
   const handleLogin = () => {
     setError("");
+    setSupportMsg("");
 
     if (!employeeId || !pin) {
       setError("Employee ID and PIN required");
@@ -37,25 +38,38 @@ export default function Login({ setIsAuth }) {
       );
 
       if (validUser) {
-        localStorage.setItem("login", "true");
-        localStorage.setItem("emp_id", employeeId);
+        const emp = employeeId.toUpperCase();
 
-        setIsAuth(true); // ✅ important
+        localStorage.setItem("login", "true");
+        localStorage.setItem("emp_id", emp);
+
+        setIsAuth(true);
         setLoading(false);
-        navigate("/dashboard");
+
+        const welcomeKey = `welcome_seen_${emp}`;
+
+        if (localStorage.getItem(welcomeKey) === "true") {
+          navigate("/dashboard", { replace: true });
+        } else {
+          navigate("/welcome", { replace: true });
+        }
       } else {
         setLoading(false);
         setError("Invalid Employee ID or PIN");
       }
-    }, 1000);
+
+      setLoading(false);
+    }, 900);
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault(); // 🔥 prevent reload
+    e.preventDefault();
     handleLogin();
   };
 
   const handleSupportRequest = () => {
+    setError("");
+
     if (!employeeId) {
       setSupportMsg("Please enter Employee ID for support request");
       return;
@@ -64,134 +78,182 @@ export default function Login({ setIsAuth }) {
     setSupportMsg("Reset request sent! HR will contact you.");
   };
 
+  const handleKeyPress = (key) => {
+    if (key === "Clear") setPin("");
+    else if (key === "Del") setPin(pin.slice(0, -1));
+    else if (pin.length < 4) setPin(pin + key);
+  };
+
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-pink-100 via-pink-50 to-rose-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-pink-950 to-rose-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl grid md:grid-cols-2 bg-white/10 backdrop-blur-xl rounded-[32px] overflow-hidden shadow-2xl border border-white/20">
 
-      {/* LEFT SIDE */}
-      <div className="hidden md:flex w-1/2 relative items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#ff3a75] via-pink-500 to-rose-500 opacity-95" />
+        {/* LEFT SIDE */}
+        <div className="hidden md:flex relative min-h-[640px] items-center justify-center p-10 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-pink-500/90 via-rose-500/90 to-orange-400/90" />
 
-        <div className="relative text-center text-white p-10">
-          <h1 className="text-4xl font-bold mb-3">HR Smart Access</h1>
-          <p className="text-sm opacity-90 mb-6">
-            Login with Employee ID & Secure 4-digit PIN
-          </p>
+          <div className="absolute -top-20 -left-20 w-72 h-72 bg-white/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-80 h-80 bg-black/20 rounded-full blur-3xl" />
 
-          <img
-            src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d"
-            className="rounded-2xl shadow-2xl w-[320px] mx-auto border-4 border-white/20"
-            alt="office"
-          />
+          <div className="relative z-10 text-white">
+            <div className="mb-8">
+              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-3xl shadow-lg">
+                🔐
+              </div>
+            </div>
 
-          <div className="mt-6 text-xs opacity-80">
-            Secure • Fast • Role Based Access
+            <h1 className="text-5xl font-extrabold leading-tight mb-4">
+              HR Smart <br /> Access
+            </h1>
+
+            <p className="text-white/85 text-base max-w-sm mb-8">
+              Secure employee login with Employee ID and 4-digit PIN.
+            </p>
+
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="bg-white/20 backdrop-blur rounded-2xl p-4">
+                <p className="text-2xl font-bold">100%</p>
+                <p className="text-xs text-white/80">Secure</p>
+              </div>
+
+              <div className="bg-white/20 backdrop-blur rounded-2xl p-4">
+                <p className="text-2xl font-bold">Fast</p>
+                <p className="text-xs text-white/80">Login</p>
+              </div>
+
+              <div className="bg-white/20 backdrop-blur rounded-2xl p-4">
+                <p className="text-2xl font-bold">Role</p>
+                <p className="text-xs text-white/80">Based</p>
+              </div>
+            </div>
+
+            <div className="rounded-3xl overflow-hidden border border-white/30 shadow-2xl">
+              <img
+                src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=80"
+                alt="office"
+                className="w-full h-56 object-cover"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* RIGHT SIDE */}
-      <div className="flex w-full md:w-1/2 items-center justify-center p-6">
+        {/* RIGHT SIDE */}
+        <div className="flex items-center justify-center p-5 sm:p-8 bg-white">
+          <div className="w-full max-w-md">
+            <div className="text-center mb-8">
+              <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg">
+                👤
+              </div>
 
-        <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8 border border-gray-100">
+              <h2 className="text-3xl font-extrabold text-gray-900">
+                Employee Login
+              </h2>
 
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">Employee Login</h1>
-            <p className="text-gray-500 text-sm">Enter ID & 4-digit PIN</p>
-          </div>
-
-          {error && (
-            <div className="bg-red-100 text-red-600 p-2 rounded mb-3 text-sm">
-              {error}
-            </div>
-          )}
-
-          {supportMsg && (
-            <div className="bg-green-100 text-green-700 p-2 rounded mb-3 text-sm">
-              {supportMsg}
-            </div>
-          )}
-
-          {/* ✅ FORM START */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-
-            <input
-              type="text"
-              placeholder="Employee ID (e.g. EMP1023)"
-              value={employeeId}
-              style={{ textTransform: "uppercase" }}
-              onChange={(e) => setEmployeeId(e.target.value)}
-              className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-400 outline-none"
-            />
-
-            <input
-              type="password"
-              placeholder="4 Digit PIN"
-              maxLength={4}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-              className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-400 outline-none tracking-widest text-center text-lg"
-            />
-
-            {/* PIN PAD */}
-            <div className="grid grid-cols-3 gap-2 text-center text-sm text-gray-600">
-              {[1,2,3,4,5,6,7,8,9,"Clear",0,"Del"].map((key,i)=>(
-                <button
-                  type="button" // 🔥 important (warna form submit ho jayega)
-                  key={i}
-                  onClick={()=>{
-                    if(key==="Clear") setPin("");
-                    else if(key==="Del") setPin(pin.slice(0,-1));
-                    else if(pin.length<4) setPin(pin+key);
-                  }}
-                  className="py-2 bg-pink-100 rounded hover:bg-pink-200 transition"
-                >
-                  {key}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="submit" // 🔥 Enter key ke liye
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-[#ff3a75] to-pink-500 hover:from-pink-600 hover:to-rose-500 text-white py-3 rounded-lg font-semibold transition"
-            >
-              {loading ? "Authenticating..." : "Login"}
-            </button>
-
-          </form>
-          {/* ✅ FORM END */}
-
-          <div className="text-center text-sm mt-3">
-            <button
-              onClick={() => setShowSupport(!showSupport)}
-              className="text-pink-600 hover:underline"
-            >
-              Forgot PIN? Need Help / Support
-            </button>
-          </div>
-
-          {showSupport && (
-            <div className="mt-3 p-3 border rounded-lg bg-pink-50">
-              <p className="text-xs text-gray-600 mb-2">
-                Enter Employee ID and request PIN reset
+              <p className="text-gray-500 text-sm mt-2">
+                Enter Employee ID and secure 4-digit PIN
               </p>
+            </div>
+
+            {error && (
+              <div className="mb-4 rounded-xl bg-red-50 border border-red-200 text-red-600 px-4 py-3 text-sm">
+                {error}
+              </div>
+            )}
+
+            {supportMsg && (
+              <div className="mb-4 rounded-xl bg-green-50 border border-green-200 text-green-700 px-4 py-3 text-sm">
+                {supportMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">
+                  Employee ID
+                </label>
+                <input
+                  type="text"
+                  placeholder="Example: HO129"
+                  value={employeeId}
+                  style={{ textTransform: "uppercase" }}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  className="mt-2 w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-pink-100 focus:border-pink-400 outline-none transition"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-gray-700">
+                  4 Digit PIN
+                </label>
+                <input
+                  type="password"
+                  placeholder="••••"
+                  maxLength={4}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                  className="mt-2 w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-pink-100 focus:border-pink-400 outline-none transition tracking-[12px] text-center text-xl font-bold"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 pt-2">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, "Clear", 0, "Del"].map(
+                  (key, i) => (
+                    <button
+                      type="button"
+                      key={i}
+                      onClick={() => handleKeyPress(key)}
+                      className={`py-3 rounded-2xl font-semibold transition shadow-sm ${key === "Clear" || key === "Del"
+                        ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-pink-50 text-pink-700 hover:bg-pink-100"
+                        }`}
+                    >
+                      {key}
+                    </button>
+                  )
+                )}
+              </div>
 
               <button
-                onClick={handleSupportRequest}
-                className="w-full bg-gradient-to-r from-[#ff3a75] to-pink-500 hover:from-pink-600 hover:to-rose-500 text-white py-2 rounded"
+                type="submit"
+                disabled={loading}
+                className="w-full mt-3 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 hover:from-pink-600 hover:to-rose-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-pink-200 transition disabled:opacity-60"
               >
-                Request New PIN
+                {loading ? "Authenticating..." : "Login Securely"}
+              </button>
+            </form>
+
+            <div className="text-center mt-5">
+              <button
+                type="button"
+                onClick={() => setShowSupport(!showSupport)}
+                className="text-sm font-semibold text-pink-600 hover:text-pink-700"
+              >
+                Forgot PIN? Need Help
               </button>
             </div>
-          )}
 
-          <p className="text-center text-xs text-gray-400 mt-6">
-            Secure Employee Access System © 2026
-          </p>
+            {showSupport && (
+              <div className="mt-4 p-4 rounded-2xl border border-pink-100 bg-pink-50">
+                <p className="text-xs text-gray-600 mb-3">
+                  Enter Employee ID and request PIN reset.
+                </p>
 
+                <button
+                  type="button"
+                  onClick={handleSupportRequest}
+                  className="w-full bg-gray-900 hover:bg-black text-white py-3 rounded-xl font-semibold transition"
+                >
+                  Request New PIN
+                </button>
+              </div>
+            )}
+
+            <p className="text-center text-xs text-gray-400 mt-8">
+              Secure Employee Access System © 2026
+            </p>
+          </div>
         </div>
       </div>
-
     </div>
   );
 }

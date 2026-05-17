@@ -68,13 +68,13 @@ export default function Chart1() {
             </div>
 
             {/* Chart */}
-            <div className="h-[260px]">
+            <div className="h-[290px]">
 
                 <ResponsiveContainer width="100%" height="100%">
 
                     <BarChart
                         data={attendanceData}
-                        barGap={5}
+                        barGap={1}
                     >
 
                         <CartesianGrid
@@ -87,7 +87,7 @@ export default function Chart1() {
                             dataKey="name"
                             tick={{
                                 fill: "#6b7280",
-                                fontSize: 12,
+                                fontSize: 14,
                                 fontWeight: 600
                             }}
                             axisLine={false}
