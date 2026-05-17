@@ -13,7 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import SideNav from "../SideNav";
-
+import { Toaster } from "react-hot-toast";
 const API_BASE = "https://ojmee.in/employee";
 
 export default function EmployeeIncrementDashboard() {
@@ -234,307 +234,310 @@ export default function EmployeeIncrementDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
-      <SideNav/>
-      <div className="flex-1 ml-72 p-4 overflow-y-auto min-h-screen">
-        <div className="rounded-[28px] overflow-hidden bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-600 p-6 text-white shadow-xl">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <Sparkles size={26} />
-                <h1 className="text-2xl md:text-3xl font-black">
-                  Increment Management Dashboard
-                </h1>
+      <Toaster />
+      <SideNav />
+      <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
+        <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
+          <div className="rounded-[28px] overflow-hidden bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-600 p-6 text-white shadow-xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Sparkles size={26} />
+                  <h1 className="text-2xl md:text-3xl font-black">
+                    Increment Management Dashboard
+                  </h1>
+                </div>
+                <p className="text-blue-100 mt-1">
+                  Upcoming increment &  Completed increment history
+                </p>
               </div>
-              <p className="text-blue-100 mt-1">
-                Upcoming increment &  Completed increment history
-              </p>
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <TopStat title="Upcoming" value={upcomingEmployees.length} />
-              <TopStat title="Completed" value={completed.length} />
+              <div className="grid grid-cols-2 gap-3">
+                <TopStat title="Upcoming" value={upcomingEmployees.length} />
+                <TopStat title="Completed" value={completed.length} />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-6">
-          {/* LEFT */}
-          <div className="xl:col-span-8 bg-white/80 backdrop-blur rounded-[28px] border border-white shadow-xl overflow-hidden">
-            <div className="p-5 border-b bg-white sticky top-0 z-10">
-              <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-black text-slate-800">
-                    Upcoming Increment
-                  </h2>
-                  <p className="text-sm text-slate-500">
-                    Next increment after 6 month later
-                  </p>
-                </div>
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-6">
+            {/* LEFT */}
+            <div className="xl:col-span-8 bg-white/80 backdrop-blur rounded-[28px] border border-white shadow-xl overflow-hidden">
+              <div className="p-5 border-b bg-white sticky top-0 z-10">
+                <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-black text-slate-800">
+                      Upcoming Increment
+                    </h2>
+                    <p className="text-sm text-slate-500">
+                      Next increment after 6 month later
+                    </p>
+                  </div>
 
-                <div className="relative">
-                  <Search
-                    size={18}
-                    className="absolute left-3 top-3 text-slate-400"
-                  />
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search employee..."
-                    className="h-11 w-full md:w-72 rounded-xl border border-slate-200 pl-10 pr-3 outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="relative">
+                    <Search
+                      size={18}
+                      className="absolute left-3 top-3 text-slate-400"
+                    />
+                    <input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search employee..."
+                      className="h-11 w-full md:w-72 rounded-xl border border-slate-200 pl-10 pr-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="p-5 max-h-[75vh] overflow-y-auto">
-              {loading && (
-                <div className="text-center py-10 font-semibold text-blue-600">
-                  Loading employees...
-                </div>
-              )}
+              <div className="p-5 max-h-[75vh] overflow-y-auto">
+                {loading && (
+                  <div className="text-center py-10 font-semibold text-blue-600">
+                    Loading employees...
+                  </div>
+                )}
 
-              {!loading && upcomingEmployees.length === 0 && (
-                <div className="text-center py-10 text-slate-500">
-                  No upcoming increment available
-                </div>
-              )}
+                {!loading && upcomingEmployees.length === 0 && (
+                  <div className="text-center py-10 text-slate-500">
+                    No upcoming increment available
+                  </div>
+                )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {upcomingEmployees.map((emp) => {
-                  const rec = recommendations[emp.employee_id];
-                  const form = forms[emp.employee_id] || {};
-                  const preview = getPreview(emp.employee_id);
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  {upcomingEmployees.map((emp) => {
+                    const rec = recommendations[emp.employee_id];
+                    const form = forms[emp.employee_id] || {};
+                    const preview = getPreview(emp.employee_id);
 
-                  return (
-                    <div
-                      key={emp.employee_id}
-                      className="rounded-[24px] border border-slate-200 bg-white shadow-sm hover:shadow-xl transition-all overflow-hidden"
-                    >
-                      <div className="p-5 bg-gradient-to-r from-slate-900 to-slate-700 text-white">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-black text-lg">
-                              {emp.employee_id} - {emp.full_name}
-                            </h3>
-                            <p className="text-xs text-slate-300">
-                              Joining: {emp.joining_date || "N/A"}
-                            </p>
-                          </div>
-                          <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center">
-                            <User size={24} />
-                          </div>
-                        </div>
-                      </div>
-
-                      {!rec ? (
-                        <div className="p-5 text-sm text-slate-500">
-                          Recommendation loading...
-                        </div>
-                      ) : (
-                        <div className="p-5 space-y-4">
-                          <div className="grid grid-cols-2 gap-3">
-                            <MiniBox
-                              icon={<IndianRupee size={17} />}
-                              title="Salary"
-                              value={formatMoney(rec.current_salary)}
-                            />
-                            <MiniBox
-                              icon={<Clock size={17} />}
-                              title="Shift"
-                              value={rec.shift_time}
-                            />
-                            <MiniBox
-                              icon={<AlertTriangle size={17} />}
-                              title="Complaints"
-                              value={rec.complaint_count}
-                            />
-                            <MiniBox
-                              icon={<ShieldAlert size={17} />}
-                              title="Penalty"
-                              value={rec.penalty_count}
-                            />
-                          </div>
-
-                          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm text-slate-500">
-                                Auto Recommendation
-                              </p>
-                              <p
-                                className={`font-black text-xl ${Number(rec.final_recommend_percent) >= 0
-                                    ? "text-emerald-600"
-                                    : "text-red-600"
-                                  }`}
-                              >
-                                {rec.final_recommend_percent}%
+                    return (
+                      <div
+                        key={emp.employee_id}
+                        className="rounded-[24px] border border-slate-200 bg-white shadow-sm hover:shadow-xl transition-all overflow-hidden"
+                      >
+                        <div className="p-5 bg-gradient-to-r from-slate-900 to-slate-700 text-white">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-black text-lg">
+                                {emp.employee_id} - {emp.full_name}
+                              </h3>
+                              <p className="text-xs text-slate-300">
+                                Joining: {emp.joining_date || "N/A"}
                               </p>
                             </div>
-
-                            <p className="text-xs text-slate-400 mt-1">
-                              Amount: {formatMoney(rec.final_recommend_amount)}
-                            </p>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                              <label className="text-xs font-bold text-slate-600">
-                                Increment Type
-                              </label>
-                              <select
-                                value={form.custom_increment_type || "auto"}
-                                onChange={(e) =>
-                                  handleFormChange(
-                                    emp.employee_id,
-                                    "custom_increment_type",
-                                    e.target.value
-                                  )
-                                }
-                                className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="auto">Auto Recommendation</option>
-                                <option value="percentage">Custom Percentage</option>
-                                <option value="amount">Custom Amount</option>
-                              </select>
+                            <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center">
+                              <User size={24} />
                             </div>
+                          </div>
+                        </div>
 
-                            <div>
-                              <label className="text-xs font-bold text-slate-600">
-                                Custom Value
-                              </label>
-                              <input
-                                type="number"
-                                disabled={form.custom_increment_type === "auto"}
-                                value={form.custom_increment_value || ""}
-                                onChange={(e) =>
-                                  handleFormChange(
-                                    emp.employee_id,
-                                    "custom_increment_value",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder={
-                                  form.custom_increment_type === "amount"
-                                    ? "Amount"
-                                    : "Percentage"
-                                }
-                                className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100"
+                        {!rec ? (
+                          <div className="p-5 text-sm text-slate-500">
+                            Recommendation loading...
+                          </div>
+                        ) : (
+                          <div className="p-5 space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                              <MiniBox
+                                icon={<IndianRupee size={17} />}
+                                title="Salary"
+                                value={formatMoney(rec.current_salary)}
+                              />
+                              <MiniBox
+                                icon={<Clock size={17} />}
+                                title="Shift"
+                                value={rec.shift_time}
+                              />
+                              <MiniBox
+                                icon={<AlertTriangle size={17} />}
+                                title="Complaints"
+                                value={rec.complaint_count}
+                              />
+                              <MiniBox
+                                icon={<ShieldAlert size={17} />}
+                                title="Penalty"
+                                value={rec.penalty_count}
                               />
                             </div>
-                          </div>
 
-                          <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4">
-                            <p className="text-xs text-blue-600 font-bold">
-                              Selected Increment Preview
-                            </p>
-                            <div className="flex items-end justify-between mt-1">
-                              <h3 className="text-2xl font-black text-blue-700">
-                                {preview.currentPercent}%
-                              </h3>
-                              <p className="font-bold text-slate-700">
-                                {formatMoney(preview.amount)}
+                            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm text-slate-500">
+                                  Auto Recommendation
+                                </p>
+                                <p
+                                  className={`font-black text-xl ${Number(rec.final_recommend_percent) >= 0
+                                    ? "text-emerald-600"
+                                    : "text-red-600"
+                                    }`}
+                                >
+                                  {rec.final_recommend_percent}%
+                                </p>
+                              </div>
+
+                              <p className="text-xs text-slate-400 mt-1">
+                                Amount: {formatMoney(rec.final_recommend_amount)}
                               </p>
                             </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-xs font-bold text-slate-600">
+                                  Increment Type
+                                </label>
+                                <select
+                                  value={form.custom_increment_type || "auto"}
+                                  onChange={(e) =>
+                                    handleFormChange(
+                                      emp.employee_id,
+                                      "custom_increment_type",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="auto">Auto Recommendation</option>
+                                  <option value="percentage">Custom Percentage</option>
+                                  <option value="amount">Custom Amount</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="text-xs font-bold text-slate-600">
+                                  Custom Value
+                                </label>
+                                <input
+                                  type="number"
+                                  disabled={form.custom_increment_type === "auto"}
+                                  value={form.custom_increment_value || ""}
+                                  onChange={(e) =>
+                                    handleFormChange(
+                                      emp.employee_id,
+                                      "custom_increment_value",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder={
+                                    form.custom_increment_type === "amount"
+                                      ? "Amount"
+                                      : "Percentage"
+                                  }
+                                  className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+                              <p className="text-xs text-blue-600 font-bold">
+                                Selected Increment Preview
+                              </p>
+                              <div className="flex items-end justify-between mt-1">
+                                <h3 className="text-2xl font-black text-blue-700">
+                                  {preview.currentPercent}%
+                                </h3>
+                                <p className="font-bold text-slate-700">
+                                  {formatMoney(preview.amount)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <textarea
+                              value={form.remark || ""}
+                              onChange={(e) =>
+                                handleFormChange(
+                                  emp.employee_id,
+                                  "remark",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Remark..."
+                              rows="2"
+                              className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+
+                            <button
+                              onClick={() => saveIncrement(emp.employee_id)}
+                              disabled={savingId === emp.employee_id}
+                              className="w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-black flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
+                            >
+                              <Save size={18} />
+                              {savingId === emp.employee_id
+                                ? "Saving..."
+                                : "Complete Increment"}
+                            </button>
                           </div>
-
-                          <textarea
-                            value={form.remark || ""}
-                            onChange={(e) =>
-                              handleFormChange(
-                                emp.employee_id,
-                                "remark",
-                                e.target.value
-                              )
-                            }
-                            placeholder="Remark..."
-                            rows="2"
-                            className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-
-                          <button
-                            onClick={() => saveIncrement(emp.employee_id)}
-                            disabled={savingId === emp.employee_id}
-                            className="w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-black flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
-                          >
-                            <Save size={18} />
-                            {savingId === emp.employee_id
-                              ? "Saving..."
-                              : "Complete Increment"}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* RIGHT */}
-          <div className="xl:col-span-4 bg-white/80 backdrop-blur rounded-[28px] border border-white shadow-xl overflow-hidden">
-            <div className="p-5 border-b bg-white sticky top-0 z-10">
-              <h2 className="text-xl font-black text-slate-800">
-                Completed Increment
-              </h2>
-              <p className="text-sm text-slate-500">
-                Completed employee increment list
-              </p>
-            </div>
+            {/* RIGHT */}
+            <div className="xl:col-span-4 bg-white/80 backdrop-blur rounded-[28px] border border-white shadow-xl overflow-hidden">
+              <div className="p-5 border-b bg-white sticky top-0 z-10">
+                <h2 className="text-xl font-black text-slate-800">
+                  Completed Increment
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Completed employee increment list
+                </p>
+              </div>
 
-            <div className="p-5 max-h-[75vh] overflow-y-auto space-y-4">
-              {completed.length === 0 && (
-                <div className="text-center py-10 text-slate-500">
-                  No completed increment
-                </div>
-              )}
+              <div className="p-5 max-h-[75vh] overflow-y-auto space-y-4">
+                {completed.length === 0 && (
+                  <div className="text-center py-10 text-slate-500">
+                    No completed increment
+                  </div>
+                )}
 
-              {filteredCompleted.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-black text-slate-800">
-                        {item.emp_id} - {item.emp_name}
-                      </h3>
-                      <p className="text-xs text-slate-400">
-                        {item.created_at}
+                {filteredCompleted.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-black text-slate-800">
+                          {item.emp_id} - {item.emp_name}
+                        </h3>
+                        <p className="text-xs text-slate-400">
+                          {item.created_at}
+                        </p>
+                      </div>
+
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                        <CheckCircle2 size={21} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mt-4">
+                      <HistoryBox
+                        title="Current"
+                        value={`${item.current_recommendation_percent || item.final_recommend_percent}%`}
+                      />
+                      <HistoryBox
+                        title="Final"
+                        value={`${item.final_increment_percent || item.final_recommend_percent}%`}
+                      />
+                      <HistoryBox
+                        title="Amount"
+                        value={formatMoney(
+                          item.final_increment_amount || item.final_recommend_amount
+                        )}
+                      />
+                      <HistoryBox
+                        title="Next Date"
+                        value={item.next_increment_date || "N/A"}
+                      />
+                    </div>
+
+                    {item.remark && (
+                      <p className="mt-3 text-xs text-slate-500 bg-slate-50 rounded-xl p-3">
+                        {item.remark}
                       </p>
-                    </div>
-
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                      <CheckCircle2 size={21} />
-                    </div>
+                    )}
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3 mt-4">
-                    <HistoryBox
-                      title="Current"
-                      value={`${item.current_recommendation_percent || item.final_recommend_percent}%`}
-                    />
-                    <HistoryBox
-                      title="Final"
-                      value={`${item.final_increment_percent || item.final_recommend_percent}%`}
-                    />
-                    <HistoryBox
-                      title="Amount"
-                      value={formatMoney(
-                        item.final_increment_amount || item.final_recommend_amount
-                      )}
-                    />
-                    <HistoryBox
-                      title="Next Date"
-                      value={item.next_increment_date || "N/A"}
-                    />
-                  </div>
-
-                  {item.remark && (
-                    <p className="mt-3 text-xs text-slate-500 bg-slate-50 rounded-xl p-3">
-                      {item.remark}
-                    </p>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>

@@ -261,8 +261,8 @@ export default function EmployeeBonusForm() {
       <Toaster />
       <SideNav />
 
-      <div className="flex-1 ml-72 p-4 overflow-y-auto min-h-screen">
-        <div className="mx-auto space-y-8">
+      <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
+        <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
 
           {/* HEADER */}
           <div className="relative overflow-hidden rounded-[34px] bg-gradient-to-r from-purple-700 via-fuchsia-600 to-pink-500 p-8 shadow-2xl">

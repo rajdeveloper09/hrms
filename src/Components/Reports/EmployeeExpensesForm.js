@@ -295,8 +295,8 @@ export default function EmployeeExpensesForm() {
       <Toaster />
       <SideNav />
 
-      <div className="flex-1 ml-72 p-4 overflow-y-auto min-h-screen">
-        <div className="space-y-6">
+      <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
+        <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
           <div className="rounded-3xl bg-gradient-to-r from-rose-600 via-pink-600 to-fuchsia-600 p-6 text-white shadow-xl">
             <h1 className="text-3xl font-black">Employee Expenses</h1>
             <p className="text-rose-100 mt-1">

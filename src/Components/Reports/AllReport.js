@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import SideNav from "../SideNav";
 import EmployeeTabsSection from "../Employee/EmployeeTabsSection";
 import { API_BASE_URL } from "../../config/api";
-
+import { Toaster } from "react-hot-toast";
 export default function AllReport() {
 
 
@@ -164,7 +164,7 @@ export default function AllReport() {
     return (
 
         <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100 flex">
-
+            <Toaster />
             <SideNav />
 
             <div className="flex-1 xl:ml-72 p-4 md:p-6 overflow-y-auto">

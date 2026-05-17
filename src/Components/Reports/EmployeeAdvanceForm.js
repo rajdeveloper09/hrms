@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import SideNav from "../SideNav";
-
+import { Toaster } from "react-hot-toast";
 const API = "https://ojmee.in/employee";
 
 export default function EmployeeAdvanceForm() {
@@ -304,9 +304,11 @@ export default function EmployeeAdvanceForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
+      <Toaster />
       <SideNav />
 
-      <div className="flex-1 ml-72 p-4 overflow-y-auto min-h-screen">
+       <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
+        <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
         <div className="rounded-3xl bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-600 p-6 text-white shadow-xl mb-6">
           <h1 className="text-3xl font-black">Employee Advance Salary</h1>
           <p className="text-blue-100 mt-1">
@@ -588,6 +590,7 @@ export default function EmployeeAdvanceForm() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

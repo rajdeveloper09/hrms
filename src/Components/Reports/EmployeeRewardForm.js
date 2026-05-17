@@ -244,292 +244,293 @@ export default function EmployeeRewardForm() {
       <Toaster />
       <SideNav />
 
-      <div className="flex-1 ml-72 p-5 overflow-y-auto min-h-screen">
-        <div className="relative overflow-hidden rounded-[34px] bg-gradient-to-r from-emerald-700 via-teal-600 to-cyan-600 p-7 text-white shadow-2xl mb-6">
-          <div className="absolute -top-24 -right-20 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
+      <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
+        <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
+          <div className="relative overflow-hidden rounded-[34px] bg-gradient-to-r from-emerald-700 via-teal-600 to-cyan-600 p-7 text-white shadow-2xl mb-6">
+            <div className="absolute -top-24 -right-20 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
+            <div className="absolute -bottom-24 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
 
-          <div className="relative z-10 flex items-center justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center shadow-xl">
-                <Gift size={40} />
+            <div className="relative z-10 flex items-center justify-between gap-6">
+              <div className="flex items-center gap-5">
+                <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center shadow-xl">
+                  <Gift size={40} />
+                </div>
+
+                <div>
+                  <h1 className="text-4xl font-black">Employee Rewards</h1>
+                  <p className="text-emerald-100 mt-2">
+                    Create and manage reward records
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <h1 className="text-4xl font-black">Employee Rewards</h1>
-                <p className="text-emerald-100 mt-2">
-                  Create and manage reward records
+              <div className="hidden xl:grid grid-cols-2 gap-4">
+                <StatCard label="Employees" value={employees.length} />
+                <StatCard label="Rewards" value={rewards.length} />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+            {/* LEFT FORM */}
+            <div className="bg-white/90 backdrop-blur-xl rounded-[34px] border border-white shadow-2xl overflow-hidden">
+              <div className="p-5 bg-slate-900 text-white">
+                <h2 className="text-xl font-black">Create Reward</h2>
+                <p className="text-sm text-slate-300">
+                  Fill reward details carefully
                 </p>
               </div>
-            </div>
 
-            <div className="hidden xl:grid grid-cols-2 gap-4">
-              <StatCard label="Employees" value={employees.length} />
-              <StatCard label="Rewards" value={rewards.length} />
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-          {/* LEFT FORM */}
-          <div className="bg-white/90 backdrop-blur-xl rounded-[34px] border border-white shadow-2xl overflow-hidden">
-            <div className="p-5 bg-slate-900 text-white">
-              <h2 className="text-xl font-black">Create Reward</h2>
-              <p className="text-sm text-slate-300">
-                Fill reward details carefully
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <Field label="Employee" icon={<User size={16} />}>
-                  <select
-                    value={form.emp_id}
-                    onChange={(e) => handleEmployeeSelect(e.target.value)}
-                    className="input"
-                    required
-                  >
-                    <option value="">Select employee</option>
-
-                    {employees.map((emp, index) => {
-                      const id = emp.employee_id || emp.emp_id || emp.id;
-                      const name =
-                        emp.full_name || emp.employee_name || emp.name || "";
-
-                      return (
-                        <option key={index} value={id}>
-                          {id} - {name}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </Field>
-
-                <Field label="Current Salary" icon={<IndianRupee size={16} />}>
-                  <input
-                    value={formatMoney(form.current_salary)}
-                    readOnly
-                    className="input read"
-                  />
-                </Field>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <Field label="Reward Type" icon={<Gift size={16} />}>
-                  <select
-                    name="reward_type"
-                    value={form.reward_type}
-                    onChange={handleChange}
-                    className="input"
-                  >
-                    <option value="Fixed">Amount Fixed</option>
-                    <option value="Percentage">Percentage</option>
-                  </select>
-                </Field>
-
-                {form.reward_type === "Fixed" ? (
-                  <Field label="Fixed Amount" icon={<IndianRupee size={16} />}>
-                    <input
-                      type="number"
-                      name="fixed_amount"
-                      value={form.fixed_amount}
-                      onChange={handleChange}
-                      placeholder="Enter amount"
+              <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field label="Employee" icon={<User size={16} />}>
+                    <select
+                      value={form.emp_id}
+                      onChange={(e) => handleEmployeeSelect(e.target.value)}
                       className="input"
                       required
-                    />
+                    >
+                      <option value="">Select employee</option>
+
+                      {employees.map((emp, index) => {
+                        const id = emp.employee_id || emp.emp_id || emp.id;
+                        const name =
+                          emp.full_name || emp.employee_name || emp.name || "";
+
+                        return (
+                          <option key={index} value={id}>
+                            {id} - {name}
+                          </option>
+                        );
+                      })}
+                    </select>
                   </Field>
-                ) : (
-                  <Field label="Percentage" icon={<Percent size={16} />}>
+
+                  <Field label="Current Salary" icon={<IndianRupee size={16} />}>
                     <input
-                      type="number"
-                      name="percentage_value"
-                      value={form.percentage_value}
-                      onChange={handleChange}
-                      placeholder="Enter %"
-                      className="input"
-                      required
+                      value={formatMoney(form.current_salary)}
+                      readOnly
+                      className="input read"
                     />
                   </Field>
-                )}
+                </div>
 
-                <Field label="Total Amount" icon={<IndianRupee size={16} />}>
-                  <input
-                    value={formatMoney(form.total_reward_amount)}
-                    readOnly
-                    className="input read font-bold text-emerald-700"
-                  />
-                </Field>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <Field label="Reward Type" icon={<Gift size={16} />}>
+                    <select
+                      name="reward_type"
+                      value={form.reward_type}
+                      onChange={handleChange}
+                      className="input"
+                    >
+                      <option value="Fixed">Amount Fixed</option>
+                      <option value="Percentage">Percentage</option>
+                    </select>
+                  </Field>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <Field label="Reward Date" icon={<CalendarDays size={16} />}>
-                  <input
-                    type="date"
-                    name="reward_date"
-                    value={form.reward_date}
-                    onChange={handleChange}
-                    className="input"
-                    required
-                  />
-                </Field>
-
-                <Field label="Reward Month" icon={<CalendarDays size={16} />}>
-                  <input
-                    name="reward_month"
-                    value={form.reward_month}
-                    readOnly
-                    className="input read"
-                  />
-                </Field>
-
-                <Field label="Order By" icon={<ClipboardPen size={16} />}>
-                  <input
-                    name="order_by"
-                    value={form.order_by}
-                    onChange={handleChange}
-                    placeholder="Order by"
-                    className="input"
-                  />
-                </Field>
-
-                <Field label="Upload Image" icon={<Upload size={16} />}>
-                  <input
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    onChange={(e) => setRewardImage(e.target.files[0])}
-                    className="input"
-                  />
-                </Field>
-              </div>
-
-              <Field label="Remark" icon={<ClipboardPen size={16} />}>
-                <textarea
-                  name="remark"
-                  value={form.remark}
-                  onChange={handleChange}
-                  rows="4"
-                  placeholder="Write reward remark..."
-                  className="input resize-none"
-                />
-              </Field>
-
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 hover:scale-[1.01] active:scale-[0.98] text-white px-10 py-4 rounded-2xl font-black shadow-xl transition-all"
-              >
-                <Send size={20} />
-                Submit Reward
-              </button>
-            </form>
-          </div>
-
-          {/* RIGHT LIST */}
-          <div className="bg-white rounded-[34px] border border-white shadow-2xl overflow-hidden">
-            <div className="p-5 bg-slate-900 text-white">
-              <h2 className="text-xl font-black">Reward History</h2>
-              <p className="text-sm text-slate-300">
-                Search and view employee rewards
-              </p>
-
-              <div className="relative mt-4">
-                <Search
-                  size={18}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search employee, type, date, amount..."
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl text-slate-800 outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="overflow-x-auto max-h-[780px] overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-emerald-50 text-slate-700 sticky top-0 z-10">
-                  <tr>
-                    <th className="p-3">Employee</th>
-                    <th className="p-3">Reward</th>
-                    <th className="p-3">Date</th>
-                    <th className="p-3">Amount</th>
-                    <th className="p-3">Image</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredRewards.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="p-8 text-center text-slate-500">
-                        No reward data found
-                      </td>
-                    </tr>
+                  {form.reward_type === "Fixed" ? (
+                    <Field label="Fixed Amount" icon={<IndianRupee size={16} />}>
+                      <input
+                        type="number"
+                        name="fixed_amount"
+                        value={form.fixed_amount}
+                        onChange={handleChange}
+                        placeholder="Enter amount"
+                        className="input"
+                        required
+                      />
+                    </Field>
                   ) : (
-                    filteredRewards.map((item, index) => (
-                      <tr
-                        key={item.id || index}
-                        className="border-b text-center hover:bg-emerald-50/60"
-                      >
-                        <td className="p-3">
-                          <div className="font-black text-slate-800">
-                            {item.emp_id || "-"}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {item.emp_name ||
-                              item.employee_name ||
-                              item.full_name ||
-                              "-"}
-                          </div>
-                        </td>
+                    <Field label="Percentage" icon={<Percent size={16} />}>
+                      <input
+                        type="number"
+                        name="percentage_value"
+                        value={form.percentage_value}
+                        onChange={handleChange}
+                        placeholder="Enter %"
+                        className="input"
+                        required
+                      />
+                    </Field>
+                  )}
 
-                        <td className="p-3">
-                          <span className="px-3 py-1 rounded-full text-xs font-black bg-cyan-100 text-cyan-700">
-                            {item.reward_type || "-"}
-                          </span>
-                          <div className="text-xs text-slate-500 mt-1">
-                            {item.reward_type === "Percentage"
-                              ? `${item.percentage_value || 0}%`
-                              : "Fixed"}
-                          </div>
-                        </td>
+                  <Field label="Total Amount" icon={<IndianRupee size={16} />}>
+                    <input
+                      value={formatMoney(form.total_reward_amount)}
+                      readOnly
+                      className="input read font-bold text-emerald-700"
+                    />
+                  </Field>
+                </div>
 
-                        <td className="p-3">
-                          <div>{item.reward_date || "-"}</div>
-                          <div className="text-xs text-slate-500">
-                            {item.reward_month || "-"}
-                          </div>
-                        </td>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field label="Reward Date" icon={<CalendarDays size={16} />}>
+                    <input
+                      type="date"
+                      name="reward_date"
+                      value={form.reward_date}
+                      onChange={handleChange}
+                      className="input"
+                      required
+                    />
+                  </Field>
 
-                        <td className="p-3 font-black text-emerald-600">
-                          {formatMoney(item.total_reward_amount)}
-                        </td>
+                  <Field label="Reward Month" icon={<CalendarDays size={16} />}>
+                    <input
+                      name="reward_month"
+                      value={form.reward_month}
+                      readOnly
+                      className="input read"
+                    />
+                  </Field>
 
-                        <td className="p-3">
-                          {item.reward_image ? (
-                            <a
-                              href={`https://ojmee.in/employee/${item.reward_image}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-blue-600 font-bold underline"
-                            >
-                              <Image size={15} />
-                              View
-                            </a>
-                          ) : (
-                            "-"
-                          )}
+                  <Field label="Order By" icon={<ClipboardPen size={16} />}>
+                    <input
+                      name="order_by"
+                      value={form.order_by}
+                      onChange={handleChange}
+                      placeholder="Order by"
+                      className="input"
+                    />
+                  </Field>
+
+                  <Field label="Upload Image" icon={<Upload size={16} />}>
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      onChange={(e) => setRewardImage(e.target.files[0])}
+                      className="input"
+                    />
+                  </Field>
+                </div>
+
+                <Field label="Remark" icon={<ClipboardPen size={16} />}>
+                  <textarea
+                    name="remark"
+                    value={form.remark}
+                    onChange={handleChange}
+                    rows="4"
+                    placeholder="Write reward remark..."
+                    className="input resize-none"
+                  />
+                </Field>
+
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 hover:scale-[1.01] active:scale-[0.98] text-white px-10 py-4 rounded-2xl font-black shadow-xl transition-all"
+                >
+                  <Send size={20} />
+                  Submit Reward
+                </button>
+              </form>
+            </div>
+
+            {/* RIGHT LIST */}
+            <div className="bg-white rounded-[34px] border border-white shadow-2xl overflow-hidden">
+              <div className="p-5 bg-slate-900 text-white">
+                <h2 className="text-xl font-black">Reward History</h2>
+                <p className="text-sm text-slate-300">
+                  Search and view employee rewards
+                </p>
+
+                <div className="relative mt-4">
+                  <Search
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search employee, type, date, amount..."
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl text-slate-800 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto max-h-[780px] overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-emerald-50 text-slate-700 sticky top-0 z-10">
+                    <tr>
+                      <th className="p-3">Employee</th>
+                      <th className="p-3">Reward</th>
+                      <th className="p-3">Date</th>
+                      <th className="p-3">Amount</th>
+                      <th className="p-3">Image</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {filteredRewards.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="p-8 text-center text-slate-500">
+                          No reward data found
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      filteredRewards.map((item, index) => (
+                        <tr
+                          key={item.id || index}
+                          className="border-b text-center hover:bg-emerald-50/60"
+                        >
+                          <td className="p-3">
+                            <div className="font-black text-slate-800">
+                              {item.emp_id || "-"}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {item.emp_name ||
+                                item.employee_name ||
+                                item.full_name ||
+                                "-"}
+                            </div>
+                          </td>
+
+                          <td className="p-3">
+                            <span className="px-3 py-1 rounded-full text-xs font-black bg-cyan-100 text-cyan-700">
+                              {item.reward_type || "-"}
+                            </span>
+                            <div className="text-xs text-slate-500 mt-1">
+                              {item.reward_type === "Percentage"
+                                ? `${item.percentage_value || 0}%`
+                                : "Fixed"}
+                            </div>
+                          </td>
+
+                          <td className="p-3">
+                            <div>{item.reward_date || "-"}</div>
+                            <div className="text-xs text-slate-500">
+                              {item.reward_month || "-"}
+                            </div>
+                          </td>
+
+                          <td className="p-3 font-black text-emerald-600">
+                            {formatMoney(item.total_reward_amount)}
+                          </td>
+
+                          <td className="p-3">
+                            {item.reward_image ? (
+                              <a
+                                href={`https://ojmee.in/employee/${item.reward_image}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-blue-600 font-bold underline"
+                              >
+                                <Image size={15} />
+                                View
+                              </a>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
 
-        <style>{`
+          <style>{`
           .field-card {
             background: linear-gradient(180deg, #ffffff, #f8fafc);
             border: 1px solid #e2e8f0;
@@ -573,6 +574,7 @@ export default function EmployeeRewardForm() {
             color: #475569;
           }
         `}</style>
+        </div>
       </div>
     </div>
   );

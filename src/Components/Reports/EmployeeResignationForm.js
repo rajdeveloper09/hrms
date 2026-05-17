@@ -292,309 +292,310 @@ export default function EmployeeResignationForm() {
       <Toaster />
       <SideNav />
 
-      <div className="flex-1 ml-72 p-4 overflow-y-auto min-h-screen">
-        <div className="rounded-3xl bg-gradient-to-r from-orange-600 via-rose-600 to-red-600 p-6 text-white shadow-xl mb-6">
-          <h1 className="text-3xl font-black">Employee Resignation</h1>
-          <p className="text-orange-100 mt-1">
-            Manage employee resignation details, letters and approval history
-          </p>
-        </div>
+      <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
+        <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
+          <div className="rounded-3xl bg-gradient-to-r from-orange-600 via-rose-600 to-red-600 p-6 text-white shadow-xl mb-6">
+            <h1 className="text-3xl font-black">Employee Resignation</h1>
+            <p className="text-orange-100 mt-1">
+              Manage employee resignation details, letters and approval history
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-          {/* LEFT FORM */}
-          <div className="bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden">
-            <div className="p-5 bg-orange-50 border-b border-orange-100">
-              <h2 className="text-xl font-black text-slate-800">
-                {editMode ? "Update Resignation" : "Resignation Form"}
-              </h2>
-              <p className="text-sm text-slate-500">
-                Fill employee resignation details carefully
-              </p>
-            </div>
-
-            <form onSubmit={editMode ? handleUpdate : handleSubmit} className="p-6 space-y-5">
-              <div>
-                <label className="label">
-                  <User size={16} /> Employee ID & Name
-                </label>
-
-                <select
-                  value={form.emp_id}
-                  onChange={(e) => handleEmployeeSelect(e.target.value)}
-                  className="input"
-                  required
-                >
-                  <option value="">Select employee</option>
-
-                  {activeEmployees.map((emp, index) => {
-                    const id = emp.employee_id || emp.emp_id || emp.id;
-                    const name =
-                      emp.full_name || emp.employee_name || emp.name || "";
-
-                    return (
-                      <option key={index} value={id}>
-                        {id} - {name}
-                      </option>
-                    );
-                  })}
-                </select>
-
-                {activeEmployees.length === 0 && (
-                  <p className="text-sm text-red-600 mt-2">
-                    No employee available. All employees already resigned.
-                  </p>
-                )}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+            {/* LEFT FORM */}
+            <div className="bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden">
+              <div className="p-5 bg-orange-50 border-b border-orange-100">
+                <h2 className="text-xl font-black text-slate-800">
+                  {editMode ? "Update Resignation" : "Resignation Form"}
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Fill employee resignation details carefully
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  icon={<User size={16} />}
-                  label="Employee Name"
-                  value={form.emp_name}
-                  readOnly
-                />
+              <form onSubmit={editMode ? handleUpdate : handleSubmit} className="p-6 space-y-5">
+                <div>
+                  <label className="label">
+                    <User size={16} /> Employee ID & Name
+                  </label>
 
-                <Input
-                  icon={<Building2 size={16} />}
-                  label="Branch ID & Name"
-                  value={
-                    form.branch_id
-                      ? `${form.branch_id} - ${form.branch_name}`
-                      : ""
-                  }
-                  readOnly
-                />
-
-                <Input
-                  icon={<CalendarDays size={16} />}
-                  label="Joining Date"
-                  type="date"
-                  name="joining_date"
-                  value={form.joining_date}
-                  readOnly
-                />
-
-                <Input
-                  icon={<CalendarDays size={16} />}
-                  label="Start Date"
-                  type="date"
-                  name="start_date"
-                  value={form.start_date}
-                  onChange={handleChange}
-                  required
-                />
-
-                <Input
-                  icon={<CalendarDays size={16} />}
-                  label="End Date"
-                  type="date"
-                  name="end_date"
-                  value={form.end_date}
-                  onChange={handleChange}
-                />
-
-                <Input
-                  icon={<CalendarDays size={16} />}
-                  label="Day Difference"
-                  value={
-                    form.total_working_days !== ""
-                      ? `${form.total_working_days} Days`
-                      : ""
-                  }
-                  readOnly
-                />
-
-                <Input
-                  icon={<ClipboardPen size={16} />}
-                  label="Accepted By"
-                  name="accepted_by"
-                  value={form.accepted_by}
-                  onChange={handleChange}
-                  placeholder="Accepted by"
-                />
-                {editMode && (
-                  <div>
-                    <label className="label">
-                      <ClipboardPen size={16} /> Status
-                    </label>
-
-                    <select
-                      name="status"
-                      value={form.status}
-                      onChange={handleChange}
-                      className="input"
-                      required
-                    >
-                      <option value="Accepted">Accepted</option>
-                      <option value="Rejected">Rejected</option>
-                    </select>
-                  </div>
-                )}
-
-              </div>
-
-
-              <TextArea
-                icon={<FileText size={16} />}
-                label="Reason"
-                name="reason"
-                value={form.reason}
-                onChange={handleChange}
-                placeholder="Enter resignation reason"
-              />
-
-              <div>
-                <label className="label">
-                  <Upload size={16} /> Upload Resignation Letter
-                </label>
-
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  onChange={(e) => setLetterFile(e.target.files[0])}
-                  className="input"
-                />
-              </div>
-
-              <TextArea
-                icon={<ClipboardPen size={16} />}
-                label="Remark"
-                name="remark"
-                value={form.remark}
-                onChange={handleChange}
-                placeholder="Enter remark"
-                rows="3"
-              />
-
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={activeEmployees.length === 0}
-                  className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-red-600 text-white px-7 py-3 rounded-2xl font-black shadow-lg"
-                >
-                  <Send size={18} />
-                  {editMode ? "Update Resignation" : "Submit Resignation"}
-                </button>
-
-                {editMode && (
-                  <button
-                    type="button"
-                    onClick={cancelEdit}
-                    className="bg-slate-600 text-white px-7 py-3 rounded-2xl font-black"
+                  <select
+                    value={form.emp_id}
+                    onChange={(e) => handleEmployeeSelect(e.target.value)}
+                    className="input"
+                    required
                   >
-                    Cancel
-                  </button>
-                )}
-              </div>
-            </form>
-          </div>
+                    <option value="">Select employee</option>
 
-          {/* RIGHT HISTORY */}
-          <div className="bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden">
-            <div className="p-5 bg-slate-900 text-white">
-              <h2 className="text-xl font-black">Resignation History</h2>
-              <p className="text-sm text-slate-300">
-                Search employee resignation records
-              </p>
+                    {activeEmployees.map((emp, index) => {
+                      const id = emp.employee_id || emp.emp_id || emp.id;
+                      const name =
+                        emp.full_name || emp.employee_name || emp.name || "";
 
-              <div className="relative mt-4">
-                <Search
-                  size={18}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by employee, branch, status, reason..."
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl text-slate-800 outline-none"
-                />
-              </div>
-            </div>
+                      return (
+                        <option key={index} value={id}>
+                          {id} - {name}
+                        </option>
+                      );
+                    })}
+                  </select>
 
-            <div className="overflow-x-auto max-h-[780px] overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-orange-50 text-slate-700 sticky top-0 z-10">
-                  <tr>
-                    <th className="p-3">Employee</th>
-                    <th className="p-3">Branch</th>
-                    <th className="p-3">Start</th>
-                    <th className="p-3">End</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3">Action</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredResignations.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="p-8 text-center text-slate-500">
-                        No resignation data found
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredResignations.map((item, index) => (
-                      <tr
-                        key={index}
-                        className="border-b text-center hover:bg-orange-50/60"
-                      >
-                        <td className="p-3">
-                          <div className="font-black text-slate-800">
-                            {item.emp_id}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {item.emp_name ||
-                              item.employee_name ||
-                              item.full_name ||
-                              "-"}
-                          </div>
-                        </td>
-
-                        <td className="p-3">
-                          <div className="font-bold">
-                            {item.branch_id || "-"}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {item.branch_name || "-"}
-                          </div>
-                        </td>
-
-                        <td className="p-3">{item.start_date || "-"}</td>
-                        <td className="p-3">{item.end_date || "-"}</td>
-
-                        <td className="p-3">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-black ${item.status === "Accepted"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : item.status === "Rejected"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-amber-100 text-amber-700"
-                              }`}
-                          >
-                            {item.status || "Pending"}
-                          </span>
-                        </td>
-                        {item.status === "Pending" && (
-                          <td className="p-3">
-                            <button
-                              onClick={() => handleEdit(item)}
-                              className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-bold"
-                            >
-                              Edit
-                            </button>
-                          </td>
-                        )
-                        }
-
-                      </tr>
-                    ))
+                  {activeEmployees.length === 0 && (
+                    <p className="text-sm text-red-600 mt-2">
+                      No employee available. All employees already resigned.
+                    </p>
                   )}
-                </tbody>
-              </table>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    icon={<User size={16} />}
+                    label="Employee Name"
+                    value={form.emp_name}
+                    readOnly
+                  />
+
+                  <Input
+                    icon={<Building2 size={16} />}
+                    label="Branch ID & Name"
+                    value={
+                      form.branch_id
+                        ? `${form.branch_id} - ${form.branch_name}`
+                        : ""
+                    }
+                    readOnly
+                  />
+
+                  <Input
+                    icon={<CalendarDays size={16} />}
+                    label="Joining Date"
+                    type="date"
+                    name="joining_date"
+                    value={form.joining_date}
+                    readOnly
+                  />
+
+                  <Input
+                    icon={<CalendarDays size={16} />}
+                    label="Start Date"
+                    type="date"
+                    name="start_date"
+                    value={form.start_date}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  <Input
+                    icon={<CalendarDays size={16} />}
+                    label="End Date"
+                    type="date"
+                    name="end_date"
+                    value={form.end_date}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    icon={<CalendarDays size={16} />}
+                    label="Day Difference"
+                    value={
+                      form.total_working_days !== ""
+                        ? `${form.total_working_days} Days`
+                        : ""
+                    }
+                    readOnly
+                  />
+
+                  <Input
+                    icon={<ClipboardPen size={16} />}
+                    label="Accepted By"
+                    name="accepted_by"
+                    value={form.accepted_by}
+                    onChange={handleChange}
+                    placeholder="Accepted by"
+                  />
+                  {editMode && (
+                    <div>
+                      <label className="label">
+                        <ClipboardPen size={16} /> Status
+                      </label>
+
+                      <select
+                        name="status"
+                        value={form.status}
+                        onChange={handleChange}
+                        className="input"
+                        required
+                      >
+                        <option value="Accepted">Accepted</option>
+                        <option value="Rejected">Rejected</option>
+                      </select>
+                    </div>
+                  )}
+
+                </div>
+
+
+                <TextArea
+                  icon={<FileText size={16} />}
+                  label="Reason"
+                  name="reason"
+                  value={form.reason}
+                  onChange={handleChange}
+                  placeholder="Enter resignation reason"
+                />
+
+                <div>
+                  <label className="label">
+                    <Upload size={16} /> Upload Resignation Letter
+                  </label>
+
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={(e) => setLetterFile(e.target.files[0])}
+                    className="input"
+                  />
+                </div>
+
+                <TextArea
+                  icon={<ClipboardPen size={16} />}
+                  label="Remark"
+                  name="remark"
+                  value={form.remark}
+                  onChange={handleChange}
+                  placeholder="Enter remark"
+                  rows="3"
+                />
+
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={activeEmployees.length === 0}
+                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-red-600 text-white px-7 py-3 rounded-2xl font-black shadow-lg"
+                  >
+                    <Send size={18} />
+                    {editMode ? "Update Resignation" : "Submit Resignation"}
+                  </button>
+
+                  {editMode && (
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="bg-slate-600 text-white px-7 py-3 rounded-2xl font-black"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {/* RIGHT HISTORY */}
+            <div className="bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden">
+              <div className="p-5 bg-slate-900 text-white">
+                <h2 className="text-xl font-black">Resignation History</h2>
+                <p className="text-sm text-slate-300">
+                  Search employee resignation records
+                </p>
+
+                <div className="relative mt-4">
+                  <Search
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by employee, branch, status, reason..."
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl text-slate-800 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto max-h-[780px] overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-orange-50 text-slate-700 sticky top-0 z-10">
+                    <tr>
+                      <th className="p-3">Employee</th>
+                      <th className="p-3">Branch</th>
+                      <th className="p-3">Start</th>
+                      <th className="p-3">End</th>
+                      <th className="p-3">Status</th>
+                      <th className="p-3">Action</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {filteredResignations.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="p-8 text-center text-slate-500">
+                          No resignation data found
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredResignations.map((item, index) => (
+                        <tr
+                          key={index}
+                          className="border-b text-center hover:bg-orange-50/60"
+                        >
+                          <td className="p-3">
+                            <div className="font-black text-slate-800">
+                              {item.emp_id}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {item.emp_name ||
+                                item.employee_name ||
+                                item.full_name ||
+                                "-"}
+                            </div>
+                          </td>
+
+                          <td className="p-3">
+                            <div className="font-bold">
+                              {item.branch_id || "-"}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {item.branch_name || "-"}
+                            </div>
+                          </td>
+
+                          <td className="p-3">{item.start_date || "-"}</td>
+                          <td className="p-3">{item.end_date || "-"}</td>
+
+                          <td className="p-3">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-black ${item.status === "Accepted"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : item.status === "Rejected"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-amber-100 text-amber-700"
+                                }`}
+                            >
+                              {item.status || "Pending"}
+                            </span>
+                          </td>
+                          {item.status === "Pending" && (
+                            <td className="p-3">
+                              <button
+                                onClick={() => handleEdit(item)}
+                                className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-bold"
+                              >
+                                Edit
+                              </button>
+                            </td>
+                          )
+                          }
+
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
 
-        <style>{`
+          <style>{`
           .label {
             display: flex;
             align-items: center;
@@ -624,6 +625,7 @@ export default function EmployeeResignationForm() {
             background: #f8fafc;
           }
         `}</style>
+        </div>
       </div>
     </div>
   );

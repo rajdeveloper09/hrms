@@ -193,245 +193,246 @@ export default function EmployeeMeetingForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
-      <Toaster/>
+      <Toaster />
       <SideNav />
 
-      <div className="flex-1 ml-72 p-4 overflow-y-auto min-h-screen">
-        <div className="rounded-3xl bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-600 p-6 text-white shadow-xl mb-6">
-          <div className="flex items-center gap-3">
-            <Users size={36} />
-            <div>
-              <h1 className="text-3xl font-black">Meeting Management</h1>
-              <p className="text-blue-100 mt-1">
-                Create meeting designation wise and manage meeting history
-              </p>
+      <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
+        <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
+          <div className="rounded-3xl bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-600 p-6 text-white shadow-xl mb-6">
+            <div className="flex items-center gap-3">
+              <Users size={36} />
+              <div>
+                <h1 className="text-3xl font-black">Meeting Management</h1>
+                <p className="text-blue-100 mt-1">
+                  Create meeting designation wise and manage meeting history
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-          {/* LEFT FORM */}
-          <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
-            <div className="p-5 bg-blue-50 border-b border-blue-100">
-              <h2 className="text-xl font-black text-slate-800">
-                Create Meeting
-              </h2>
-              <p className="text-sm text-slate-500">
-                Select designation, employees and meeting details
-              </p>
-            </div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+            {/* LEFT FORM */}
+            <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
+              <div className="p-5 bg-blue-50 border-b border-blue-100">
+                <h2 className="text-xl font-black text-slate-800">
+                  Create Meeting
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Select designation, employees and meeting details
+                </p>
+              </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="label">
-                    <BriefcaseBusiness size={16} /> Meeting Designation
-                  </label>
+              <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="label">
+                      <BriefcaseBusiness size={16} /> Meeting Designation
+                    </label>
 
-                  <select
-                    name="designation"
-                    value={form.designation}
-                    onChange={handleDesignationChange}
-                    className="input"
+                    <select
+                      name="designation"
+                      value={form.designation}
+                      onChange={handleDesignationChange}
+                      className="input"
+                      required
+                    >
+                      <option value="">Select designation</option>
+
+                      {designations.map((item, index) => (
+                        <option key={index} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <Input
+                    icon={<Users size={16} />}
+                    label="Selected Employees"
+                    value={`${form.employee_ids.length} employee selected`}
+                    readOnly
+                  />
+                </div>
+
+                {form.designation && (
+                  <div>
+                    <label className="label">
+                      <Users size={16} /> Employees
+                    </label>
+
+                    {filteredEmployees.length === 0 ? (
+                      <div className="border border-red-200 bg-red-50 text-red-600 rounded-xl px-4 py-3 text-sm font-semibold">
+                        No employee found for this designation
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border rounded-2xl p-4 bg-slate-50 max-h-64 overflow-y-auto">
+                        {filteredEmployees.map((emp, index) => {
+                          const empId = emp.employee_id || emp.emp_id || emp.id;
+                          const empName =
+                            emp.full_name || emp.employee_name || emp.name || "";
+
+                          return (
+                            <label
+                              key={index}
+                              className="flex items-center gap-3 bg-white border rounded-xl px-4 py-3 cursor-pointer hover:bg-indigo-50"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={form.employee_ids.includes(empId)}
+                                onChange={() => handleEmployeeCheckbox(emp)}
+                                className="w-4 h-4"
+                              />
+
+                              <span className="text-sm font-medium text-slate-700">
+                                {empId} - {empName}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Input
+                    icon={<CalendarDays size={16} />}
+                    label="Meeting Date"
+                    type="date"
+                    name="meeting_date"
+                    value={form.meeting_date}
+                    onChange={handleChange}
                     required
-                  >
-                    <option value="">Select designation</option>
+                  />
 
-                    {designations.map((item, index) => (
-                      <option key={index} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
+                  <Input
+                    icon={<Clock size={16} />}
+                    label="Meeting Time"
+                    type="time"
+                    name="meeting_time"
+                    value={form.meeting_time}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  <Input
+                    icon={<MapPin size={16} />}
+                    label="Place"
+                    name="place"
+                    value={form.place}
+                    onChange={handleChange}
+                    placeholder="Enter meeting place"
+                  />
+
+                  <Input
+                    icon={<ClipboardPen size={16} />}
+                    label="Meeting Attend By"
+                    name="meeting_attend_by"
+                    value={form.meeting_attend_by}
+                    onChange={handleChange}
+                    placeholder="Enter meeting attend by"
+                  />
                 </div>
 
-                <Input
-                  icon={<Users size={16} />}
-                  label="Selected Employees"
-                  value={`${form.employee_ids.length} employee selected`}
-                  readOnly
-                />
-              </div>
-
-              {form.designation && (
-                <div>
-                  <label className="label">
-                    <Users size={16} /> Employees
-                  </label>
-
-                  {filteredEmployees.length === 0 ? (
-                    <div className="border border-red-200 bg-red-50 text-red-600 rounded-xl px-4 py-3 text-sm font-semibold">
-                      No employee found for this designation
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border rounded-2xl p-4 bg-slate-50 max-h-64 overflow-y-auto">
-                      {filteredEmployees.map((emp, index) => {
-                        const empId = emp.employee_id || emp.emp_id || emp.id;
-                        const empName =
-                          emp.full_name || emp.employee_name || emp.name || "";
-
-                        return (
-                          <label
-                            key={index}
-                            className="flex items-center gap-3 bg-white border rounded-xl px-4 py-3 cursor-pointer hover:bg-indigo-50"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={form.employee_ids.includes(empId)}
-                              onChange={() => handleEmployeeCheckbox(emp)}
-                              className="w-4 h-4"
-                            />
-
-                            <span className="text-sm font-medium text-slate-700">
-                              {empId} - {empName}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <Input
-                  icon={<CalendarDays size={16} />}
-                  label="Meeting Date"
-                  type="date"
-                  name="meeting_date"
-                  value={form.meeting_date}
-                  onChange={handleChange}
-                  required
-                />
-
-                <Input
-                  icon={<Clock size={16} />}
-                  label="Meeting Time"
-                  type="time"
-                  name="meeting_time"
-                  value={form.meeting_time}
-                  onChange={handleChange}
-                  required
-                />
-
-                <Input
-                  icon={<MapPin size={16} />}
-                  label="Place"
-                  name="place"
-                  value={form.place}
-                  onChange={handleChange}
-                  placeholder="Enter meeting place"
-                />
-
-                <Input
+                <TextArea
                   icon={<ClipboardPen size={16} />}
-                  label="Meeting Attend By"
-                  name="meeting_attend_by"
-                  value={form.meeting_attend_by}
+                  label="Remark"
+                  name="remark"
+                  value={form.remark}
                   onChange={handleChange}
-                  placeholder="Enter meeting attend by"
+                  rows="4"
+                  placeholder="Enter remark"
                 />
-              </div>
 
-              <TextArea
-                icon={<ClipboardPen size={16} />}
-                label="Remark"
-                name="remark"
-                value={form.remark}
-                onChange={handleChange}
-                rows="4"
-                placeholder="Enter remark"
-              />
-
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-700 to-cyan-600 hover:from-indigo-800 hover:to-cyan-700 text-white px-7 py-3 rounded-2xl font-black shadow-lg transition-all"
-              >
-                <Send size={18} />
-                Submit Meeting
-              </button>
-            </form>
-          </div>
-
-          {/* RIGHT LIST */}
-          <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
-            <div className="p-5 bg-slate-900 text-white">
-              <h2 className="text-xl font-black">Meeting History</h2>
-              <p className="text-sm text-slate-300">
-                Search meeting records
-              </p>
-
-              <div className="relative mt-4">
-                <Search
-                  size={18}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by designation, employee, place..."
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl text-slate-800 outline-none"
-                />
-              </div>
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-700 to-cyan-600 hover:from-indigo-800 hover:to-cyan-700 text-white px-7 py-3 rounded-2xl font-black shadow-lg transition-all"
+                >
+                  <Send size={18} />
+                  Submit Meeting
+                </button>
+              </form>
             </div>
 
-            <div className="overflow-x-auto max-h-[780px] overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-blue-50 text-slate-700 sticky top-0 z-10">
-                  <tr>
-                    <th className="p-3">Designation</th>
-                    <th className="p-3">Employees</th>
-                    <th className="p-3">Date / Time</th>
-                    <th className="p-3">Place</th>
-                    <th className="p-3">Attend By</th>
-                  </tr>
-                </thead>
+            {/* RIGHT LIST */}
+            <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
+              <div className="p-5 bg-slate-900 text-white">
+                <h2 className="text-xl font-black">Meeting History</h2>
+                <p className="text-sm text-slate-300">
+                  Search meeting records
+                </p>
 
-                <tbody>
-                  {filteredMeetings.length === 0 ? (
+                <div className="relative mt-4">
+                  <Search
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by designation, employee, place..."
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl text-slate-800 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto max-h-[780px] overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-blue-50 text-slate-700 sticky top-0 z-10">
                     <tr>
-                      <td colSpan="5" className="p-8 text-center text-slate-500">
-                        No meeting data found
-                      </td>
+                      <th className="p-3">Designation</th>
+                      <th className="p-3">Employees</th>
+                      <th className="p-3">Date / Time</th>
+                      <th className="p-3">Place</th>
+                      <th className="p-3">Attend By</th>
                     </tr>
-                  ) : (
-                    filteredMeetings.map((item, index) => (
-                      <tr
-                        key={item.id || index}
-                        className="border-b text-center hover:bg-blue-50/60"
-                      >
-                        <td className="p-3 font-black text-slate-800">
-                          {item.designation || "-"}
-                        </td>
+                  </thead>
 
-                        <td className="p-3">
-                          <div className="font-bold text-slate-800">
-                            {item.employee_ids || "-"}
-                          </div>
-                          <div className="text-xs text-slate-500 max-w-52 truncate">
-                            {item.employee_names || "-"}
-                          </div>
+                  <tbody>
+                    {filteredMeetings.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="p-8 text-center text-slate-500">
+                          No meeting data found
                         </td>
-
-                        <td className="p-3">
-                          <div>{item.meeting_date || "-"}</div>
-                          <div className="text-xs text-slate-500">
-                            {item.meeting_time || "-"}
-                          </div>
-                        </td>
-
-                        <td className="p-3">{item.place || "-"}</td>
-                        <td className="p-3">{item.meeting_attend_by || "-"}</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      filteredMeetings.map((item, index) => (
+                        <tr
+                          key={item.id || index}
+                          className="border-b text-center hover:bg-blue-50/60"
+                        >
+                          <td className="p-3 font-black text-slate-800">
+                            {item.designation || "-"}
+                          </td>
+
+                          <td className="p-3">
+                            <div className="font-bold text-slate-800">
+                              {item.employee_ids || "-"}
+                            </div>
+                            <div className="text-xs text-slate-500 max-w-52 truncate">
+                              {item.employee_names || "-"}
+                            </div>
+                          </td>
+
+                          <td className="p-3">
+                            <div>{item.meeting_date || "-"}</div>
+                            <div className="text-xs text-slate-500">
+                              {item.meeting_time || "-"}
+                            </div>
+                          </td>
+
+                          <td className="p-3">{item.place || "-"}</td>
+                          <td className="p-3">{item.meeting_attend_by || "-"}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
 
-        <style>{`
+          <style>{`
           .label {
             display: flex;
             align-items: center;
@@ -461,6 +462,7 @@ export default function EmployeeMeetingForm() {
             background: #f8fafc;
           }
         `}</style>
+        </div>
       </div>
     </div>
   );

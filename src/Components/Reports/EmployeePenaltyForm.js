@@ -248,9 +248,8 @@ export default function EmployeePenaltyForm() {
       <Toaster />
 
       <SideNav />
-      <div className="flex-1 p-4 ml-72 overflow-y-auto bg-gradient-to-br from-rose-50 via-pink-50 to-red-100 min-h-screen">
-
-        <div className="mx-auto">
+      <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
+        <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
 
           {/* TOP HEADER */}
           <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-r from-red-600 via-rose-500 to-pink-500 p-8 shadow-2xl mb-8">

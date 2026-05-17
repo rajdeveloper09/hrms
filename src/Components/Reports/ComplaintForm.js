@@ -456,7 +456,8 @@ export default function ComplaintForm() {
 
       <SideNav />
 
-      <div className="flex-1 p-4 ml-72 overflow-y-auto">
+      <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
+        <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
 
         <div className="bg-white rounded-[32px] overflow-hidden shadow-2xl border border-white/40">
 
@@ -997,6 +998,7 @@ export default function ComplaintForm() {
 
       </div>
 
+    </div>
     </div>
 
   );
