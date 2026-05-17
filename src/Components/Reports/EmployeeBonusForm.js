@@ -265,7 +265,7 @@ export default function EmployeeBonusForm() {
         <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
 
           {/* HEADER */}
-          <div className="relative overflow-hidden rounded-[34px] bg-gradient-to-r from-purple-700 via-fuchsia-600 to-pink-500 p-8 shadow-2xl">
+          <div className="relative overflow-hidden rounded-[34px] bg-gradient-to-r from-purple-700 via-fuchsia-600 to-pink-500 p-4 shadow-2xl">
             <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/20 rounded-full blur-3xl"></div>
             <div className="absolute -bottom-24 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
 
@@ -276,11 +276,7 @@ export default function EmployeeBonusForm() {
                 </div>
 
                 <div>
-                  <p className="inline-flex px-4 py-1 rounded-full bg-white/20 text-white text-sm font-semibold mb-3">
-                    HR Bonus Management
-                  </p>
-
-                  <h1 className="text-4xl font-black text-white">
+                  <h1 className="text-3xl font-black text-white">
                     Employee Bonus
                   </h1>
 

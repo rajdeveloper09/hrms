@@ -246,7 +246,7 @@ export default function EmployeeRewardForm() {
 
       <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
         <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
-          <div className="relative overflow-hidden rounded-[34px] bg-gradient-to-r from-emerald-700 via-teal-600 to-cyan-600 p-7 text-white shadow-2xl mb-6">
+          <div className="relative overflow-hidden rounded-[34px] bg-gradient-to-r from-emerald-700 via-teal-600 to-cyan-600 p-4 text-white shadow-2xl mb-6">
             <div className="absolute -top-24 -right-20 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
             <div className="absolute -bottom-24 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
 
@@ -257,7 +257,7 @@ export default function EmployeeRewardForm() {
                 </div>
 
                 <div>
-                  <h1 className="text-4xl font-black">Employee Rewards</h1>
+                  <h1 className="text-3xl font-black">Employee Rewards</h1>
                   <p className="text-emerald-100 mt-2">
                     Create and manage reward records
                   </p>

@@ -267,7 +267,7 @@ export default function AreaManagerBranchForm() {
 
       <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
         <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
-          <div className="rounded-3xl bg-gradient-to-r from-rose-600 via-pink-600 to-fuchsia-600 p-6 text-white shadow-xl">
+          <div className="rounded-3xl bg-gradient-to-r from-rose-600 via-pink-600 to-fuchsia-600 p-5 text-white shadow-xl pl-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-black">
@@ -351,7 +351,7 @@ export default function AreaManagerBranchForm() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[420px] overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-h-[420px] overflow-y-auto pr-1">
                 {visibleBranches.length === 0 ? (
                   <div className="md:col-span-2 text-slate-500 bg-slate-50 rounded-2xl p-5 text-center">
                     No branch available. All branches are assigned.
@@ -491,7 +491,7 @@ export default function AreaManagerBranchForm() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           {activeEmployee.branches.map((item) => (
                             <div
                               key={item.id}
