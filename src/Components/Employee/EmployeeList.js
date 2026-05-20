@@ -114,11 +114,10 @@ export default function EmployeeList() {
   ]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
-
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-100 flex">
       <SideNav />
 
-      <div className="flex-1 p-6 ml-72 overflow-y-auto">
+      <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
 
         {/* TOP */}
         <div className="flex justify-between items-center mb-6">

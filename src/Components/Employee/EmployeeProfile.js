@@ -30,158 +30,176 @@ export default function EmployeeProfile() {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
 
- const [empAttendance, setEmpAttendance] =
-        useState([]);
+  const [empAttendance, setEmpAttendance] =
+    useState([]);
 
-    const [salaryData, setSalaryData] =
-        useState([]);
+  const [salaryData, setSalaryData] =
+    useState([]);
 
-    console.log("salary data" + salaryData)
+  console.log("salary data" + salaryData)
 
-    const [bonusData, setBonusData] =
-        useState([]);
+  const [bonusData, setBonusData] =
+    useState([]);
 
-    const [penaltyData, setPenaltyData] =
-        useState([]);
+  const [penaltyData, setPenaltyData] =
+    useState([]);
 
-    const [rewardsData, setRewardsData] =
-        useState([]);
+  const [rewardsData, setRewardsData] =
+    useState([]);
 
-    const [empComplaint, setEmpComplaint] =
-        useState([]);
+  const [empComplaint, setEmpComplaint] =
+    useState([]);
 
-    const [empIncrement, setEmpIncrement] =
-        useState([]);
+  const [empEsicPfData, setEmpEsicPfData] =
+    useState([]);
 
-    const [empOvertime, setEmpOvertime] =
-        useState([]);
+  const [empIncrement, setEmpIncrement] =
+    useState([]);
 
-    const [empMeeting, setEmpMeeting] =
-        useState([]);
+  const [empOvertime, setEmpOvertime] =
+    useState([]);
 
-    const [empResignation, setEmpResignation] =
-        useState([]);
+  const [empMeeting, setEmpMeeting] =
+    useState([]);
 
-    const [empAssest, setEmpAssest] =
-        useState([]);
+  const [empResignation, setEmpResignation] =
+    useState([]);
 
+  const [empAssest, setEmpAssest] =
+    useState([]);
 
-    useEffect(() => {
+  const [empList, setEmployeeNew] =
+    useState([]);
 
-        const fetchData = async (
-            url,
-            setter,
-            label
-        ) => {
+  useEffect(() => {
 
-            try {
+    const fetchData = async (
+      url,
+      setter,
+      label
+    ) => {
 
-                const res = await fetch(url);
+      try {
 
-                const response =
-                    await res.json();
+        const res = await fetch(url);
 
-                console.log(
-                    `${label} Response:`,
-                    response
-                );
+        const response =
+          await res.json();
 
-                const data =
-                    response?.data ||
-                    response?.result ||
-                    response ||
-                    [];
-
-                setter(
-                    Array.isArray(data)
-                        ? data
-                        : []
-                );
-
-            } catch (err) {
-
-                console.log(
-                    `${label} Error:`,
-                    err
-                );
-
-                setter([]);
-
-            }
-
-        };
-
-        /* =========================================
-            ALL API CALLS
-        ========================================= */
-
-        fetchData(
-            `${API_BASE_URL}/emp_attendance`,
-            setEmpAttendance,
-            "Attendance"
+        console.log(
+          `${label} Response:`,
+          response
         );
 
-        fetchData(
-            `${API_BASE_URL}/emp_month_salary`,
-            setSalaryData,
-            "Salary"
+        const data =
+          response?.data ||
+          response?.result ||
+          response ||
+          [];
+
+        setter(
+          Array.isArray(data)
+            ? data
+            : []
         );
 
-        fetchData(
-            `${API_BASE_URL}/emp_bonus`,
-            setBonusData,
-            "Bonus"
+      } catch (err) {
+
+        console.log(
+          `${label} Error:`,
+          err
         );
 
-        fetchData(
-            `${API_BASE_URL}/emp_penalties`,
-            setPenaltyData,
-            "Penalty"
-        );
+        setter([]);
 
-        fetchData(
-            `${API_BASE_URL}/emp_rewards`,
-            setRewardsData,
-            "Rewards"
-        );
+      }
 
-        fetchData(
-            `${API_BASE_URL}/emp_complaints`,
-            setEmpComplaint,
-            "Complaint"
-        );
+    };
 
-        fetchData(
-            `${API_BASE_URL}/emp_increments`,
-            setEmpIncrement,
-            "Increment"
-        );
+    /* =========================================
+        ALL API CALLS
+    ========================================= */
 
-        fetchData(
-            `${API_BASE_URL}/emp_overtime`,
-            setEmpOvertime,
-            "Overtime"
-        );
+    fetchData(
+      `${API_BASE_URL}/emp_attendance`,
+      setEmpAttendance,
+      "Attendance"
+    );
 
-        fetchData(
-            `${API_BASE_URL}/emp_meetings`,
-            setEmpMeeting,
-            "Meeting"
-        );
+    fetchData(
+      `${API_BASE_URL}/emp_month_salary`,
+      setSalaryData,
+      "Salary"
+    );
 
-        fetchData(
-            `${API_BASE_URL}/emp_resignation`,
-            setEmpResignation,
-            "Resignation"
-        );
+    fetchData(
+      `${API_BASE_URL}/emp_bonus`,
+      setBonusData,
+      "Bonus"
+    );
 
-        fetchData(
-            `${API_BASE_URL}/employee_assets`,
-            setEmpAssest,
-            "Assest"
-        );
+    fetchData(
+      `${API_BASE_URL}/emp_penalties`,
+      setPenaltyData,
+      "Penalty"
+    );
 
-    }, []);
+    fetchData(
+      `${API_BASE_URL}/emp_rewards`,
+      setRewardsData,
+      "Rewards"
+    );
+
+    fetchData(
+      `${API_BASE_URL}/emp_complaints`,
+      setEmpComplaint,
+      "Complaint"
+    );
+
+    fetchData(
+      `${API_BASE_URL}/emp_increments`,
+      setEmpIncrement,
+      "Increment"
+    );
+    fetchData(
+      `${API_BASE_URL}/emp_esicpf`,
+      setEmpEsicPfData,
+      "Increment"
+    );
+
+
+
+    fetchData(
+      `${API_BASE_URL}/emp_overtime`,
+      setEmpOvertime,
+      "Overtime"
+    );
+
+    fetchData(
+      `${API_BASE_URL}/emp_meetings`,
+      setEmpMeeting,
+      "Meeting"
+    );
+
+    fetchData(
+      `${API_BASE_URL}/emp_resignation`,
+      setEmpResignation,
+      "Resignation"
+    );
+
+    fetchData(
+      `${API_BASE_URL}/get_office_asset_history`,
+      setEmpAssest,
+      "Assest"
+    );
+
+    fetchData(
+      `${API_BASE_URL}/get_employee`,
+      setEmployeeNew,
+      "Assest"
+    );
+
+  }, []);
 
 
 
@@ -527,8 +545,11 @@ export default function EmployeeProfile() {
               complaintData={empComplaint}
               incrementData={empIncrement}
               overtimeData={empOvertime}
+              esicPfData={empEsicPfData}
               meetingData={empMeeting}
               resignationData={empResignation}
+              assestData={empAssest}
+              employeeData={empList}
             />
           </div>
 

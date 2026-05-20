@@ -22,6 +22,10 @@ import EmployeeAdvanceForm from "./Components/Reports/EmployeeAdvanceForm";
 import EmployeeExpensesForm from "./Components/Reports/EmployeeExpensesForm";
 import AreaManagerBranchForm from "./Components/Reports/AreaManagerBranchForm";
 import Welcome from "./Components/Welcome";
+import EmployeeEsicPfForm from "./Components/Reports/EmployeeEsicPfForm";
+import AddOfficeAssetsForm from "./Components/Reports/AddOfficeAssetsForm";
+import AddOfficeAssetsCategory from "./Components/Reports/AddOfficeAssetsCategory";
+import CreateLoginNewUser from "./Components/CreateLoginNewUser";
 
 
 
@@ -79,7 +83,10 @@ function App() {
           <Route path="/add-expenses" element={<EmployeeExpensesForm />} />
           <Route path="/add-areaManagerBranch" element={<AreaManagerBranchForm />} />
           <Route path="/add-areaManagerBranch" element={<AreaManagerBranchForm />} />
-
+          <Route path="/add-EsicPf" element={<EmployeeEsicPfForm />} />
+          <Route path="/add-office-assets" element={<AddOfficeAssetsForm />} />
+          <Route path="/add-office-assets-category" element={<AddOfficeAssetsCategory />} />
+          <Route path="/create-user" element={<CreateLoginNewUser />} />
         </Routes>
       </Router>
     </>

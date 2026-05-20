@@ -9,9 +9,11 @@ const EmployeeTabsSection = ({
   complaintData = [],
   incrementData = [],
   overtimeData = [],
+  esicPfData = [],
   meetingData = [],
   resignationData = [],
   assestData = [],
+  employeeData = [],
 }) => {
 
   const [activeTab, setActiveTab] =
@@ -49,6 +51,7 @@ const EmployeeTabsSection = ({
       Increment: incrementData || [],
       Overtime: overtimeData || [],
       Meeting: meetingData || [],
+      EsicPF: esicPfData || [],
       Resignation: resignationData || [],
       Assest: assestData || [],
 
@@ -64,6 +67,7 @@ const EmployeeTabsSection = ({
     incrementData,
     overtimeData,
     meetingData,
+    esicPfData,
     resignationData,
     assestData,
   ]);
@@ -300,6 +304,78 @@ const EmployeeTabsSection = ({
   /* =========================================
       TABLE HEADERS
   ========================================= */
+
+  const employeeMap = useMemo(() => {
+    const map = {};
+
+    employeeData.forEach((emp) => {
+      map[String(emp.employee_id)] = emp;
+    });
+
+    return map;
+  }, [employeeData]);
+
+  const toMinutes = (time = "00:00") => {
+    const [h, m] = String(time).split(":").map(Number);
+    return h * 60 + m;
+  };
+
+  const formatMinutes = (totalMinutes) => {
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return `${h}h ${m}m`;
+  };
+
+  const getAttendanceCalc = (item) => {
+    const emp = employeeMap[item.employee_id] || {};
+
+    const inPunch = item.punches?.find((p) => Number(p.status) === 0);
+    const outPunch = item.punches?.find((p) => Number(p.status) === 1);
+
+    const shiftTime = emp.shift_time || "09:30";
+    const requiredHours = Number(emp.working_hours || 0);
+
+    let workingHours = "-";
+    let lateOt = "-";
+
+    if (inPunch?.time && outPunch?.time) {
+      const inMin = toMinutes(inPunch.time);
+      const outMin = toMinutes(outPunch.time);
+      const diffMin = outMin >= inMin ? outMin - inMin : 1440 - inMin + outMin;
+
+      workingHours = formatMinutes(diffMin);
+
+      const requiredMin = requiredHours * 60;
+
+      if (diffMin >= requiredMin) {
+        const otMin = diffMin - requiredMin;
+        lateOt = otMin > 0 ? `OT ${formatMinutes(otMin)}` : "Complete";
+      } else {
+        const shortMin = requiredMin - diffMin;
+        lateOt = `Short ${formatMinutes(shortMin)}`;
+      }
+    }
+
+    if (inPunch?.time) {
+      const shiftMin = toMinutes(shiftTime);
+      const inMin = toMinutes(inPunch.time);
+
+      if (inMin > shiftMin) {
+        lateOt = `Late ${inMin - shiftMin} min`;
+      } else if (lateOt === "-") {
+        lateOt = "On Time";
+      }
+    }
+
+    return {
+      inTime: inPunch?.time || "-",
+      outTime: outPunch?.time || "-",
+      workingHours,
+      lateOt,
+      shiftTime,
+      requiredHours,
+    };
+  };
 
   const renderTableHeader = () => {
 
@@ -628,6 +704,33 @@ const EmployeeTabsSection = ({
 
           </tr>
         );
+      case "EsicPF":
+
+        return (
+          <tr>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Employee
+            </th>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Suspected
+            </th>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Type
+            </th>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Status
+            </th>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Date
+            </th>
+
+          </tr>
+        );
       case "Resignation":
 
         return (
@@ -727,98 +830,11 @@ const EmployeeTabsSection = ({
             ATTENDANCE
         ===================================== */
 
-        if (
-          activeTab === "Attendance"
-        ) {
-
-          const inPunch =
-            item.punches?.find(
-              (p) => p.status === 0
-            );
-
-          const outPunch =
-            item.punches?.find(
-              (p) => p.status === 1
-            );
-
-          let workingHours = "-";
-
-          if (
-            inPunch?.time &&
-            outPunch?.time
-          ) {
-
-            const inTime = new Date(
-              `2000-01-01 ${inPunch.time}`
-            );
-
-            const outTime = new Date(
-              `2000-01-01 ${outPunch.time}`
-            );
-
-            const diffMs =
-              outTime - inTime;
-
-            const hours = Math.floor(
-              diffMs /
-              (1000 * 60 * 60)
-            );
-
-            const minutes = Math.floor(
-              (
-                diffMs %
-                (1000 * 60 * 60)
-              ) /
-              (1000 * 60)
-            );
-
-            workingHours =
-              `${hours}h ${minutes}m`;
-
-          }
-
-          let lateOt = "-";
-
-          if (inPunch?.time) {
-
-            const officeTime =
-              new Date(
-                `2000-01-01 09:30:00`
-              );
-
-            const empInTime =
-              new Date(
-                `2000-01-01 ${inPunch.time}`
-              );
-
-            if (
-              empInTime > officeTime
-            ) {
-
-              const diff =
-                (
-                  empInTime -
-                  officeTime
-                ) /
-                (1000 * 60);
-
-              lateOt =
-                `Late ${Math.floor(diff)} min`;
-
-            } else {
-
-              lateOt = "On Time";
-
-            }
-
-          }
+        if (activeTab === "Attendance") {
+          const calc = getAttendanceCalc(item);
 
           return (
-
-            <tr
-              key={index}
-              className="hover:bg-pink-50/60 transition-all duration-200"
-            >
+            <tr key={index} className="hover:bg-pink-50/60 transition-all duration-200">
               {!isSingleEmployee && (
                 <>
                   <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
@@ -836,25 +852,22 @@ const EmployeeTabsSection = ({
               </td>
 
               <td className="px-4 py-4 border-b text-emerald-600 font-semibold">
-                {inPunch?.time || "-"}
+                {calc.inTime}
               </td>
 
               <td className="px-4 py-4 border-b text-rose-600 font-semibold">
-                {outPunch?.time || "-"}
+                {calc.outTime}
               </td>
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {workingHours}
+                {calc.workingHours}
               </td>
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {lateOt}
+                {calc.lateOt}
               </td>
-
             </tr>
-
           );
-
         }
 
         /* =====================================
@@ -1153,23 +1166,23 @@ const EmployeeTabsSection = ({
             >
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {item.emp_id}
+                {item.asset_id}
               </td>
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {item.asset_name}
+                {item.allow_employee_id} <br /> {item.allow_employee_name}
               </td>
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {item.asset_number}
+                {item.allow_emp_date}
               </td>
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {item.no_of_assets}
+                {item.disallow_emp_date}
               </td>
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {item.start_date}
+                {item.status}
               </td>
 
             </tr>
@@ -1244,6 +1257,42 @@ const EmployeeTabsSection = ({
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
                 {item.emp_id}
+              </td>
+
+            </tr>
+
+          );
+
+        }
+        if (
+          activeTab === "EsicPF"
+        ) {
+
+          return (
+
+            <tr
+              key={index}
+              className="hover:bg-pink-50/60 transition-all duration-200"
+            >
+
+              <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
+                {item.emp_id} <br />  {item.emp_name}
+              </td>
+
+              <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
+                {item.esic_employee_amount}
+              </td>
+
+              <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
+                {item.pf_employee_amount}
+              </td>
+
+              <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
+                {item.effective_date}
+              </td>
+
+              <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
+                {item.status}
               </td>
 
             </tr>
@@ -1348,6 +1397,7 @@ const EmployeeTabsSection = ({
             "Increment",
             "Assest",
             "Overtime",
+            "EsicPF",
             "Meeting",
             "Resignation",
           ].map((tab, index) => (

@@ -30,6 +30,10 @@ export default function AllReport() {
     const [empIncrement, setEmpIncrement] =
         useState([]);
 
+    const [empEsicPfData, setEmpEsicPfData] =
+        useState([]);
+
+
     const [empOvertime, setEmpOvertime] =
         useState([]);
 
@@ -40,6 +44,9 @@ export default function AllReport() {
         useState([]);
 
     const [empAssest, setEmpAssest] =
+        useState([]);
+
+    const [empList, setEmployeeNew] =
         useState([]);
 
 
@@ -135,6 +142,12 @@ export default function AllReport() {
         );
 
         fetchData(
+            `${API_BASE_URL}/emp_esicpf`,
+            setEmpEsicPfData,
+            "Increment"
+        );
+
+        fetchData(
             `${API_BASE_URL}/emp_overtime`,
             setEmpOvertime,
             "Overtime"
@@ -153,8 +166,13 @@ export default function AllReport() {
         );
 
         fetchData(
-            `${API_BASE_URL}/employee_assets`,
+            `${API_BASE_URL}/get_office_asset_history`,
             setEmpAssest,
+            "Assest"
+        );
+        fetchData(
+            `${API_BASE_URL}/get_employee`,
+            setEmployeeNew,
             "Assest"
         );
 
@@ -167,54 +185,22 @@ export default function AllReport() {
             <Toaster />
             <SideNav />
 
-            <div className="flex-1 xl:ml-72 p-4 md:p-6 overflow-y-auto">
+            <div className="flex-1 xl:ml-72 p-4 md:p-6 overflow-y-auto mt-20">
 
                 <EmployeeTabsSection
-
-                    attendanceData={
-                        empAttendance
-                    }
-
-                    salaryData={
-                        salaryData
-                    }
-
-                    bonusData={
-                        bonusData
-                    }
-
-                    penaltyData={
-                        penaltyData
-                    }
-
-                    rewardsData={
-                        rewardsData
-                    }
-
-                    complaintData={
-                        empComplaint
-                    }
-
-                    incrementData={
-                        empIncrement
-                    }
-
-                    overtimeData={
-                        empOvertime
-                    }
-
-                    meetingData={
-                        empMeeting
-                    }
-
-                    resignationData={
-                        empResignation
-                    }
-
-                    assestData={
-                        empAssest
-                    }
-
+                    attendanceData={empAttendance}
+                    salaryData={salaryData}
+                    bonusData={bonusData}
+                    penaltyData={penaltyData}
+                    rewardsData={rewardsData}
+                    complaintData={empComplaint}
+                    incrementData={empIncrement}
+                    overtimeData={empOvertime}
+                    esicPfData={empEsicPfData}
+                    meetingData={empMeeting}
+                    resignationData={empResignation}
+                    assestData={empAssest}
+                    employeeData={empList}
                 />
 
             </div>

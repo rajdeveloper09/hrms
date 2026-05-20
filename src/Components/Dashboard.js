@@ -32,10 +32,10 @@ export default function Dashboard({ setIsAuth }) {
   ]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
-
-      <SideNav />
-      <div className="flex-1 ml-72 p-3 overflow-y-auto">
+     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
+          <SideNav />
+    
+           <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
         <TopBar setIsAuth={setIsAuth} />
         {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           {stats.map((s, i) => (

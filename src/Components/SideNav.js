@@ -7,9 +7,6 @@ import {
   LayoutDashboard,
   Users,
   Wallet,
-  Briefcase,
-  Building2,
-  Settings,
   FileText,
   Sparkles,
   LogOut,
@@ -21,6 +18,12 @@ export default function SideNav() {
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const role = localStorage.getItem("role") || user.role || "view";
+  const empId = localStorage.getItem("emp_id") || user.employee_id || "User";
+
+  const canShow = (allowedRoles) => allowedRoles.includes(role);
 
   const linkClass = ({ isActive }) =>
     isActive
@@ -39,13 +42,15 @@ export default function SideNav() {
   const logout = () => {
     localStorage.removeItem("login");
     localStorage.removeItem("emp_id");
-
+    localStorage.removeItem("role");
+    localStorage.removeItem("user");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     navigate("/login", { replace: true });
   };
 
   return (
     <>
-      {/* MOBILE TOP BAR */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-xl shadow-lg z-50 flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 text-white flex items-center justify-center shadow">
@@ -62,7 +67,6 @@ export default function SideNav() {
         </button>
       </div>
 
-      {/* SIDEBAR */}
       <div
         className={`
           fixed top-0 left-0 h-screen w-72 z-50
@@ -74,7 +78,6 @@ export default function SideNav() {
           md:translate-x-0
         `}
       >
-        {/* LOGO */}
         <div className="shrink-0 bg-white/95 backdrop-blur-xl border-b border-rose-100 p-5">
           <NavLink to="/dashboard" className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-rose-600 via-pink-600 to-fuchsia-600 text-white flex items-center justify-center shadow-lg shadow-pink-200">
@@ -86,119 +89,100 @@ export default function SideNav() {
                 Admin
               </h1>
               <p className="text-xs font-semibold text-slate-400">
-                Employee Panel
+                {role}
               </p>
             </div>
           </NavLink>
         </div>
 
-        {/* ONLY MENU SCROLL */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2 sidebar-scroll">
-          <NavLink to="/dashboard" end className={linkClass}>
-            <LayoutDashboard size={20} />
-            Dashboard
-          </NavLink>
+          {canShow(["view", "contributor", "admin", "superAdmin"]) && (
+            <NavLink to="/dashboard" end className={linkClass}>
+              <LayoutDashboard size={20} />
+              Dashboard
+            </NavLink>
+          )}
 
-          <NavLink to="/all-report" className={linkClass}>
-            <FileText size={20} />
-            All Reports
-          </NavLink>
-          <NavLink to="/employees-list" className={linkClass}>
-            <Users size={20} />
-            Employee List
-          </NavLink>
+          {canShow(["view", "admin", "superAdmin"]) && (
+            <NavLink to="/all-report" className={linkClass}>
+              <FileText size={20} />
+              All Reports
+            </NavLink>
+          )}
 
-          {/* <MenuGroup
-            title="Employees"
-            icon={<Users size={20} />}
-            open={openMenu === "employee"}
-            onClick={() => toggleMenu("employee")}
-          >
-            <NavLink to="/employees-list" className={subLinkClass}>
+          {canShow(["contributor", "admin", "superAdmin"]) && (
+            <NavLink to="/employees-list" className={linkClass}>
+              <Users size={20} />
               Employee List
             </NavLink>
+          )}
 
-            <NavLink to="/add-employee" className={subLinkClass}>
-              Add Employee
-            </NavLink>
-          </MenuGroup> */}
+          {canShow(["contributor", "admin", "superAdmin"]) && (
+            <MenuGroup
+              title="Add/Update Reports"
+              icon={<Wallet size={20} />}
+              open={openMenu === "reports"}
+              onClick={() => toggleMenu("reports")}
+            >
+              {canShow(["superAdmin"]) && (
+                <NavLink to="/create-login-user" className={subLinkClass}>
+                  Create Login User
+                </NavLink>
+              )}
 
-          <MenuGroup
-            title="Add/Update Reports"
-            icon={<Wallet size={20} />}
-            open={openMenu === "salary"}
-            onClick={() => toggleMenu("salary")}
-          >
-            <NavLink to="/add-increment" className={subLinkClass}>
-              Add Increment
-            </NavLink>
+              {canShow(["admin", "superAdmin"]) && (
+                <>
+                  <NavLink to="/create-user" className={subLinkClass}>
+                    Add New Employee
+                  </NavLink>
 
-            <NavLink to="/add-areaManagerBranch" className={subLinkClass}>
-              Add Area Manager Branch
-            </NavLink>
+                  <NavLink to="/add-EsicPf" className={subLinkClass}>
+                    Add ESIC & PF
+                  </NavLink>
 
-            <NavLink to="/add-expenses" className={subLinkClass}>
-              Add Expenses
-            </NavLink>
+                  <NavLink to="/add-office-assets-category" className={subLinkClass}>
+                    Add Office Assets Category
+                  </NavLink>
+                </>
+              )}
 
-            <NavLink to="/add-advance" className={subLinkClass}>
-              Add Advance
-            </NavLink>
+              {canShow(["contributor", "admin", "superAdmin"]) && (
+                <>
+                  <NavLink to="/add-office-assets" className={subLinkClass}>
+                    Add Office Assets
+                  </NavLink>
 
-            <NavLink to="/add-penalty" className={subLinkClass}>
-              Add Penalty
-            </NavLink>
+                  <NavLink to="/add-expenses" className={subLinkClass}>
+                    Add Expenses
+                  </NavLink>
 
-            <NavLink to="/add-resignation" className={subLinkClass}>
-              Add Resignation
-            </NavLink>
+                  <NavLink to="/add-advance" className={subLinkClass}>
+                    Add Advance
+                  </NavLink>
 
-            <NavLink to="/add-overtime" className={subLinkClass}>
-              Add Over Time
-            </NavLink>
+                  <NavLink to="/add-bonus" className={subLinkClass}>
+                    Add Bonus
+                  </NavLink>
 
-            <NavLink to="/add-transfer" className={subLinkClass}>
-              Add Transfer
-            </NavLink>
+                  <NavLink to="/add-penalty" className={subLinkClass}>
+                    Add Penalty
+                  </NavLink>
 
-            <NavLink to="/add-complaint" className={subLinkClass}>
-              Add Complaint
-            </NavLink>
+                  <NavLink to="/add-reward" className={subLinkClass}>
+                    Add Reward
+                  </NavLink>
+                </>
+              )}
+            </MenuGroup>
+          )}
 
-            <NavLink to="/add-assests" className={subLinkClass}>
-              Add Assests
-            </NavLink>
-
-            <NavLink to="/add-bonus" className={subLinkClass}>
-              Add Bonus
-            </NavLink>
-
-            <NavLink to="/add-meeting" className={subLinkClass}>
-              Add Meeting
-            </NavLink>
-
-            <NavLink to="/add-reward" className={subLinkClass}>
-              Add Reward
-            </NavLink>
-          </MenuGroup>
-
-          {/* <NavLink to="/branches" className={linkClass}>
-            <Building2 size={20} />
-            Branches
-          </NavLink>
-
-          <NavLink to="/jobs" className={linkClass}>
-            <Briefcase size={20} />
-            Jobs
-          </NavLink>
-
-          <NavLink to="/settings" className={linkClass}>
-            <Settings size={20} />
-            Settings
-          </NavLink> */}
+          {role === "view" && (
+            <div className="mt-4 rounded-2xl bg-blue-50 border border-blue-100 p-4 text-sm font-bold text-blue-700">
+              View role: only Dashboard and Reports allowed.
+            </div>
+          )}
         </div>
 
-        {/* FIXED BOTTOM PROFILE */}
         <div className="shrink-0 p-4 bg-white/95 backdrop-blur-xl border-t border-rose-100">
           <div className="rounded-3xl bg-gradient-to-r from-rose-50 via-pink-50 to-fuchsia-50 border border-rose-100 p-4 shadow-xl">
             <div className="flex items-center gap-3 mb-4">
@@ -208,10 +192,10 @@ export default function SideNav() {
 
               <div className="flex-1 overflow-hidden">
                 <h3 className="text-sm font-black text-slate-800 truncate">
-                  Admin User
+                  {empId}
                 </h3>
                 <p className="text-xs font-semibold text-slate-400 truncate">
-                  admin@gmail.com
+                  {role}
                 </p>
               </div>
             </div>
@@ -227,7 +211,6 @@ export default function SideNav() {
         </div>
       </div>
 
-      {/* MOBILE OVERLAY */}
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
