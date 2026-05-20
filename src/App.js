@@ -26,6 +26,7 @@ import EmployeeEsicPfForm from "./Components/Reports/EmployeeEsicPfForm";
 import AddOfficeAssetsForm from "./Components/Reports/AddOfficeAssetsForm";
 import AddOfficeAssetsCategory from "./Components/Reports/AddOfficeAssetsCategory";
 import CreateLoginNewUser from "./Components/CreateLoginNewUser";
+import EmployeePermissionPage from "./Components/EmployeePermissionPage";
 
 
 
@@ -87,6 +88,8 @@ function App() {
           <Route path="/add-office-assets" element={<AddOfficeAssetsForm />} />
           <Route path="/add-office-assets-category" element={<AddOfficeAssetsCategory />} />
           <Route path="/create-user" element={<CreateLoginNewUser />} />
+          <Route path="/create-user-permission" element={<EmployeePermissionPage />} />
+          
         </Routes>
       </Router>
     </>

@@ -103,6 +103,13 @@ export default function SideNav() {
             </NavLink>
           )}
 
+          {canShow(["superAdmin"]) && (
+            <NavLink to="/create-user-permission" className={linkClass}>
+              <FileText size={20} />
+              Add Permission
+            </NavLink>
+          )}
+
           {canShow(["view", "admin", "superAdmin"]) && (
             <NavLink to="/all-report" className={linkClass}>
               <FileText size={20} />
