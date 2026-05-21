@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import SideNav from "../SideNav";
 
 const API = "https://ojmee.in/employee";
+const CURRENT_PATH = "/add-expenses";
 
 export default function EmployeeExpensesForm() {
   const emptyForm = {
@@ -26,6 +27,19 @@ export default function EmployeeExpensesForm() {
   const [form, setForm] = useState(emptyForm);
   const [editMode, setEditMode] = useState(false);
   const [search, setSearch] = useState("");
+
+  const role = localStorage.getItem("role") || "view";
+  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+
+  const pagePermission =
+    role === "superAdmin"
+      ? { can_view: 1, can_add: 1, can_edit: 1, can_delete: 1 }
+      : permissions.find((p) => p.route_path === CURRENT_PATH) || {};
+
+  const canView = role === "superAdmin" || Number(pagePermission.can_view) === 1;
+  const canAdd = role === "superAdmin" || Number(pagePermission.can_add) === 1;
+  const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
+  const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
 
   useEffect(() => {
     fetchEmployees();
@@ -52,7 +66,6 @@ export default function EmployeeExpensesForm() {
 
   const filteredExpenses = useMemo(() => {
     const q = search.toLowerCase().trim();
-
     if (!q) return expensesList;
 
     return expensesList.filter((item) => {
@@ -78,6 +91,8 @@ export default function EmployeeExpensesForm() {
   }, [expensesList, search]);
 
   const handleEmployeeChange = (e) => {
+    if (!canAdd) return alert("You do not have add permission");
+
     const empId = e.target.value;
     const emp = employees.find((item) => item.employee_id === empId);
 
@@ -93,7 +108,11 @@ export default function EmployeeExpensesForm() {
       status: "Pending",
     });
   };
+
   const handleChange = (e) => {
+    if (!editMode && !canAdd) return alert("You do not have add permission");
+    if (editMode && !canEdit) return alert("You do not have edit permission");
+
     const { name, value, files, type } = e.target;
 
     setForm((prev) => ({
@@ -125,7 +144,6 @@ export default function EmployeeExpensesForm() {
       <body>
         <div class="box">
           <h1>Employee Expenses Request</h1>
-
           <table>
             <tr><td><b>Expenses ID</b></td><td>${data.expenses_id || "-"}</td></tr>
             <tr><td><b>Employee ID</b></td><td>${data.emp_id || "-"}</td></tr>
@@ -137,11 +155,7 @@ export default function EmployeeExpensesForm() {
             <tr><td><b>Status</b></td><td>${data.status || "Pending"}</td></tr>
             <tr><td><b>Remark</b></td><td>${data.remark || "-"}</td></tr>
           </table>
-
-          <p style="margin-top:30px;">
-            I confirm that I have requested the above expenses amount.
-          </p>
-
+          <p style="margin-top:30px;">I confirm that I have requested the above expenses amount.</p>
           <div class="signatures">
             <div class="sign">Employee Signature</div>
             <div class="sign">Authorize Person Signature</div>
@@ -154,11 +168,7 @@ export default function EmployeeExpensesForm() {
 
   const printExpensesLetter = (data) => {
     const printWindow = window.open("", "_blank");
-
-    if (!printWindow) {
-      alert("Popup blocked hai. Browser popup allow karo.");
-      return;
-    }
+    if (!printWindow) return alert("Popup blocked hai. Browser popup allow karo.");
 
     printWindow.document.write(generateExpensesLetterHTML(data));
     printWindow.document.close();
@@ -187,6 +197,8 @@ export default function EmployeeExpensesForm() {
   const createExpenses = async (e) => {
     e.preventDefault();
 
+    if (!canAdd) return alert("You do not have add permission");
+
     if (!form.emp_id) return alert("Select employee");
     if (!form.expenses_amount) return alert("Expenses amount required");
     if (!form.expenses_type) return alert("Expenses type required");
@@ -206,7 +218,7 @@ export default function EmployeeExpensesForm() {
 
       const res = await axios.post(`${API}/emp_expenses_post`, formData);
 
-      if (res.data.status) {
+      if (res.data.status || res.data.success) {
         const printData = {
           ...form,
           expenses_id: res.data.expenses_id,
@@ -227,6 +239,8 @@ export default function EmployeeExpensesForm() {
 
   const updateExpenses = async (e) => {
     e.preventDefault();
+
+    if (!canEdit) return alert("You do not have edit permission");
 
     if (!form.id) return alert("Select record first");
     if (!form.approve_by) return alert("Approve by required");
@@ -250,7 +264,7 @@ export default function EmployeeExpensesForm() {
 
       const res = await axios.post(`${API}/emp_expenses_post_update`, formData);
 
-      if (res.data.status) {
+      if (res.data.status || res.data.success) {
         alert(res.data.message);
         setForm(emptyForm);
         setEditMode(false);
@@ -264,7 +278,30 @@ export default function EmployeeExpensesForm() {
     }
   };
 
+  const deleteExpenses = async (item) => {
+    if (!canDelete) return alert("You do not have delete permission");
+
+    if (!window.confirm(`Delete ${item.expenses_id}?`)) return;
+
+    try {
+      const res = await axios.post(`${API}/emp_expenses_delete`, {
+        id: item.id,
+      });
+
+      if (res.data.status || res.data.success) {
+        alert(res.data.message || "Deleted successfully");
+        fetchExpensesList();
+      } else {
+        alert(res.data.message || "Delete failed");
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || error.message || "Delete API not working");
+    }
+  };
+
   const handleEdit = (item) => {
+    if (!canEdit) return alert("You do not have edit permission");
+
     setEditMode(true);
 
     setForm({
@@ -290,6 +327,24 @@ export default function EmployeeExpensesForm() {
     setForm(emptyForm);
   };
 
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-72 p-6">
+          <div className="bg-white rounded-3xl p-10 text-center shadow-xl">
+            <h1 className="text-2xl font-black text-red-600">Access Denied</h1>
+            <p className="text-slate-500 mt-2">
+              You do not have permission to view this page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const formAllowed = editMode ? canEdit : canAdd;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
       <Toaster />
@@ -311,7 +366,11 @@ export default function EmployeeExpensesForm() {
                   {!editMode ? "Create Expenses" : "Approve / Update Expenses"}
                 </h2>
                 <p className="text-sm text-slate-500">
-                  Fill expenses details carefully
+                  {formAllowed
+                    ? "Fill expenses details carefully"
+                    : editMode
+                    ? "View Only Permission - Edit Not Allowed"
+                    : "View Only Permission - Add Not Allowed"}
                 </p>
               </div>
 
@@ -327,6 +386,7 @@ export default function EmployeeExpensesForm() {
                         value={form.emp_id}
                         onChange={handleEmployeeChange}
                         required
+                        disabled={!canAdd}
                         className="input"
                       >
                         <option value="">Select Employee</option>
@@ -346,6 +406,7 @@ export default function EmployeeExpensesForm() {
                       name="expenses_amount"
                       value={form.expenses_amount}
                       onChange={handleChange}
+                      readOnly={!canAdd}
                       required
                     />
 
@@ -355,6 +416,7 @@ export default function EmployeeExpensesForm() {
                       name="expenses_date"
                       value={form.expenses_date}
                       onChange={handleChange}
+                      readOnly={!canAdd}
                       required
                     />
 
@@ -365,6 +427,7 @@ export default function EmployeeExpensesForm() {
                         value={form.expenses_type}
                         onChange={handleChange}
                         required
+                        disabled={!canAdd}
                         className="input"
                       >
                         <option value="">Select Expenses Type</option>
@@ -380,6 +443,7 @@ export default function EmployeeExpensesForm() {
                       name="order_by"
                       value={form.order_by}
                       onChange={handleChange}
+                      readOnly={!canAdd}
                       required
                     />
 
@@ -399,6 +463,7 @@ export default function EmployeeExpensesForm() {
                       name="expenses_date"
                       value={form.expenses_date}
                       onChange={handleChange}
+                      readOnly={!canEdit}
                       required
                     />
 
@@ -407,6 +472,7 @@ export default function EmployeeExpensesForm() {
                       name="approve_by"
                       value={form.approve_by}
                       onChange={handleChange}
+                      readOnly={!canEdit}
                       required
                     />
 
@@ -415,6 +481,7 @@ export default function EmployeeExpensesForm() {
                       name="order_by"
                       value={form.order_by}
                       onChange={handleChange}
+                      readOnly={!canEdit}
                       required
                     />
 
@@ -425,6 +492,7 @@ export default function EmployeeExpensesForm() {
                         value={form.status}
                         onChange={handleChange}
                         required
+                        disabled={!canEdit}
                         className="input"
                       >
                         <option value="Pending">Pending</option>
@@ -440,6 +508,7 @@ export default function EmployeeExpensesForm() {
                         name="signature_document"
                         accept=".pdf,.jpg,.jpeg,.png,.webp"
                         onChange={handleChange}
+                        disabled={!canEdit}
                         className="input"
                       />
                     </div>
@@ -452,15 +521,24 @@ export default function EmployeeExpensesForm() {
                     name="remark"
                     value={form.remark}
                     onChange={handleChange}
+                    readOnly={!formAllowed}
                     className="input h-24"
                     placeholder="Enter remark"
                   />
                 </div>
 
                 <div className="md:col-span-2 flex gap-3">
-                  <button className="flex-1 bg-gradient-to-r from-rose-600 to-pink-600 text-white py-3 rounded-2xl font-black shadow-lg">
-                    {!editMode ? "Create Expenses & Print" : "Update Expenses"}
-                  </button>
+                  {formAllowed ? (
+                    <button className="flex-1 bg-gradient-to-r from-rose-600 to-pink-600 text-white py-3 rounded-2xl font-black shadow-lg">
+                      {!editMode ? "Create Expenses & Print" : "Update Expenses"}
+                    </button>
+                  ) : (
+                    <div className="flex-1 bg-yellow-50 text-yellow-700 border border-yellow-200 py-3 rounded-2xl font-black text-center">
+                      {!editMode
+                        ? "View Only Permission - Add Not Allowed"
+                        : "View Only Permission - Edit Not Allowed"}
+                    </div>
+                  )}
 
                   {editMode && (
                     <button
@@ -512,7 +590,10 @@ export default function EmployeeExpensesForm() {
                       </tr>
                     ) : (
                       filteredExpenses.map((item) => (
-                        <tr key={item.id} className="border-b text-center hover:bg-rose-50/40">
+                        <tr
+                          key={item.id}
+                          className="border-b text-center hover:bg-rose-50/40"
+                        >
                           <td className="p-3 font-black">{item.expenses_id}</td>
 
                           <td className="p-3">
@@ -532,55 +613,67 @@ export default function EmployeeExpensesForm() {
 
                           <td className="p-3">
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-black ${item.status === "Accepted"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : item.status === "Rejected"
+                              className={`px-3 py-1 rounded-full text-xs font-black ${
+                                item.status === "Accepted"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : item.status === "Rejected"
                                   ? "bg-red-100 text-red-700"
                                   : "bg-amber-100 text-amber-700"
-                                }`}
+                              }`}
                             >
                               {item.status}
                             </span>
                           </td>
 
                           <td className="p-3">
-                            {item.status === "Pending" && (
-                              <div className="flex flex-wrap gap-2 justify-center">
+                            <div className="flex flex-wrap gap-2 justify-center">
+                              {item.status === "Pending" && canEdit ? (
                                 <button
                                   onClick={() => handleEdit(item)}
                                   className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold"
                                 >
                                   Edit
                                 </button>
+                              ) : (
+                                <span className="text-xs font-black text-slate-400">
+                                  View Only
+                                </span>
+                              )}
 
+                              <button
+                                onClick={() => printExpensesLetter(item)}
+                                className="bg-blue-600 text-white px-3 py-2 rounded-xl font-bold"
+                              >
+                                Print
+                              </button>
 
-                                <button
-                                  onClick={() => printExpensesLetter(item)}
-                                  className="bg-blue-600 text-white px-3 py-2 rounded-xl font-bold"
+                              <button
+                                onClick={() => downloadExpensesLetter(item)}
+                                className="bg-emerald-600 text-white px-3 py-2 rounded-xl font-bold"
+                              >
+                                Download
+                              </button>
+
+                              {item.signature_document && (
+                                <a
+                                  href={`${API}/${item.signature_document}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="bg-slate-700 text-white px-3 py-2 rounded-xl font-bold"
                                 >
-                                  Print
-                                </button>
+                                  View
+                                </a>
+                              )}
 
+                              {canDelete && (
                                 <button
-                                  onClick={() => downloadExpensesLetter(item)}
-                                  className="bg-emerald-600 text-white px-3 py-2 rounded-xl font-bold"
+                                  onClick={() => deleteExpenses(item)}
+                                  className="bg-red-600 text-white px-3 py-2 rounded-xl font-bold"
                                 >
-                                  Download
+                                  Delete
                                 </button>
-
-                                {item.signature_document && (
-                                  <a
-                                    href={`${API}/${item.signature_document}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="bg-slate-700 text-white px-3 py-2 rounded-xl font-bold"
-                                  >
-                                    View
-                                  </a>
-                                )}
-
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -591,6 +684,40 @@ export default function EmployeeExpensesForm() {
             </div>
           </div>
         </div>
+
+        <style>{`
+          .label {
+            display:block;
+            font-size:13px;
+            font-weight:800;
+            color:#334155;
+            margin-bottom:8px;
+          }
+
+          .input {
+            width:100%;
+            padding:12px 14px;
+            border-radius:16px;
+            border:1px solid #fecdd3;
+            background:#ffffff;
+            outline:none;
+            font-weight:700;
+            color:#1e293b;
+          }
+
+          .input:focus {
+            border-color:#e11d48;
+            box-shadow:0 0 0 4px rgba(225,29,72,0.12);
+          }
+
+          .input:read-only,
+          .input:disabled,
+          textarea:read-only {
+            background:#f8fafc;
+            color:#475569;
+            cursor:not-allowed;
+          }
+        `}</style>
       </div>
     </div>
   );

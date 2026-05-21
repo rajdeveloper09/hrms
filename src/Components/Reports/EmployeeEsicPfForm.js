@@ -4,6 +4,7 @@ import SideNav from "../SideNav";
 import { Toaster } from "react-hot-toast";
 
 const API = "https://ojmee.in/employee";
+const CURRENT_PATH = "/add-EsicPf";
 
 export default function EmployeeESICPFForm() {
   const emptyForm = {
@@ -53,6 +54,23 @@ export default function EmployeeESICPFForm() {
   const [editMode, setEditMode] = useState(false);
   const [search, setSearch] = useState("");
 
+  const role = localStorage.getItem("role") || "view";
+  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+
+  const pagePermission =
+    role === "superAdmin"
+      ? { can_view: 1, can_add: 1, can_edit: 1, can_delete: 1 }
+      : permissions.find((p) => p.route_path === CURRENT_PATH) || {};
+
+  const canView =
+    role === "superAdmin" || Number(pagePermission.can_view) === 1;
+  const canAdd =
+    role === "superAdmin" || Number(pagePermission.can_add) === 1;
+  const canEdit =
+    role === "superAdmin" || Number(pagePermission.can_edit) === 1;
+  const canDelete =
+    role === "superAdmin" || Number(pagePermission.can_delete) === 1;
+
   useEffect(() => {
     fetchEmployees();
     fetchList();
@@ -94,9 +112,10 @@ export default function EmployeeESICPFForm() {
 
   const calculateAmounts = (data) => {
     const currentSalary = Number(data.current_salary || 0);
-
     const esicSalary = Number(data.esic_deduct_salary || currentSalary || 0);
-    const pfSalary = Number(data.pf_deduct_salary || data.basic_salary || currentSalary || 0);
+    const pfSalary = Number(
+      data.pf_deduct_salary || data.basic_salary || currentSalary || 0
+    );
 
     let esicEmployeeAmount = 0;
     let esicEmployerAmount = 0;
@@ -106,8 +125,10 @@ export default function EmployeeESICPFForm() {
     let pfEmployerAmount = 0;
 
     if (data.esic_applicable === "Yes") {
-      esicEmployeeAmount = (esicSalary * Number(data.esic_employee_percent || 0)) / 100;
-      esicEmployerAmount = (esicSalary * Number(data.esic_employer_percent || 0)) / 100;
+      esicEmployeeAmount =
+        (esicSalary * Number(data.esic_employee_percent || 0)) / 100;
+      esicEmployerAmount =
+        (esicSalary * Number(data.esic_employer_percent || 0)) / 100;
     }
 
     if (data.pf_applicable === "Yes") {
@@ -136,12 +157,18 @@ export default function EmployeeESICPFForm() {
       pf_employee_amount: Math.round(pfEmployeeAmount),
       pf_employer_amount: Math.round(pfEmployerAmount),
       total_pf_amount: Math.round(pfEmployeeAmount + pfEmployerAmount),
-      total_deduction_employee: Math.round(esicEmployeeAmount + pfEmployeeAmount),
-      total_company_contribution: Math.round(esicEmployerAmount + pfEmployerAmount),
+      total_deduction_employee: Math.round(
+        esicEmployeeAmount + pfEmployeeAmount
+      ),
+      total_company_contribution: Math.round(
+        esicEmployerAmount + pfEmployerAmount
+      ),
     }));
   };
 
   const handleEmployeeChange = (e) => {
+    if (!canAdd) return alert("You do not have add permission");
+
     const empId = e.target.value;
     const emp = employees.find((item) => item.employee_id === empId);
 
@@ -172,6 +199,9 @@ export default function EmployeeESICPFForm() {
   };
 
   const handleChange = (e) => {
+    if (!editMode && !canAdd) return alert("You do not have add permission");
+    if (editMode && !canEdit) return alert("You do not have edit permission");
+
     const { name, value } = e.target;
 
     setForm((prev) => {
@@ -196,6 +226,9 @@ export default function EmployeeESICPFForm() {
   const submitForm = async (e) => {
     e.preventDefault();
 
+    if (!editMode && !canAdd) return alert("You do not have add permission");
+    if (editMode && !canEdit) return alert("You do not have edit permission");
+
     if (!form.emp_id) return alert("Employee required");
     if (!form.effective_date) return alert("Effective date required");
     if (!form.order_by) return alert("Order by required");
@@ -215,7 +248,10 @@ export default function EmployeeESICPFForm() {
     }
 
     try {
-      const url = editMode ? `${API}/emp_esicpf_update` : `${API}/emp_esicpf_post`;
+      const url = editMode
+        ? `${API}/emp_esicpf_update`
+        : `${API}/emp_esicpf_post`;
+
       const res = await axios.post(url, form);
 
       if (res.data.status || res.data.success) {
@@ -232,6 +268,8 @@ export default function EmployeeESICPFForm() {
   };
 
   const handleEdit = (item) => {
+    if (!canEdit) return alert("You do not have edit permission");
+
     setEditMode(true);
 
     setForm({
@@ -260,6 +298,27 @@ export default function EmployeeESICPFForm() {
     });
 
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDelete = async (item) => {
+    if (!canDelete) return alert("You do not have delete permission");
+
+    if (!window.confirm(`Delete ${item.esicpf_id || item.id}?`)) return;
+
+    try {
+      const res = await axios.post(`${API}/emp_esicpf_delete`, {
+        id: item.id,
+      });
+
+      if (res.data.status || res.data.success) {
+        alert(res.data.message || "Deleted successfully");
+        fetchList();
+      } else {
+        alert(res.data.message || "Delete failed");
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || error.message || "Delete API not working");
+    }
   };
 
   const cancelEdit = () => {
@@ -300,6 +359,24 @@ export default function EmployeeESICPFForm() {
     );
   }, [employees, usedEmployeeIds]);
 
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-72 p-6">
+          <div className="bg-white rounded-3xl p-10 text-center shadow-xl">
+            <h1 className="text-2xl font-black text-red-600">Access Denied</h1>
+            <p className="text-slate-500 mt-2">
+              You do not have permission to view this page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const formAllowed = editMode ? canEdit : canAdd;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-emerald-50 flex">
       <Toaster />
@@ -320,17 +397,34 @@ export default function EmployeeESICPFForm() {
                 <h2 className="text-xl font-black text-slate-800">
                   {editMode ? "Edit / Update ESIC PF" : "Create ESIC PF"}
                 </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  {formAllowed
+                    ? "Fill ESIC/PF details carefully"
+                    : editMode
+                    ? "View Only Permission - Edit Not Allowed"
+                    : "View Only Permission - Add Not Allowed"}
+                </p>
               </div>
 
-              <form onSubmit={submitForm} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form
+                onSubmit={submitForm}
+                className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
                 {!editMode ? (
                   <div>
                     <label className="label">Employee</label>
-                    <select value={form.emp_id} onChange={handleEmployeeChange} required className="input">
+                    <select
+                      value={form.emp_id}
+                      onChange={handleEmployeeChange}
+                      required
+                      className="input"
+                      disabled={!canAdd}
+                    >
                       <option value="">Select Employee</option>
                       {availableEmployees.map((emp) => (
                         <option key={emp.employee_id} value={emp.employee_id}>
-                          {emp.employee_id} - {emp.full_name || emp.emp_name || emp.employee_name}
+                          {emp.employee_id} -{" "}
+                          {emp.full_name || emp.emp_name || emp.employee_name}
                         </option>
                       ))}
                     </select>
@@ -355,23 +449,15 @@ export default function EmployeeESICPFForm() {
                   value={form.esic_applicable}
                   onChange={handleChange}
                   options={["No", "Yes"]}
+                  disabled={!formAllowed}
                 />
 
                 {form.esic_applicable === "Yes" && (
                   <>
-                    <Input label="ESIC Number" name="esic_number" value={form.esic_number} onChange={handleChange} required />
-
-                    <Input
-                      label="ESIC Deduct On Amount"
-                      name="esic_deduct_salary"
-                      type="number"
-                      value={form.esic_deduct_salary}
-                      onChange={handleChange}
-                      required
-                    />
-
-                    <Input label="ESIC Employee %" name="esic_employee_percent" value={form.esic_employee_percent} onChange={handleChange} type="number" />
-                    <Input label="ESIC Employer %" name="esic_employer_percent" value={form.esic_employer_percent} onChange={handleChange} type="number" />
+                    <Input label="ESIC Number" name="esic_number" value={form.esic_number} onChange={handleChange} readOnly={!formAllowed} required />
+                    <Input label="ESIC Deduct On Amount" name="esic_deduct_salary" type="number" value={form.esic_deduct_salary} onChange={handleChange} readOnly={!formAllowed} required />
+                    <Input label="ESIC Employee %" name="esic_employee_percent" value={form.esic_employee_percent} onChange={handleChange} type="number" readOnly={!formAllowed} />
+                    <Input label="ESIC Employer %" name="esic_employer_percent" value={form.esic_employer_percent} onChange={handleChange} type="number" readOnly={!formAllowed} />
                     <Input label="ESIC Employee Amount" value={money(form.esic_employee_amount)} readOnly />
                     <Input label="ESIC Employer Amount" value={money(form.esic_employer_amount)} readOnly />
                   </>
@@ -385,25 +471,24 @@ export default function EmployeeESICPFForm() {
                   value={form.pf_applicable}
                   onChange={handleChange}
                   options={["No", "Yes"]}
+                  disabled={!formAllowed}
                 />
 
                 {form.pf_applicable === "Yes" && (
                   <>
-                    <Input label="PF Number" name="pf_number" value={form.pf_number} onChange={handleChange} required />
-                    <Input label="UAN Number" name="uan_number" value={form.uan_number} onChange={handleChange} />
-
-                    <Input
-                      label="PF Deduct On Amount"
-                      name="pf_deduct_salary"
-                      type="number"
-                      value={form.pf_deduct_salary}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Input label="PF Number" name="pf_number" value={form.pf_number} onChange={handleChange} readOnly={!formAllowed} required />
+                    <Input label="UAN Number" name="uan_number" value={form.uan_number} onChange={handleChange} readOnly={!formAllowed} />
+                    <Input label="PF Deduct On Amount" name="pf_deduct_salary" type="number" value={form.pf_deduct_salary} onChange={handleChange} readOnly={!formAllowed} required />
 
                     <div>
                       <label className="label">PF Deduction Type</label>
-                      <select name="pf_type" value={form.pf_type} onChange={handleChange} className="input">
+                      <select
+                        name="pf_type"
+                        value={form.pf_type}
+                        onChange={handleChange}
+                        className="input"
+                        disabled={!formAllowed}
+                      >
                         <option value="Single Side Employee">Single Side Employee - 12%</option>
                         <option value="Both Side Employee">Both Side Employee - 12% + 12% = 24%</option>
                         <option value="Employee + Employer">Employee 12% + Employer 12%</option>
@@ -423,23 +508,48 @@ export default function EmployeeESICPFForm() {
                 <Input label="Employee Total Deduction" value={money(form.total_deduction_employee)} readOnly />
                 <Input label="Company Contribution" value={money(form.total_company_contribution)} readOnly />
 
-                <Input label="Effective Date" name="effective_date" type="date" value={form.effective_date} onChange={handleChange} required />
-                <Input label="Order By" name="order_by" value={form.order_by} onChange={handleChange} required />
+                <Input label="Effective Date" name="effective_date" type="date" value={form.effective_date} onChange={handleChange} readOnly={!formAllowed} required />
+                <Input label="Order By" name="order_by" value={form.order_by} onChange={handleChange} readOnly={!formAllowed} required />
 
-                <SelectInput label="Status" name="status" value={form.status} onChange={handleChange} options={["Active", "Inactive"]} />
+                <SelectInput
+                  label="Status"
+                  name="status"
+                  value={form.status}
+                  onChange={handleChange}
+                  options={["Active", "Inactive"]}
+                  disabled={!formAllowed}
+                />
 
                 <div className="md:col-span-2">
                   <label className="label">Remark</label>
-                  <textarea name="remark" value={form.remark} onChange={handleChange} className="input h-24" />
+                  <textarea
+                    name="remark"
+                    value={form.remark}
+                    onChange={handleChange}
+                    className="input h-24"
+                    readOnly={!formAllowed}
+                  />
                 </div>
 
                 <div className="md:col-span-2 flex gap-3">
-                  <button className="flex-1 bg-gradient-to-r from-blue-700 to-cyan-600 text-white py-3 rounded-2xl font-black shadow-lg">
-                    {editMode ? "Update ESIC PF" : "Create ESIC PF"}
-                  </button>
+                  {formAllowed ? (
+                    <button className="flex-1 bg-gradient-to-r from-blue-700 to-cyan-600 text-white py-3 rounded-2xl font-black shadow-lg">
+                      {editMode ? "Update ESIC PF" : "Create ESIC PF"}
+                    </button>
+                  ) : (
+                    <div className="flex-1 bg-yellow-50 text-yellow-700 border border-yellow-200 py-3 rounded-2xl font-black text-center">
+                      {editMode
+                        ? "View Only Permission - Edit Not Allowed"
+                        : "View Only Permission - Add Not Allowed"}
+                    </div>
+                  )}
 
                   {editMode && (
-                    <button type="button" onClick={cancelEdit} className="bg-slate-600 text-white px-8 py-3 rounded-2xl font-black">
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="bg-slate-600 text-white px-8 py-3 rounded-2xl font-black"
+                    >
                       Cancel
                     </button>
                   )}
@@ -481,7 +591,10 @@ export default function EmployeeESICPFForm() {
                       </tr>
                     ) : (
                       filteredList.map((item) => (
-                        <tr key={item.id} className="border-b text-center hover:bg-blue-50/50">
+                        <tr
+                          key={item.id}
+                          className="border-b text-center hover:bg-blue-50/50"
+                        >
                           <td className="p-3 font-black">{item.esicpf_id || item.id}</td>
 
                           <td className="p-3">
@@ -503,9 +616,29 @@ export default function EmployeeESICPFForm() {
                           </td>
 
                           <td className="p-3">
-                            <button onClick={() => handleEdit(item)} className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold">
-                              Edit
-                            </button>
+                            <div className="flex gap-2 justify-center">
+                              {canEdit ? (
+                                <button
+                                  onClick={() => handleEdit(item)}
+                                  className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold"
+                                >
+                                  Edit
+                                </button>
+                              ) : (
+                                <span className="text-xs font-black text-slate-400">
+                                  View Only
+                                </span>
+                              )}
+
+                              {canDelete && (
+                                <button
+                                  onClick={() => handleDelete(item)}
+                                  className="bg-red-600 text-white px-3 py-2 rounded-xl font-bold"
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -540,6 +673,13 @@ export default function EmployeeESICPFForm() {
           border-color:#2563eb;
           box-shadow:0 0 0 4px rgba(37,99,235,0.12);
         }
+        .input:read-only,
+        .input:disabled,
+        textarea:read-only {
+          background:#f8fafc;
+          color:#475569;
+          cursor:not-allowed;
+        }
       `}</style>
     </div>
   );
@@ -554,11 +694,17 @@ function Input({ label, ...props }) {
   );
 }
 
-function SelectInput({ label, name, value, onChange, options }) {
+function SelectInput({ label, name, value, onChange, options, disabled }) {
   return (
     <div>
       <label className="label">{label}</label>
-      <select name={name} value={value} onChange={onChange} className="input">
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="input"
+        disabled={disabled}
+      >
         {options.map((op) => (
           <option key={op} value={op}>
             {op}

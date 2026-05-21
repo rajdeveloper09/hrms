@@ -11,10 +11,11 @@ import {
   Hash,
   Search,
   Edit,
-  X,
 } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import { API_BASE_URL } from "../../config/api";
+
+const CURRENT_PATH = "/add-assests";
 
 const EMPTY_ASSET = {
   asset_id: "",
@@ -53,6 +54,19 @@ export default function EmployeeAssetsForm() {
     remark: "",
     status: "1",
   });
+
+  const role = localStorage.getItem("role") || "view";
+  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+
+  const pagePermission =
+    role === "superAdmin"
+      ? { can_view: 1, can_add: 1, can_edit: 1, can_delete: 1 }
+      : permissions.find((p) => p.route_path === CURRENT_PATH) || {};
+
+  const canView = role === "superAdmin" || Number(pagePermission.can_view) === 1;
+  const canAdd = role === "superAdmin" || Number(pagePermission.can_add) === 1;
+  const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
+  const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
 
   useEffect(() => {
     fetchEmployees();
@@ -115,6 +129,8 @@ export default function EmployeeAssetsForm() {
   }, [assignedAssets, search]);
 
   const addRow = () => {
+    if (!canAdd) return alert("You do not have add permission");
+
     setForm((prev) => ({
       ...prev,
       assets: [...prev.assets, { ...EMPTY_ASSET }],
@@ -122,6 +138,8 @@ export default function EmployeeAssetsForm() {
   };
 
   const removeRow = (index) => {
+    if (!canAdd) return alert("You do not have add permission");
+
     const updated = [...form.assets];
     updated.splice(index, 1);
 
@@ -132,6 +150,8 @@ export default function EmployeeAssetsForm() {
   };
 
   const handleAssetChange = (index, field, value) => {
+    if (!canAdd) return alert("You do not have add permission");
+
     const updated = [...form.assets];
     updated[index][field] = value;
 
@@ -147,6 +167,8 @@ export default function EmployeeAssetsForm() {
   };
 
   const handleEditChange = (e) => {
+    if (!canEdit) return alert("You do not have edit permission");
+
     const { name, value } = e.target;
 
     setEditForm((prev) => ({
@@ -156,6 +178,8 @@ export default function EmployeeAssetsForm() {
   };
 
   const handleEdit = (item) => {
+    if (!canEdit) return alert("You do not have edit permission");
+
     setEditMode(true);
 
     setEditForm({
@@ -195,6 +219,8 @@ export default function EmployeeAssetsForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!canAdd) return alert("You do not have add permission");
+
     if (!form.emp_id) {
       alert("Please select employee");
       return;
@@ -224,6 +250,8 @@ export default function EmployeeAssetsForm() {
   const handleUpdate = async (e) => {
     e.preventDefault();
 
+    if (!canEdit) return alert("You do not have edit permission");
+
     if (!editForm.id) {
       alert("Record ID missing");
       return;
@@ -244,7 +272,7 @@ export default function EmployeeAssetsForm() {
         payload
       );
 
-      if (res.data.success) {
+      if (res.data.success || res.data.status) {
         alert(res.data.message || "Asset updated successfully");
         cancelEdit();
         fetchAssignedAssets();
@@ -259,9 +287,49 @@ export default function EmployeeAssetsForm() {
     }
   };
 
+  const handleDelete = async (item) => {
+    if (!canDelete) return alert("You do not have delete permission");
+
+    if (!window.confirm("Delete this assigned asset?")) return;
+
+    try {
+      const res = await axios.post(`${API_BASE_URL}/employee_assets_delete`, {
+        id: item.id,
+      });
+
+      if (res.data.success || res.data.status) {
+        alert(res.data.message || "Asset deleted successfully");
+        fetchAssignedAssets();
+      } else {
+        alert(res.data.message || "Delete failed");
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Delete API not working");
+    }
+  };
+
   const selectedEmployee = employeeList.find(
     (emp) => emp.employee_id === form.emp_id
   );
+
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-72 p-6">
+          <div className="bg-white rounded-3xl p-10 text-center shadow-xl">
+            <h1 className="text-2xl font-black text-red-600">Access Denied</h1>
+            <p className="text-slate-500 mt-2">
+              You do not have permission to view this page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const formAllowed = editMode ? canEdit : canAdd;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-100 flex">
@@ -288,7 +356,6 @@ export default function EmployeeAssetsForm() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-            {/* LEFT FORM */}
             <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
               <div className="bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-5 flex items-center justify-between">
                 <div>
@@ -296,22 +363,15 @@ export default function EmployeeAssetsForm() {
                     {editMode ? "Update Asset" : "Assign Assets"}
                   </h2>
                   <p className="text-pink-100 text-sm">
-                    {editMode
-                      ? "Only status, end date and remark can be updated"
-                      : "Select employee and add one or multiple assets"}
+                    {formAllowed
+                      ? editMode
+                        ? "Only status, end date and remark can be updated"
+                        : "Select employee and add one or multiple assets"
+                      : editMode
+                      ? "View Only Permission - Edit Not Allowed"
+                      : "View Only Permission - Add Not Allowed"}
                   </p>
                 </div>
-
-                {/* {editMode && (
-                <button
-                  type="button"
-                  onClick={cancelEdit}
-                  className="bg-white text-rose-600 px-4 py-2 rounded-xl font-bold flex items-center gap-2"
-                >
-                  <X size={16} />
-                  Cancel
-                </button>
-              )} */}
               </div>
 
               {!editMode ? (
@@ -325,13 +385,13 @@ export default function EmployeeAssetsForm() {
                     <select
                       value={form.emp_id}
                       onChange={(e) =>
-                        setForm({
-                          ...form,
-                          emp_id: e.target.value,
-                        })
+                        canAdd
+                          ? setForm({ ...form, emp_id: e.target.value })
+                          : alert("You do not have add permission")
                       }
                       className="input"
                       required
+                      disabled={!canAdd}
                     >
                       <option value="">Select Employee</option>
 
@@ -354,185 +414,196 @@ export default function EmployeeAssetsForm() {
                     )}
                   </div>
 
-                  <div className="space-y-5 max-h-[620px] overflow-y-auto pr-1">
-                    {form.assets.map((asset, index) => (
-                      <div
-                        key={index}
-                        className="bg-slate-50 rounded-3xl border border-slate-200 overflow-hidden"
-                      >
-                        <div className="bg-slate-900 px-5 py-4 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                              <Package className="text-white" size={20} />
+                  {canAdd ? (
+                    <>
+                      <div className="space-y-5 max-h-[620px] overflow-y-auto pr-1">
+                        {form.assets.map((asset, index) => (
+                          <div
+                            key={index}
+                            className="bg-slate-50 rounded-3xl border border-slate-200 overflow-hidden"
+                          >
+                            <div className="bg-slate-900 px-5 py-4 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                                  <Package className="text-white" size={20} />
+                                </div>
+
+                                <div>
+                                  <h3 className="text-white font-bold">
+                                    Asset #{index + 1}
+                                  </h3>
+                                  <p className="text-slate-300 text-xs">
+                                    Employee asset details
+                                  </p>
+                                </div>
+                              </div>
+
+                              {form.assets.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeRow(index)}
+                                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl flex items-center gap-2 font-bold"
+                                >
+                                  <Trash2 size={16} />
+                                  Remove
+                                </button>
+                              )}
                             </div>
 
-                            <div>
-                              <h3 className="text-white font-bold">
-                                Asset #{index + 1}
-                              </h3>
-                              <p className="text-slate-300 text-xs">
-                                Employee asset details
-                              </p>
+                            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="label">
+                                  <Package size={16} />
+                                  Select Asset
+                                </label>
+
+                                <select
+                                  value={asset.asset_id}
+                                  onChange={(e) =>
+                                    handleAssetChange(
+                                      index,
+                                      "asset_id",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="input"
+                                  required
+                                >
+                                  <option value="">Choose Asset</option>
+
+                                  {assetList.map((item) => (
+                                    <option key={item.id} value={item.asset_id}>
+                                      {item.asset_name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <Input
+                                label="Asset Number"
+                                icon={<Hash size={16} />}
+                                value={asset.asset_number}
+                                onChange={(e) =>
+                                  handleAssetChange(
+                                    index,
+                                    "asset_number",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Enter asset number"
+                              />
+
+                              <Input
+                                label="Quantity"
+                                type="number"
+                                min="1"
+                                value={asset.no_of_assets}
+                                onChange={(e) =>
+                                  handleAssetChange(
+                                    index,
+                                    "no_of_assets",
+                                    e.target.value
+                                  )
+                                }
+                              />
+
+                              <div>
+                                <label className="label">Status</label>
+                                <select
+                                  value={asset.status}
+                                  onChange={(e) =>
+                                    handleAssetChange(index, "status", e.target.value)
+                                  }
+                                  className="input"
+                                >
+                                  <option value={1}>Active</option>
+                                  <option value={0}>Inactive</option>
+                                </select>
+                              </div>
+
+                              <Input
+                                label="Start Date"
+                                icon={<Calendar size={16} />}
+                                type="date"
+                                value={asset.start_date}
+                                onChange={(e) =>
+                                  handleAssetChange(
+                                    index,
+                                    "start_date",
+                                    e.target.value
+                                  )
+                                }
+                              />
+
+                              <Input
+                                label="End Date"
+                                icon={<Calendar size={16} />}
+                                type="date"
+                                value={asset.end_date}
+                                onChange={(e) =>
+                                  handleAssetChange(
+                                    index,
+                                    "end_date",
+                                    e.target.value
+                                  )
+                                }
+                              />
+
+                              <div className="md:col-span-2">
+                                <label className="label">
+                                  <FileText size={16} />
+                                  Remark
+                                </label>
+
+                                <textarea
+                                  rows="2"
+                                  value={asset.remark}
+                                  onChange={(e) =>
+                                    handleAssetChange(
+                                      index,
+                                      "remark",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="Write remark..."
+                                  className="input resize-none"
+                                />
+                              </div>
                             </div>
                           </div>
-
-                          {form.assets.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeRow(index)}
-                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl flex items-center gap-2 font-bold"
-                            >
-                              <Trash2 size={16} />
-                              Remove
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="label">
-                              <Package size={16} />
-                              Select Asset
-                            </label>
-
-                            <select
-                              value={asset.asset_id}
-                              onChange={(e) =>
-                                handleAssetChange(
-                                  index,
-                                  "asset_id",
-                                  e.target.value
-                                )
-                              }
-                              className="input"
-                              required
-                            >
-                              <option value="">Choose Asset</option>
-
-                              {assetList.map((item) => (
-                                <option key={item.id} value={item.asset_id}>
-                                  {item.asset_name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <Input
-                            label="Asset Number"
-                            icon={<Hash size={16} />}
-                            value={asset.asset_number}
-                            onChange={(e) =>
-                              handleAssetChange(
-                                index,
-                                "asset_number",
-                                e.target.value
-                              )
-                            }
-                            placeholder="Enter asset number"
-                          />
-
-                          <Input
-                            label="Quantity"
-                            type="number"
-                            min="1"
-                            value={asset.no_of_assets}
-                            onChange={(e) =>
-                              handleAssetChange(
-                                index,
-                                "no_of_assets",
-                                e.target.value
-                              )
-                            }
-                          />
-
-                          <div>
-                            <label className="label">Status</label>
-                            <select
-                              value={asset.status}
-                              onChange={(e) =>
-                                handleAssetChange(index, "status", e.target.value)
-                              }
-                              className="input"
-                            >
-                              <option value={1}>Active</option>
-                              <option value={0}>Inactive</option>
-                            </select>
-                          </div>
-
-                          <Input
-                            label="Start Date"
-                            icon={<Calendar size={16} />}
-                            type="date"
-                            value={asset.start_date}
-                            onChange={(e) =>
-                              handleAssetChange(
-                                index,
-                                "start_date",
-                                e.target.value
-                              )
-                            }
-                          />
-
-                          <Input
-                            label="End Date"
-                            icon={<Calendar size={16} />}
-                            type="date"
-                            value={asset.end_date}
-                            onChange={(e) =>
-                              handleAssetChange(
-                                index,
-                                "end_date",
-                                e.target.value
-                              )
-                            }
-                          />
-
-                          <div className="md:col-span-2">
-                            <label className="label">
-                              <FileText size={16} />
-                              Remark
-                            </label>
-
-                            <textarea
-                              rows="2"
-                              value={asset.remark}
-                              onChange={(e) =>
-                                handleAssetChange(
-                                  index,
-                                  "remark",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Write remark..."
-                              className="input resize-none"
-                            />
-                          </div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
 
-                  <div className="flex flex-wrap gap-4 mt-6">
-                    <button
-                      type="button"
-                      onClick={addRow}
-                      className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-4 rounded-2xl font-semibold shadow-lg flex items-center gap-2"
-                    >
-                      <Plus size={20} />
-                      Add More Asset
-                    </button>
+                      <div className="flex flex-wrap gap-4 mt-6">
+                        <button
+                          type="button"
+                          onClick={addRow}
+                          className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-4 rounded-2xl font-semibold shadow-lg flex items-center gap-2"
+                        >
+                          <Plus size={20} />
+                          Add More Asset
+                        </button>
 
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-8 py-4 rounded-2xl font-semibold shadow-lg disabled:opacity-60"
-                    >
-                      {loading ? "Submitting..." : "Submit Assets"}
-                    </button>
-                  </div>
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-8 py-4 rounded-2xl font-semibold shadow-lg disabled:opacity-60"
+                        >
+                          {loading ? "Submitting..." : "Submit Assets"}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 p-4 rounded-2xl text-center font-black">
+                      View Only Permission - Add Not Allowed
+                    </div>
+                  )}
                 </form>
               ) : (
-                <form onSubmit={handleUpdate} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form
+                  onSubmit={handleUpdate}
+                  className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
                   <Input label="Employee ID" value={editForm.emp_id} readOnly />
                   <Input label="Employee Name" value={editForm.emp_name} readOnly />
                   <Input label="Asset ID" value={editForm.asset_id} readOnly />
@@ -547,6 +618,7 @@ export default function EmployeeAssetsForm() {
                     name="end_date"
                     value={editForm.end_date}
                     onChange={handleEditChange}
+                    readOnly={!canEdit}
                   />
 
                   <div>
@@ -556,6 +628,7 @@ export default function EmployeeAssetsForm() {
                       value={editForm.status}
                       onChange={handleEditChange}
                       className="input"
+                      disabled={!canEdit}
                     >
                       <option value="1">Active</option>
                       <option value="0">Inactive</option>
@@ -575,17 +648,24 @@ export default function EmployeeAssetsForm() {
                       onChange={handleEditChange}
                       className="input resize-none"
                       placeholder="Enter remark"
+                      readOnly={!canEdit}
                     />
                   </div>
 
                   <div className="md:col-span-2 flex gap-3">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-8 py-4 rounded-2xl font-semibold shadow-lg disabled:opacity-60"
-                    >
-                      {loading ? "Updating..." : "Update Asset"}
-                    </button>
+                    {canEdit ? (
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-8 py-4 rounded-2xl font-semibold shadow-lg disabled:opacity-60"
+                      >
+                        {loading ? "Updating..." : "Update Asset"}
+                      </button>
+                    ) : (
+                      <div className="flex-1 bg-yellow-50 border border-yellow-200 text-yellow-700 px-8 py-4 rounded-2xl font-black text-center">
+                        View Only Permission - Edit Not Allowed
+                      </div>
+                    )}
 
                     <button
                       type="button"
@@ -599,7 +679,6 @@ export default function EmployeeAssetsForm() {
               )}
             </div>
 
-            {/* RIGHT LIST */}
             <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
               <div className="bg-slate-900 text-white p-5">
                 <h2 className="text-xl font-black">Assets List</h2>
@@ -639,7 +718,7 @@ export default function EmployeeAssetsForm() {
                   <tbody>
                     {filteredAssignedAssets.length === 0 ? (
                       <tr>
-                        <td colSpan="6" className="p-8 text-center text-slate-500">
+                        <td colSpan="7" className="p-8 text-center text-slate-500">
                           No assets data found
                         </td>
                       </tr>
@@ -677,32 +756,50 @@ export default function EmployeeAssetsForm() {
                               {item.end_date || "Continue"}
                             </div>
                           </td>
+
                           <td className="text-sm text-slate-500">
-                            {item.remark || 1}
+                            {item.remark || "-"}
                           </td>
 
                           <td className="p-3">
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-black ${String(item.status) === "1"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-red-100 text-red-700"
-                                }`}
+                              className={`px-3 py-1 rounded-full text-xs font-black ${
+                                String(item.status) === "1"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-red-100 text-red-700"
+                              }`}
                             >
                               {String(item.status) === "1" ? "Active" : "Inactive"}
                             </span>
                           </td>
-                          {item.status === "1" && (
-                            <td className="p-3">
-                              <button
-                                onClick={() => handleEdit(item)}
-                                className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 mx-auto"
-                              >
-                                <Edit size={16} />
-                                Edit
-                              </button>
-                            </td>
-                          )}
 
+                          <td className="p-3">
+                            <div className="flex gap-2 justify-center">
+                              {String(item.status) === "1" && canEdit ? (
+                                <button
+                                  onClick={() => handleEdit(item)}
+                                  className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 mx-auto"
+                                >
+                                  <Edit size={16} />
+                                  Edit
+                                </button>
+                              ) : (
+                                <span className="text-xs font-black text-slate-400">
+                                  View Only
+                                </span>
+                              )}
+
+                              {canDelete && (
+                                <button
+                                  onClick={() => handleDelete(item)}
+                                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2"
+                                >
+                                  <Trash2 size={16} />
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -713,36 +810,39 @@ export default function EmployeeAssetsForm() {
           </div>
 
           <style>{`
-          .label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 14px;
-            font-weight: 700;
-            color: #334155;
-            margin-bottom: 8px;
-          }
+            .label {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              font-size: 14px;
+              font-weight: 700;
+              color: #334155;
+              margin-bottom: 8px;
+            }
 
-          .input {
-            width: 100%;
-            border: 1px solid #cbd5e1;
-            border-radius: 16px;
-            padding: 12px 14px;
-            outline: none;
-            font-size: 14px;
-            background: white;
-          }
+            .input {
+              width: 100%;
+              border: 1px solid #cbd5e1;
+              border-radius: 16px;
+              padding: 12px 14px;
+              outline: none;
+              font-size: 14px;
+              background: white;
+            }
 
-          .input:focus {
-            border-color: #ec4899;
-            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
-          }
+            .input:focus {
+              border-color: #ec4899;
+              box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
+            }
 
-          .input[readonly] {
-            background: #f8fafc;
-            color: #64748b;
-          }
-        `}</style>
+            .input[readonly],
+            .input:disabled,
+            textarea[readonly] {
+              background: #f8fafc;
+              color: #64748b;
+              cursor: not-allowed;
+            }
+          `}</style>
         </div>
       </div>
     </div>
