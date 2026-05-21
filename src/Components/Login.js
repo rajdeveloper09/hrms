@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { getDefaultRedirect } from "../utils/permissionRedirect";
 const API = "https://ojmee.in/employee";
 
 export default function Login({ setIsAuth }) {
@@ -40,15 +40,19 @@ export default function Login({ setIsAuth }) {
       localStorage.setItem("emp_id", data.user.employee_id);
       localStorage.setItem("role", data.user.role);
       localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("permissions",JSON.stringify(data.permissions || []));
+      localStorage.setItem("permissions", JSON.stringify(data.permissions || []));
 
       setIsAuth(true);
       setLoading(false);
 
       const welcomeKey = `welcome_seen_${data.user.employee_id}`;
-      navigate(localStorage.getItem(welcomeKey) === "true" ? "/dashboard" : "/welcome", {
-        replace: true,
-      });
+      const defaultPath = getDefaultRedirect();
+
+      if (localStorage.getItem(welcomeKey) === "true") {
+        navigate(defaultPath, { replace: true });
+      } else {
+        navigate("/welcome", { replace: true });
+      }
     } catch (err) {
       setLoading(false);
       setError("Server not working");
@@ -116,7 +120,7 @@ export default function Login({ setIsAuth }) {
               />
 
               <div className="grid grid-cols-3 gap-3 pt-2">
-                {[1,2,3,4,5,6,7,8,9,"Clear",0,"Del"].map((key, i) => (
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, "Clear", 0, "Del"].map((key, i) => (
                   <button
                     type="button"
                     key={i}

@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-
+import { getDefaultRedirect } from "./utils/permissionRedirect";
 import Login from "./Components/Login";
 import Dashboard from "./Components/Dashboard";
 import EmployeeList from "./Components/Employee/EmployeeList";
@@ -51,7 +51,11 @@ function App() {
           <Route
             path="/"
             element={
-              isAuth ? <Navigate to="/dashboard" /> : <Login setIsAuth={setIsAuth} />
+              isAuth ? (
+                <Navigate to={getDefaultRedirect()} replace />
+              ) : (
+                <Login setIsAuth={setIsAuth} />
+              )
             }
           />
           <Route
@@ -88,7 +92,7 @@ function App() {
           <Route path="/add-office-assets-category" element={<AddOfficeAssetsCategory />} />
           <Route path="/create-user" element={<CreateLoginNewUser />} />
           <Route path="/create-user-permission" element={<EmployeePermissionPage />} />
-          
+
         </Routes>
       </Router>
     </>

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getDefaultRedirect } from "../utils/permissionRedirect";
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ export default function Welcome() {
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(welcomeKey, "true");
-      navigate("/dashboard", { replace: true });
+      navigate(getDefaultRedirect(), { replace: true });
     }, 8000);
 
     return () => clearTimeout(timer);
@@ -101,7 +102,7 @@ export default function Welcome() {
         </div>
 
         <p className="text-[14px] text-slate-400 font-semibold mt-4">
-          Redirecting to dashboard in 8 seconds...
+          Redirecting to your allowed page in 8 seconds...
         </p>
 
       </div>
