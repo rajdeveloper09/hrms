@@ -1,30 +1,46 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import SideNav from "../SideNav";
-import { Search, Clock, User, Send } from "lucide-react";
+import { Search, Clock, User, Send, Edit, Trash2, X } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+
 const API = "https://ojmee.in/employee";
+const CURRENT_PATH = "/add-overtime";
+
+const emptyForm = {
+  id: "",
+  emp_id: "",
+  emp_name: "",
+  current_salary: "",
+  working_hours: "",
+  shift_time: "",
+  ot_allow: "1",
+  ot_type: "1",
+  ot_start_date: "",
+  ot_end_date: "",
+  approve_by: "",
+  remark: "",
+};
 
 export default function EmployeeOTPage() {
   const [employees, setEmployees] = useState([]);
   const [otList, setOtList] = useState([]);
   const [search, setSearch] = useState("");
-
-  const emptyForm = {
-    emp_id: "",
-    emp_name: "",
-    current_salary: "",
-    working_hours: "",
-    shift_time: "",
-    ot_allow: "1",
-    ot_type: "1",
-    ot_start_date: "",
-    ot_end_date: "",
-    approve_by: "",
-    remark: "",
-  };
-
   const [form, setForm] = useState(emptyForm);
+  const [editMode, setEditMode] = useState(false);
+
+  const role = localStorage.getItem("role") || "view";
+  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+
+  const pagePermission =
+    role === "superAdmin"
+      ? { can_view: 1, can_add: 1, can_edit: 1, can_delete: 1 }
+      : permissions.find((p) => p.route_path === CURRENT_PATH) || {};
+
+  const canView = role === "superAdmin" || Number(pagePermission.can_view) === 1;
+  const canAdd = role === "superAdmin" || Number(pagePermission.can_add) === 1;
+  const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
+  const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
 
   useEffect(() => {
     fetchEmployees();
@@ -78,6 +94,8 @@ export default function EmployeeOTPage() {
   }, [otList, search]);
 
   const handleEmployeeChange = (e) => {
+    if (!canAdd) return toast.error("You do not have add permission");
+
     const empId = e.target.value;
     const emp = employees.find((x) => x.employee_id === empId);
 
@@ -100,6 +118,9 @@ export default function EmployeeOTPage() {
   };
 
   const handleChange = (e) => {
+    if (!editMode && !canAdd) return toast.error("You do not have add permission");
+    if (editMode && !canEdit) return toast.error("You do not have edit permission");
+
     const { name, value } = e.target;
 
     setForm((prev) => ({
@@ -107,18 +128,20 @@ export default function EmployeeOTPage() {
       [name]: value,
       ...(name === "ot_allow" && value === "0"
         ? {
-          ot_type: "1",
-          ot_start_date: "",
-          ot_end_date: "",
-          approve_by: "",
-          remark: "",
-        }
+            ot_type: "1",
+            ot_start_date: "",
+            ot_end_date: "",
+            approve_by: "",
+            remark: "",
+          }
         : {}),
     }));
   };
 
   const submitOT = async (e) => {
     e.preventDefault();
+
+    if (!canAdd) return toast.error("You do not have add permission");
 
     try {
       const payload = {
@@ -132,7 +155,7 @@ export default function EmployeeOTPage() {
 
       const res = await axios.post(`${API}/emp_overtime_post`, payload);
 
-      if (res.data.success) {
+      if (res.data.success || res.data.status) {
         alert("OT saved successfully");
         setForm(emptyForm);
         fetchOTList();
@@ -145,7 +168,107 @@ export default function EmployeeOTPage() {
     }
   };
 
+  const updateOT = async (e) => {
+    e.preventDefault();
+
+    if (!canEdit) return toast.error("You do not have edit permission");
+
+    if (!form.id) return alert("OT record ID missing");
+
+    try {
+      const payload = {
+        ...form,
+        ot_type: form.ot_allow === "0" ? "" : form.ot_type,
+        ot_start_date: form.ot_allow === "0" ? "" : form.ot_start_date,
+        ot_end_date: form.ot_allow === "0" ? "" : form.ot_end_date,
+        approve_by: form.ot_allow === "0" ? "" : form.approve_by,
+        remark: form.ot_allow === "0" ? "" : form.remark,
+      };
+
+      const res = await axios.post(`${API}/emp_overtime_update`, payload);
+
+      if (res.data.success || res.data.status) {
+        alert(res.data.message || "OT updated successfully");
+        setForm(emptyForm);
+        setEditMode(false);
+        fetchOTList();
+      } else {
+        alert(res.data.message || "Update failed");
+      }
+    } catch (error) {
+      console.log("OT Update API Error:", error);
+      alert("OT Update API not working");
+    }
+  };
+
+  const handleEdit = (item) => {
+    if (!canEdit) return toast.error("You do not have edit permission");
+
+    setEditMode(true);
+
+    setForm({
+      id: item.id || "",
+      emp_id: item.emp_id || "",
+      emp_name: item.emp_name || item.employee_name || item.full_name || "",
+      current_salary: item.current_salary || "",
+      working_hours: item.working_hours || "",
+      shift_time: item.shift_time || "",
+      ot_allow: String(item.ot_allow ?? "1"),
+      ot_type: String(item.ot_type ?? "1"),
+      ot_start_date: item.ot_start_date || "",
+      ot_end_date: item.ot_end_date || "",
+      approve_by: item.approve_by || "",
+      remark: item.remark || "",
+    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteOT = async (item) => {
+    if (!canDelete) return toast.error("You do not have delete permission");
+
+    if (!window.confirm(`Delete OT record of ${item.emp_id}?`)) return;
+
+    try {
+      const res = await axios.post(`${API}/emp_overtime_delete`, {
+        id: item.id,
+      });
+
+      if (res.data.success || res.data.status) {
+        alert(res.data.message || "OT deleted successfully");
+        fetchOTList();
+      } else {
+        alert(res.data.message || "Delete failed");
+      }
+    } catch (error) {
+      console.log("OT Delete API Error:", error);
+      alert("OT Delete API not working");
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditMode(false);
+    setForm(emptyForm);
+  };
+
   const showOTFields = form.ot_allow === "1";
+  const formAllowed = editMode ? canEdit : canAdd;
+
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-72 p-6">
+          <div className="bg-white rounded-3xl p-10 text-center shadow-xl">
+            <h1 className="text-2xl font-black text-red-600">Access Denied</h1>
+            <p className="text-slate-500 mt-2">
+              You do not have permission to view this page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
@@ -162,45 +285,67 @@ export default function EmployeeOTPage() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-            {/* LEFT FORM */}
             <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
-              <div className="p-5 bg-blue-50 border-b border-blue-100">
-                <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                  <Clock size={22} /> OT Form
-                </h2>
-                <p className="text-sm text-slate-500">
-                  Select employee and set overtime details
-                </p>
+              <div className="p-5 bg-blue-50 border-b border-blue-100 flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                    <Clock size={22} />
+                    {editMode ? "Update OT" : "OT Form"}
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    {formAllowed
+                      ? "Select employee and set overtime details"
+                      : editMode
+                      ? "View Only Permission - Edit Not Allowed"
+                      : "View Only Permission - Add Not Allowed"}
+                  </p>
+                </div>
+
+                {editMode && (
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="bg-slate-700 text-white px-4 py-2 rounded-xl font-black flex gap-2 items-center"
+                  >
+                    <X size={16} />
+                    Cancel
+                  </button>
+                )}
               </div>
 
               <form
-                onSubmit={submitOT}
+                onSubmit={editMode ? updateOT : submitOT}
                 className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
               >
-                <div>
-                  <label className="label">
-                    <User size={16} /> Employee
-                  </label>
+                {!editMode ? (
+                  <div>
+                    <label className="label">
+                      <User size={16} /> Employee
+                    </label>
 
-                  <select
-                    value={form.emp_id}
-                    onChange={handleEmployeeChange}
-                    required
-                    className="input"
-                  >
-                    <option value="">Select Employee</option>
+                    <select
+                      value={form.emp_id}
+                      onChange={handleEmployeeChange}
+                      required
+                      disabled={!canAdd}
+                      className="input"
+                    >
+                      <option value="">Select Employee</option>
 
-                    {employees
-                      .filter((emp) => {
-                        return !otList.some((ot) => ot.emp_id === emp.employee_id);
-                      })
-                      .map((emp) => (
-                        <option key={emp.employee_id} value={emp.employee_id}>
-                          {emp.employee_id} - {emp.full_name}
-                        </option>
-                      ))}
-                  </select>
-                </div>
+                      {employees
+                        .filter((emp) => {
+                          return !otList.some((ot) => ot.emp_id === emp.employee_id);
+                        })
+                        .map((emp) => (
+                          <option key={emp.employee_id} value={emp.employee_id}>
+                            {emp.employee_id} - {emp.full_name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                ) : (
+                  <Input label="Employee ID" value={form.emp_id} readOnly />
+                )}
 
                 <div>
                   <label className="label">OT Allow</label>
@@ -209,6 +354,7 @@ export default function EmployeeOTPage() {
                     value={form.ot_allow}
                     onChange={handleChange}
                     required
+                    disabled={!formAllowed}
                     className="input"
                   >
                     <option value="1">Yes / 1</option>
@@ -218,33 +364,10 @@ export default function EmployeeOTPage() {
 
                 {showOTFields && (
                   <>
-                    <Input
-                      label="Employee Name"
-                      name="emp_name"
-                      value={form.emp_name}
-                      readOnly
-                    />
-
-                    <Input
-                      label="Current Salary"
-                      name="current_salary"
-                      value={form.current_salary}
-                      readOnly
-                    />
-
-                    <Input
-                      label="Working Hours"
-                      name="working_hours"
-                      value={form.working_hours}
-                      readOnly
-                    />
-
-                    <Input
-                      label="Shift Time"
-                      name="shift_time"
-                      value={form.shift_time}
-                      readOnly
-                    />
+                    <Input label="Employee Name" name="emp_name" value={form.emp_name} readOnly />
+                    <Input label="Current Salary" name="current_salary" value={form.current_salary} readOnly />
+                    <Input label="Working Hours" name="working_hours" value={form.working_hours} readOnly />
+                    <Input label="Shift Time" name="shift_time" value={form.shift_time} readOnly />
 
                     <div>
                       <label className="label">OT Type</label>
@@ -253,6 +376,7 @@ export default function EmployeeOTPage() {
                         value={form.ot_type}
                         onChange={handleChange}
                         required={showOTFields}
+                        disabled={!formAllowed}
                         className="input"
                       >
                         <option value="1">1x</option>
@@ -266,6 +390,7 @@ export default function EmployeeOTPage() {
                       name="ot_start_date"
                       value={form.ot_start_date}
                       onChange={handleChange}
+                      readOnly={!formAllowed}
                       required={showOTFields}
                     />
 
@@ -275,6 +400,7 @@ export default function EmployeeOTPage() {
                       name="ot_end_date"
                       value={form.ot_end_date}
                       onChange={handleChange}
+                      readOnly={!formAllowed}
                     />
 
                     <Input
@@ -282,6 +408,7 @@ export default function EmployeeOTPage() {
                       name="approve_by"
                       value={form.approve_by}
                       onChange={handleChange}
+                      readOnly={!formAllowed}
                       required={showOTFields}
                     />
 
@@ -292,6 +419,7 @@ export default function EmployeeOTPage() {
                         value={form.remark}
                         onChange={handleChange}
                         className="input h-24 resize-none"
+                        readOnly={!formAllowed}
                         required={showOTFields}
                         placeholder="Enter remark"
                       />
@@ -299,14 +427,33 @@ export default function EmployeeOTPage() {
                   </>
                 )}
 
-                <button className="md:col-span-2 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-700 to-cyan-600 text-white py-3 rounded-2xl font-black shadow-lg hover:from-indigo-800 hover:to-cyan-700">
-                  <Send size={18} />
-                  Submit OT
-                </button>
+                <div className="md:col-span-2 flex gap-3">
+                  {formAllowed ? (
+                    <button className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-700 to-cyan-600 text-white py-3 rounded-2xl font-black shadow-lg hover:from-indigo-800 hover:to-cyan-700">
+                      <Send size={18} />
+                      {editMode ? "Update OT" : "Submit OT"}
+                    </button>
+                  ) : (
+                    <div className="flex-1 bg-yellow-50 border border-yellow-200 text-yellow-700 py-3 rounded-2xl font-black text-center">
+                      {editMode
+                        ? "View Only Permission - Edit Not Allowed"
+                        : "View Only Permission - Add Not Allowed"}
+                    </div>
+                  )}
+
+                  {editMode && (
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="bg-slate-600 text-white px-8 py-3 rounded-2xl font-black"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
 
-            {/* RIGHT LIST */}
             <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
               <div className="p-5 bg-slate-900 text-white">
                 <h2 className="text-xl font-black">OT History</h2>
@@ -338,20 +485,21 @@ export default function EmployeeOTPage() {
                       <th className="p-3">Month</th>
                       <th className="p-3">Amount</th>
                       <th className="p-3">Approved</th>
+                      <th className="p-3">Action</th>
                     </tr>
                   </thead>
 
                   <tbody>
                     {filteredOTList.length === 0 ? (
                       <tr>
-                        <td colSpan="6" className="p-8 text-center text-slate-500">
+                        <td colSpan="7" className="p-8 text-center text-slate-500">
                           No OT data found
                         </td>
                       </tr>
                     ) : (
                       filteredOTList.map((item, index) => (
                         <tr
-                          key={index}
+                          key={item.id || index}
                           className="border-b text-center hover:bg-blue-50/60"
                         >
                           <td className="p-3">
@@ -365,10 +513,11 @@ export default function EmployeeOTPage() {
 
                           <td className="p-3">
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-black ${item.ot_allow === "0"
+                              className={`px-3 py-1 rounded-full text-xs font-black ${
+                                item.ot_allow === "0"
                                   ? "bg-red-100 text-red-700"
                                   : "bg-emerald-100 text-emerald-700"
-                                }`}
+                              }`}
                             >
                               {item.ot_allow === "0" ? "No" : `${item.ot_type}x`}
                             </span>
@@ -391,6 +540,34 @@ export default function EmployeeOTPage() {
                           </td>
 
                           <td className="p-3">{item.approve_by || "-"}</td>
+
+                          <td className="p-3">
+                            <div className="flex gap-2 justify-center">
+                              {canEdit ? (
+                                <button
+                                  onClick={() => handleEdit(item)}
+                                  className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1"
+                                >
+                                  <Edit size={15} />
+                                  Edit
+                                </button>
+                              ) : (
+                                <span className="text-xs font-black text-slate-400">
+                                  View Only
+                                </span>
+                              )}
+
+                              {canDelete && (
+                                <button
+                                  onClick={() => deleteOT(item)}
+                                  className="bg-red-600 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1"
+                                >
+                                  <Trash2 size={15} />
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -401,35 +578,38 @@ export default function EmployeeOTPage() {
           </div>
 
           <style>{`
-          .label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 14px;
-            font-weight: 700;
-            color: #334155;
-            margin-bottom: 6px;
-          }
+            .label {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              font-size: 14px;
+              font-weight: 700;
+              color: #334155;
+              margin-bottom: 6px;
+            }
 
-          .input {
-            width: 100%;
-            border: 1px solid #cbd5e1;
-            border-radius: 14px;
-            padding: 12px 14px;
-            outline: none;
-            font-size: 14px;
-            background: white;
-          }
+            .input {
+              width: 100%;
+              border: 1px solid #cbd5e1;
+              border-radius: 14px;
+              padding: 12px 14px;
+              outline: none;
+              font-size: 14px;
+              background: white;
+            }
 
-          .input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-          }
+            .input:focus {
+              border-color: #2563eb;
+              box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            }
 
-          .input[readonly] {
-            background: #f8fafc;
-          }
-        `}</style>
+            .input[readonly],
+            .input:disabled,
+            textarea[readonly] {
+              background: #f8fafc;
+              cursor: not-allowed;
+            }
+          `}</style>
         </div>
       </div>
     </div>

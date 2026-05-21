@@ -8,13 +8,33 @@ import {
   Send,
   BriefcaseBusiness,
   Search,
+  Edit,
+  Trash2,
+  X,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import SideNav from "../SideNav";
 
-const EMPLOYEE_API = "https://ojmee.in/employee/get_employee";
-const MEETING_GET_API = "https://ojmee.in/employee/emp_meetings";
-const MEETING_POST_API = "https://ojmee.in/employee/emp_meetings_post";
+const API = "https://ojmee.in/employee";
+const CURRENT_PATH = "/add-meeting";
+
+const EMPLOYEE_API = `${API}/get_employee`;
+const MEETING_GET_API = `${API}/emp_meetings`;
+const MEETING_POST_API = `${API}/emp_meetings_post`;
+const MEETING_UPDATE_API = `${API}/emp_meetings_update`;
+const MEETING_DELETE_API = `${API}/emp_meetings_delete`;
+
+const emptyForm = {
+  id: "",
+  designation: "",
+  employee_ids: [],
+  employee_names: [],
+  meeting_date: "",
+  meeting_time: "",
+  place: "",
+  meeting_attend_by: "",
+  remark: "",
+};
 
 export default function EmployeeMeetingForm() {
   const [employees, setEmployees] = useState([]);
@@ -22,17 +42,22 @@ export default function EmployeeMeetingForm() {
   const [designations, setDesignations] = useState([]);
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [search, setSearch] = useState("");
+  const [editMode, setEditMode] = useState(false);
 
-  const [form, setForm] = useState({
-    designation: "",
-    employee_ids: [],
-    employee_names: [],
-    meeting_date: "",
-    meeting_time: "",
-    place: "",
-    meeting_attend_by: "",
-    remark: "",
-  });
+  const [form, setForm] = useState(emptyForm);
+
+  const role = localStorage.getItem("role") || "view";
+  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+
+  const pagePermission =
+    role === "superAdmin"
+      ? { can_view: 1, can_add: 1, can_edit: 1, can_delete: 1 }
+      : permissions.find((p) => p.route_path === CURRENT_PATH) || {};
+
+  const canView = role === "superAdmin" || Number(pagePermission.can_view) === 1;
+  const canAdd = role === "superAdmin" || Number(pagePermission.can_add) === 1;
+  const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
+  const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
 
   useEffect(() => {
     fetchEmployees();
@@ -93,7 +118,26 @@ export default function EmployeeMeetingForm() {
     );
   }, [meetings, search]);
 
+  const normalizeIds = (value) => {
+    if (Array.isArray(value)) return value;
+    return String(value || "")
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+  };
+
+  const normalizeNames = (value) => {
+    if (Array.isArray(value)) return value;
+    return String(value || "")
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+  };
+
   const handleDesignationChange = (e) => {
+    if (!editMode && !canAdd) return toast.error("You do not have add permission");
+    if (editMode && !canEdit) return toast.error("You do not have edit permission");
+
     const designation = e.target.value;
 
     const filtered = employees.filter(
@@ -104,36 +148,42 @@ export default function EmployeeMeetingForm() {
 
     setFilteredEmployees(filtered);
 
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       designation,
       employee_ids: [],
       employee_names: [],
-    });
+    }));
   };
 
   const handleEmployeeCheckbox = (emp) => {
+    if (!editMode && !canAdd) return toast.error("You do not have add permission");
+    if (editMode && !canEdit) return toast.error("You do not have edit permission");
+
     const empId = emp.employee_id || emp.emp_id || emp.id;
     const empName = emp.full_name || emp.employee_name || emp.name || "";
 
     const alreadySelected = form.employee_ids.includes(empId);
 
     if (alreadySelected) {
-      setForm({
-        ...form,
-        employee_ids: form.employee_ids.filter((id) => id !== empId),
-        employee_names: form.employee_names.filter((name) => name !== empName),
-      });
+      setForm((prev) => ({
+        ...prev,
+        employee_ids: prev.employee_ids.filter((id) => id !== empId),
+        employee_names: prev.employee_names.filter((name) => name !== empName),
+      }));
     } else {
-      setForm({
-        ...form,
-        employee_ids: [...form.employee_ids, empId],
-        employee_names: [...form.employee_names, empName],
-      });
+      setForm((prev) => ({
+        ...prev,
+        employee_ids: [...prev.employee_ids, empId],
+        employee_names: [...prev.employee_names, empName],
+      }));
     }
   };
 
   const handleChange = (e) => {
+    if (!editMode && !canAdd) return toast.error("You do not have add permission");
+    if (editMode && !canEdit) return toast.error("You do not have edit permission");
+
     setForm({
       ...form,
       [e.target.name]: e.target.value,
@@ -141,32 +191,31 @@ export default function EmployeeMeetingForm() {
   };
 
   const resetForm = () => {
-    setForm({
-      designation: "",
-      employee_ids: [],
-      employee_names: [],
-      meeting_date: "",
-      meeting_time: "",
-      place: "",
-      meeting_attend_by: "",
-      remark: "",
-    });
-
+    setEditMode(false);
+    setForm(emptyForm);
     setFilteredEmployees([]);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const validateForm = () => {
     if (
       !form.designation ||
       form.employee_ids.length === 0 ||
       !form.meeting_date ||
       !form.meeting_time
     ) {
-      toast.error("Designation, Employee, Date and Time required");
-      return;
+      return "Designation, Employee, Date and Time required";
     }
+
+    return "";
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!canAdd) return toast.error("You do not have add permission");
+
+    const error = validateForm();
+    if (error) return toast.error(error);
 
     try {
       const res = await fetch(MEETING_POST_API, {
@@ -179,7 +228,7 @@ export default function EmployeeMeetingForm() {
 
       const json = await res.json();
 
-      if (json.success) {
+      if (json.success || json.status) {
         toast.success("Meeting created successfully");
         resetForm();
         fetchMeetings();
@@ -190,6 +239,113 @@ export default function EmployeeMeetingForm() {
       toast.error("Server error");
     }
   };
+
+  const handleEdit = (item) => {
+    if (!canEdit) return toast.error("You do not have edit permission");
+
+    const ids = normalizeIds(item.employee_ids);
+    const names = normalizeNames(item.employee_names);
+
+    const filtered = employees.filter(
+      (emp) =>
+        String(emp.designation || "").toLowerCase() ===
+        String(item.designation || "").toLowerCase()
+    );
+
+    setFilteredEmployees(filtered);
+
+    setForm({
+      id: item.id || "",
+      designation: item.designation || "",
+      employee_ids: ids,
+      employee_names: names,
+      meeting_date: item.meeting_date || "",
+      meeting_time: item.meeting_time || "",
+      place: item.place || "",
+      meeting_attend_by: item.meeting_attend_by || "",
+      remark: item.remark || "",
+    });
+
+    setEditMode(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    if (!canEdit) return toast.error("You do not have edit permission");
+    if (!form.id) return toast.error("Meeting ID missing");
+
+    const error = validateForm();
+    if (error) return toast.error(error);
+
+    try {
+      const res = await fetch(MEETING_UPDATE_API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      const json = await res.json();
+
+      if (json.success || json.status) {
+        toast.success("Meeting updated successfully");
+        resetForm();
+        fetchMeetings();
+      } else {
+        toast.error(json.message || "Meeting update failed");
+      }
+    } catch {
+      toast.error("Update server error");
+    }
+  };
+
+  const handleDelete = async (item) => {
+    if (!canDelete) return toast.error("You do not have delete permission");
+
+    if (!window.confirm("Delete this meeting?")) return;
+
+    try {
+      const res = await fetch(MEETING_DELETE_API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: item.id }),
+      });
+
+      const json = await res.json();
+
+      if (json.success || json.status) {
+        toast.success("Meeting deleted successfully");
+        fetchMeetings();
+      } else {
+        toast.error(json.message || "Delete failed");
+      }
+    } catch {
+      toast.error("Delete server error");
+    }
+  };
+
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-72 p-6">
+          <div className="bg-white rounded-3xl p-10 text-center shadow-xl">
+            <h1 className="text-2xl font-black text-red-600">Access Denied</h1>
+            <p className="text-slate-500 mt-2">
+              You do not have permission to view this page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const formAllowed = editMode ? canEdit : canAdd;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
@@ -211,18 +367,37 @@ export default function EmployeeMeetingForm() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-            {/* LEFT FORM */}
             <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
-              <div className="p-5 bg-blue-50 border-b border-blue-100">
-                <h2 className="text-xl font-black text-slate-800">
-                  Create Meeting
-                </h2>
-                <p className="text-sm text-slate-500">
-                  Select designation, employees and meeting details
-                </p>
+              <div className="p-5 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-slate-800">
+                    {editMode ? "Update Meeting" : "Create Meeting"}
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    {formAllowed
+                      ? "Select designation, employees and meeting details"
+                      : editMode
+                      ? "View Only Permission - Edit Not Allowed"
+                      : "View Only Permission - Add Not Allowed"}
+                  </p>
+                </div>
+
+                {editMode && (
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="bg-slate-700 text-white px-4 py-2 rounded-xl font-black flex items-center gap-2"
+                  >
+                    <X size={16} />
+                    Cancel
+                  </button>
+                )}
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <form
+                onSubmit={editMode ? handleUpdate : handleSubmit}
+                className="p-6 space-y-5"
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="label">
@@ -235,6 +410,7 @@ export default function EmployeeMeetingForm() {
                       onChange={handleDesignationChange}
                       className="input"
                       required
+                      disabled={!formAllowed}
                     >
                       <option value="">Select designation</option>
 
@@ -274,12 +450,17 @@ export default function EmployeeMeetingForm() {
                           return (
                             <label
                               key={index}
-                              className="flex items-center gap-3 bg-white border rounded-xl px-4 py-3 cursor-pointer hover:bg-indigo-50"
+                              className={`flex items-center gap-3 bg-white border rounded-xl px-4 py-3 ${
+                                formAllowed
+                                  ? "cursor-pointer hover:bg-indigo-50"
+                                  : "cursor-not-allowed opacity-70"
+                              }`}
                             >
                               <input
                                 type="checkbox"
                                 checked={form.employee_ids.includes(empId)}
                                 onChange={() => handleEmployeeCheckbox(emp)}
+                                disabled={!formAllowed}
                                 className="w-4 h-4"
                               />
 
@@ -302,6 +483,7 @@ export default function EmployeeMeetingForm() {
                     name="meeting_date"
                     value={form.meeting_date}
                     onChange={handleChange}
+                    readOnly={!formAllowed}
                     required
                   />
 
@@ -312,6 +494,7 @@ export default function EmployeeMeetingForm() {
                     name="meeting_time"
                     value={form.meeting_time}
                     onChange={handleChange}
+                    readOnly={!formAllowed}
                     required
                   />
 
@@ -321,6 +504,7 @@ export default function EmployeeMeetingForm() {
                     name="place"
                     value={form.place}
                     onChange={handleChange}
+                    readOnly={!formAllowed}
                     placeholder="Enter meeting place"
                   />
 
@@ -330,6 +514,7 @@ export default function EmployeeMeetingForm() {
                     name="meeting_attend_by"
                     value={form.meeting_attend_by}
                     onChange={handleChange}
+                    readOnly={!formAllowed}
                     placeholder="Enter meeting attend by"
                   />
                 </div>
@@ -340,27 +525,33 @@ export default function EmployeeMeetingForm() {
                   name="remark"
                   value={form.remark}
                   onChange={handleChange}
+                  readOnly={!formAllowed}
                   rows="4"
                   placeholder="Enter remark"
                 />
 
-                <button
-                  type="submit"
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-700 to-cyan-600 hover:from-indigo-800 hover:to-cyan-700 text-white px-7 py-3 rounded-2xl font-black shadow-lg transition-all"
-                >
-                  <Send size={18} />
-                  Submit Meeting
-                </button>
+                {formAllowed ? (
+                  <button
+                    type="submit"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-700 to-cyan-600 hover:from-indigo-800 hover:to-cyan-700 text-white px-7 py-3 rounded-2xl font-black shadow-lg transition-all"
+                  >
+                    <Send size={18} />
+                    {editMode ? "Update Meeting" : "Submit Meeting"}
+                  </button>
+                ) : (
+                  <div className="w-full bg-yellow-50 border border-yellow-200 text-yellow-700 px-7 py-3 rounded-2xl font-black text-center">
+                    {editMode
+                      ? "View Only Permission - Edit Not Allowed"
+                      : "View Only Permission - Add Not Allowed"}
+                  </div>
+                )}
               </form>
             </div>
 
-            {/* RIGHT LIST */}
             <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
               <div className="p-5 bg-slate-900 text-white">
                 <h2 className="text-xl font-black">Meeting History</h2>
-                <p className="text-sm text-slate-300">
-                  Search meeting records
-                </p>
+                <p className="text-sm text-slate-300">Search meeting records</p>
 
                 <div className="relative mt-4">
                   <Search
@@ -385,13 +576,14 @@ export default function EmployeeMeetingForm() {
                       <th className="p-3">Date / Time</th>
                       <th className="p-3">Place</th>
                       <th className="p-3">Attend By</th>
+                      <th className="p-3">Action</th>
                     </tr>
                   </thead>
 
                   <tbody>
                     {filteredMeetings.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="p-8 text-center text-slate-500">
+                        <td colSpan="6" className="p-8 text-center text-slate-500">
                           No meeting data found
                         </td>
                       </tr>
@@ -422,7 +614,37 @@ export default function EmployeeMeetingForm() {
                           </td>
 
                           <td className="p-3">{item.place || "-"}</td>
-                          <td className="p-3">{item.meeting_attend_by || "-"}</td>
+                          <td className="p-3">
+                            {item.meeting_attend_by || "-"}
+                          </td>
+
+                          <td className="p-3">
+                            <div className="flex gap-2 justify-center">
+                              {canEdit ? (
+                                <button
+                                  onClick={() => handleEdit(item)}
+                                  className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1"
+                                >
+                                  <Edit size={15} />
+                                  Edit
+                                </button>
+                              ) : (
+                                <span className="text-xs font-black text-slate-400">
+                                  View Only
+                                </span>
+                              )}
+
+                              {canDelete && (
+                                <button
+                                  onClick={() => handleDelete(item)}
+                                  className="bg-red-600 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1"
+                                >
+                                  <Trash2 size={15} />
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -433,35 +655,38 @@ export default function EmployeeMeetingForm() {
           </div>
 
           <style>{`
-          .label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 14px;
-            font-weight: 700;
-            color: #334155;
-            margin-bottom: 6px;
-          }
+            .label {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              font-size: 14px;
+              font-weight: 700;
+              color: #334155;
+              margin-bottom: 6px;
+            }
 
-          .input {
-            width: 100%;
-            border: 1px solid #cbd5e1;
-            border-radius: 14px;
-            padding: 12px 14px;
-            outline: none;
-            font-size: 14px;
-            background: white;
-          }
+            .input {
+              width: 100%;
+              border: 1px solid #cbd5e1;
+              border-radius: 14px;
+              padding: 12px 14px;
+              outline: none;
+              font-size: 14px;
+              background: white;
+            }
 
-          .input:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-          }
+            .input:focus {
+              border-color: #6366f1;
+              box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            }
 
-          .input[readonly] {
-            background: #f8fafc;
-          }
-        `}</style>
+            .input[readonly],
+            .input:disabled,
+            textarea[readonly] {
+              background: #f8fafc;
+              cursor: not-allowed;
+            }
+          `}</style>
         </div>
       </div>
     </div>
