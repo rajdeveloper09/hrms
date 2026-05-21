@@ -13,12 +13,10 @@ import {
 } from "lucide-react";
 
 const API = "https://ojmee.in/employee";
+const CURRENT_PATH = "/add-areaManagerBranch";
 
 const cleanText = (value) =>
-  String(value || "")
-    .toLowerCase()
-    .replace(/\s+/g, "")
-    .trim();
+  String(value || "").toLowerCase().replace(/\s+/g, "").trim();
 
 export default function AreaManagerBranchForm() {
   const [employees, setEmployees] = useState([]);
@@ -33,6 +31,19 @@ export default function AreaManagerBranchForm() {
     allowed_branch_date: "",
     branches: [],
   });
+
+  const role = localStorage.getItem("role") || "view";
+  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+
+  const pagePermission =
+    role === "superAdmin"
+      ? { can_view: 1, can_add: 1, can_edit: 1, can_delete: 1 }
+      : permissions.find((p) => p.route_path === CURRENT_PATH) || {};
+
+  const canView = role === "superAdmin" || Number(pagePermission.can_view) === 1;
+  const canAdd = role === "superAdmin" || Number(pagePermission.can_add) === 1;
+  const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
+  const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
 
   useEffect(() => {
     fetchEmployees();
@@ -96,6 +107,8 @@ export default function AreaManagerBranchForm() {
   );
 
   const handleEmployeeChange = (e) => {
+    if (!canAdd) return alert("You do not have add permission");
+
     const empId = e.target.value;
     const emp = employees.find((item) => item.employee_id === empId);
 
@@ -118,6 +131,8 @@ export default function AreaManagerBranchForm() {
   };
 
   const handleBranchCheck = (branch) => {
+    if (!canAdd) return alert("You do not have add permission");
+
     const exists = form.branches.some(
       (item) => item.branch_id === branch.branch_id
     );
@@ -146,6 +161,7 @@ export default function AreaManagerBranchForm() {
   const submitForm = async (e) => {
     e.preventDefault();
 
+    if (!canAdd) return alert("You do not have add permission");
     if (!form.emp_id) return alert("Select Area Manager");
     if (!form.allowed_branch_date) return alert("Select allowed branch date");
     if (form.branches.length === 0) return alert("Select at least one branch");
@@ -174,6 +190,8 @@ export default function AreaManagerBranchForm() {
   };
 
   const updateStatus = async (item, status) => {
+    if (!canEdit) return alert("You do not have edit permission");
+
     try {
       const res = await axios.post(`${API}/area_manager_branches_update`, {
         id: item.id,
@@ -212,7 +230,6 @@ export default function AreaManagerBranchForm() {
 
   const filteredGroupedAssigned = useMemo(() => {
     const q = cleanText(search);
-
     if (!q) return groupedAssigned;
 
     return groupedAssigned
@@ -260,6 +277,28 @@ export default function AreaManagerBranchForm() {
     (emp) => emp.emp_id === activeEmpTab
   );
 
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-72 p-6">
+          <div className="bg-white rounded-3xl p-10 text-center shadow-xl">
+            <h1 className="text-2xl font-black text-red-600">Access Denied</h1>
+            <p className="text-slate-500 mt-2">
+              You do not have permission to view this page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const blockedBox = (text) => (
+    <div className="mt-6 w-full bg-yellow-50 border border-yellow-200 text-yellow-700 py-3 rounded-2xl font-black text-center">
+      {text}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
       <Toaster />
@@ -300,101 +339,109 @@ export default function AreaManagerBranchForm() {
                     Assign Branch Permission
                   </h2>
                   <p className="text-sm text-slate-500">
-                    Select Area Manager and allowed branches
+                    {canAdd
+                      ? "Select Area Manager and allowed branches"
+                      : "View only user cannot assign new branches"}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 mb-6">
-                <div>
-                  <label className="text-sm font-bold text-slate-600">
-                    Area Manager
-                  </label>
-                  <select
-                    value={form.emp_id}
-                    onChange={handleEmployeeChange}
-                    required
-                    className="mt-1 w-full h-12 rounded-xl border border-slate-300 px-4 outline-none focus:ring-2 focus:ring-rose-500 bg-white"
-                  >
-                    <option value="">Select Area Manager</option>
-                    {availableEmployees.map((emp) => (
-                      <option key={emp.employee_id} value={emp.employee_id}>
-                        {emp.employee_id} - {emp.full_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <Input label="Employee Name" value={form.emp_name} readOnly />
-
-                <Input
-                  label="Allowed Branch Date"
-                  type="date"
-                  value={form.allowed_branch_date}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      allowed_branch_date: e.target.value,
-                    }))
-                  }
-                  required
-                />
-              </div>
-
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-black text-slate-800">
-                  Select Branches
-                </h2>
-
-                <span className="text-sm font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-full">
-                  Selected: {form.branches.length}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-h-[420px] overflow-y-auto pr-1">
-                {visibleBranches.length === 0 ? (
-                  <div className="md:col-span-2 text-slate-500 bg-slate-50 rounded-2xl p-5 text-center">
-                    No branch available. All branches are assigned.
-                  </div>
-                ) : (
-                  visibleBranches.map((branch) => {
-                    const checked = form.branches.some(
-                      (item) => item.branch_id === branch.branch_id
-                    );
-
-                    return (
-                      <label
-                        key={branch.branch_id}
-                        className={`rounded-2xl p-4 cursor-pointer flex items-start gap-3 border transition-all ${
-                          checked
-                            ? "bg-rose-50 border-rose-500 shadow-md"
-                            : "bg-white border-slate-200 hover:border-rose-300 hover:bg-rose-50/40"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => handleBranchCheck(branch)}
-                          className="mt-1 w-5 h-5 accent-rose-600"
-                        />
-
-                        <span>
-                          <span className="block font-black text-slate-800">
-                            {branch.branch_name}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {branch.branch_id}
-                          </span>
-                        </span>
+              {canAdd ? (
+                <>
+                  <div className="grid grid-cols-1 gap-4 mb-6">
+                    <div>
+                      <label className="text-sm font-bold text-slate-600">
+                        Area Manager
                       </label>
-                    );
-                  })
-                )}
-              </div>
+                      <select
+                        value={form.emp_id}
+                        onChange={handleEmployeeChange}
+                        required
+                        className="mt-1 w-full h-12 rounded-xl border border-slate-300 px-4 outline-none focus:ring-2 focus:ring-rose-500 bg-white"
+                      >
+                        <option value="">Select Area Manager</option>
+                        {availableEmployees.map((emp) => (
+                          <option key={emp.employee_id} value={emp.employee_id}>
+                            {emp.employee_id} - {emp.full_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-              <button className="mt-6 w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:opacity-90 text-white py-3 rounded-2xl font-black shadow-lg">
-                Save Branch Permission
-              </button>
+                    <Input label="Employee Name" value={form.emp_name} readOnly />
+
+                    <Input
+                      label="Allowed Branch Date"
+                      type="date"
+                      value={form.allowed_branch_date}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          allowed_branch_date: e.target.value,
+                        }))
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-black text-slate-800">
+                      Select Branches
+                    </h2>
+
+                    <span className="text-sm font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-full">
+                      Selected: {form.branches.length}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-h-[420px] overflow-y-auto pr-1">
+                    {visibleBranches.length === 0 ? (
+                      <div className="md:col-span-2 text-slate-500 bg-slate-50 rounded-2xl p-5 text-center">
+                        No branch available. All branches are assigned.
+                      </div>
+                    ) : (
+                      visibleBranches.map((branch) => {
+                        const checked = form.branches.some(
+                          (item) => item.branch_id === branch.branch_id
+                        );
+
+                        return (
+                          <label
+                            key={branch.branch_id}
+                            className={`rounded-2xl p-4 cursor-pointer flex items-start gap-3 border transition-all ${
+                              checked
+                                ? "bg-rose-50 border-rose-500 shadow-md"
+                                : "bg-white border-slate-200 hover:border-rose-300 hover:bg-rose-50/40"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => handleBranchCheck(branch)}
+                              className="mt-1 w-5 h-5 accent-rose-600"
+                            />
+
+                            <span>
+                              <span className="block font-black text-slate-800">
+                                {branch.branch_name}
+                              </span>
+                              <span className="text-xs text-slate-500">
+                                {branch.branch_id}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <button className="mt-6 w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:opacity-90 text-white py-3 rounded-2xl font-black shadow-lg">
+                    Save Branch Permission
+                  </button>
+                </>
+              ) : (
+                blockedBox("View Only Permission - Add Not Allowed")
+              )}
             </form>
 
             <div className="bg-white rounded-3xl shadow-xl border border-rose-100 overflow-hidden">
@@ -541,23 +588,35 @@ export default function AreaManagerBranchForm() {
                                 />
                               </div>
 
-                              <label className="mt-5 flex items-center justify-between rounded-2xl bg-white border px-4 py-3 cursor-pointer">
-                                <span className="text-sm font-black text-slate-700">
-                                  Branch Permission
-                                </span>
+                              {canEdit ? (
+                                <label className="mt-5 flex items-center justify-between rounded-2xl bg-white border px-4 py-3 cursor-pointer">
+                                  <span className="text-sm font-black text-slate-700">
+                                    Branch Permission
+                                  </span>
 
-                                <input
-                                  type="checkbox"
-                                  checked={String(item.status) === "1"}
-                                  onChange={(e) =>
-                                    updateStatus(
-                                      item,
-                                      e.target.checked ? 1 : 0
-                                    )
-                                  }
-                                  className="w-5 h-5 accent-rose-600"
-                                />
-                              </label>
+                                  <input
+                                    type="checkbox"
+                                    checked={String(item.status) === "1"}
+                                    onChange={(e) =>
+                                      updateStatus(
+                                        item,
+                                        e.target.checked ? 1 : 0
+                                      )
+                                    }
+                                    className="w-5 h-5 accent-rose-600"
+                                  />
+                                </label>
+                              ) : (
+                                <div className="mt-5 rounded-2xl bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 text-center font-black text-sm">
+                                  View Only - Edit Not Allowed
+                                </div>
+                              )}
+
+                              {!canDelete && (
+                                <p className="text-[11px] text-slate-400 mt-3 text-center">
+                                  Delete permission not assigned
+                                </p>
+                              )}
                             </div>
                           ))}
                         </div>

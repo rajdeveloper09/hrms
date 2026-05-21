@@ -12,13 +12,10 @@ import {
   Send,
   Edit,
   X,
-  Trash2,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { API_BASE_URL } from "../../config/api";
 import SideNav from "../SideNav";
-
-const CURRENT_PATH = "/add-complaint";
 
 export default function ComplaintForm() {
   const emptyForm = {
@@ -45,19 +42,6 @@ export default function ComplaintForm() {
   const [editMode, setEditMode] = useState(false);
   const [search, setSearch] = useState("");
 
-  const role = localStorage.getItem("role") || "view";
-  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
-
-  const pagePermission =
-    role === "superAdmin"
-      ? { can_view: 1, can_add: 1, can_edit: 1, can_delete: 1 }
-      : permissions.find((p) => p.route_path === CURRENT_PATH) || {};
-
-  const canView = role === "superAdmin" || Number(pagePermission.can_view) === 1;
-  const canAdd = role === "superAdmin" || Number(pagePermission.can_add) === 1;
-  const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
-  const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
-
   useEffect(() => {
     fetchEmployees();
     fetchComplaints();
@@ -66,16 +50,18 @@ export default function ComplaintForm() {
   const fetchEmployees = async () => {
     try {
       setLoadingEmployees(true);
+
       const response = await fetch(`${API_BASE_URL}/get_employee`);
       const data = await response.json();
 
       let employeeList = [];
+
       if (Array.isArray(data)) employeeList = data;
       else if (Array.isArray(data.data)) employeeList = data.data;
       else if (Array.isArray(data.result)) employeeList = data.result;
 
       setEmployees(employeeList);
-    } catch {
+    } catch (error) {
       toast.error("Failed to load employees");
     } finally {
       setLoadingEmployees(false);
@@ -87,13 +73,12 @@ export default function ComplaintForm() {
       const response = await fetch(`${API_BASE_URL}/emp_complaints`);
       const data = await response.json();
       setComplaints(data.data || data.result || []);
-    } catch {
+    } catch (error) {
       toast.error("Failed to load complaints");
     }
   };
 
-  const getEmployeeId = (emp) =>
-    String(emp?.employee_id || emp?.emp_id || emp?.id || "");
+  const getEmployeeId = (emp) => String(emp?.employee_id || emp?.emp_id || emp?.id || "");
 
   const getEmployeeName = (emp) =>
     emp?.full_name || emp?.employee_name || emp?.name || "";
@@ -105,11 +90,11 @@ export default function ComplaintForm() {
     (emp) => getEmployeeId(emp) === formData.emp_id
   );
 
-  const branchName =
-    formData.branch_id || getEmployeeBranch(selectedEmployeeData);
+  const branchName = formData.branch_id || getEmployeeBranch(selectedEmployeeData);
 
   const filteredComplaints = useMemo(() => {
     const q = search.toLowerCase().trim();
+
     if (!q) return complaints;
 
     return complaints.filter((item) =>
@@ -135,12 +120,8 @@ export default function ComplaintForm() {
   }, [complaints, search]);
 
   const handleEmployeeSelect = (e) => {
-    if (!canAdd && !editMode) {
-      toast.error("You do not have add permission");
-      return;
-    }
-
     const selectedEmpId = e.target.value;
+
     const selectedEmployee = employees.find(
       (emp) => getEmployeeId(emp) === selectedEmpId
     );
@@ -198,12 +179,6 @@ export default function ComplaintForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!canAdd) {
-      toast.error("You do not have add permission");
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -218,7 +193,9 @@ export default function ComplaintForm() {
 
       const response = await fetch(`${API_BASE_URL}/emp_complaints_post`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
 
@@ -231,7 +208,7 @@ export default function ComplaintForm() {
       } else {
         toast.error(data.message || "Failed to submit complaint");
       }
-    } catch {
+    } catch (error) {
       toast.error("API Error");
     } finally {
       setLoading(false);
@@ -239,11 +216,6 @@ export default function ComplaintForm() {
   };
 
   const handleEdit = (item) => {
-    if (!canEdit) {
-      toast.error("You do not have edit permission");
-      return;
-    }
-
     setEditMode(true);
 
     const complaintType = item.complaint_type || "Emp vs Emp";
@@ -272,11 +244,6 @@ export default function ComplaintForm() {
   const handleUpdate = async (e) => {
     e.preventDefault();
 
-    if (!canEdit) {
-      toast.error("You do not have edit permission");
-      return;
-    }
-
     if (!formData.id) {
       toast.error("Complaint ID missing");
       return;
@@ -296,7 +263,9 @@ export default function ComplaintForm() {
 
       const response = await fetch(`${API_BASE_URL}/emp_complaints_update`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
 
@@ -309,63 +278,15 @@ export default function ComplaintForm() {
       } else {
         toast.error(data.message || "Update failed");
       }
-    } catch {
+    } catch (error) {
       toast.error("Update API Error");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (item) => {
-    if (!canDelete) {
-      toast.error("You do not have delete permission");
-      return;
-    }
-
-    if (!window.confirm("Delete this complaint?")) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/emp_complaints_delete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: item.id }),
-      });
-
-      const data = await response.json();
-
-      if (data.success || data.status) {
-        toast.success("Complaint deleted successfully");
-        fetchComplaints();
-      } else {
-        toast.error(data.message || "Delete failed");
-      }
-    } catch {
-      toast.error("Delete API Error");
-    }
-  };
-
   const inputStyle =
     "w-full border border-slate-200 bg-slate-50 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent transition-all";
-
-  if (!canView) {
-    return (
-      <div className="min-h-screen bg-slate-100 flex">
-        <SideNav />
-        <div className="flex-1 lg:ml-72 p-6">
-          <div className="bg-white rounded-3xl p-10 text-center shadow-xl">
-            <h1 className="text-2xl font-black text-red-600">Access Denied</h1>
-            <p className="text-slate-500 mt-2">
-              You do not have permission to view this page.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const formBlockedText = !editMode
-    ? "View Only Permission - Add Not Allowed"
-    : "View Only Permission - Edit Not Allowed";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
@@ -374,6 +295,8 @@ export default function ComplaintForm() {
 
       <div className="flex-1 w-full lg:ml-72 p-4 md:p-5 overflow-y-auto min-h-screen">
         <div className="relative bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 rounded-[32px] p-4 overflow-hidden shadow-2xl mb-6">
+          <div className="absolute -top-20 -right-10 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+
           <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div className="pl-4">
               <div className="flex gap-10">
@@ -453,7 +376,7 @@ export default function ComplaintForm() {
                     onChange={handleEmployeeSelect}
                     className={inputStyle}
                     required
-                    disabled={editMode || (!editMode && !canAdd)}
+                    disabled={editMode}
                   >
                     <option value="">
                       {loadingEmployees ? "Loading..." : "Select Employee"}
@@ -492,7 +415,7 @@ export default function ComplaintForm() {
                     value={formData.complaint_type}
                     onChange={handleChange}
                     className={inputStyle}
-                    disabled={editMode || (!editMode && !canAdd)}
+                    disabled={editMode}
                   >
                     <option value="Emp vs Emp">Emp vs Emp</option>
                     <option value="Emp vs Other">Emp vs Other</option>
@@ -513,7 +436,7 @@ export default function ComplaintForm() {
                         onChange={handleChange}
                         className={inputStyle}
                         required
-                        disabled={editMode || (!editMode && !canAdd)}
+                        disabled={editMode}
                       >
                         <option value="">Select Second Employee</option>
 
@@ -537,7 +460,7 @@ export default function ComplaintForm() {
                         onChange={handleChange}
                         className={inputStyle}
                         required
-                        disabled={editMode || (!editMode && !canAdd)}
+                        disabled={editMode}
                       >
                         <option value="">Select Suspected Employee</option>
 
@@ -565,7 +488,7 @@ export default function ComplaintForm() {
                         placeholder="Enter Other Person Name"
                         className={inputStyle}
                         required
-                        readOnly={editMode || (!editMode && !canAdd)}
+                        readOnly={editMode}
                       />
                     </div>
 
@@ -583,7 +506,7 @@ export default function ComplaintForm() {
                         placeholder="Suspected Person"
                         className={inputStyle}
                         required
-                        readOnly={editMode || (!editMode && !canAdd)}
+                        readOnly={editMode}
                       />
                     </div>
                   </>
@@ -601,7 +524,6 @@ export default function ComplaintForm() {
                     value={formData.incident_datetime}
                     onChange={handleChange}
                     className={inputStyle}
-                    readOnly={editMode ? !canEdit : !canAdd}
                   />
                 </div>
 
@@ -619,7 +541,6 @@ export default function ComplaintForm() {
                     placeholder="Incident Place"
                     className={inputStyle}
                     required
-                    readOnly={editMode ? !canEdit : !canAdd}
                   />
                 </div>
 
@@ -637,7 +558,6 @@ export default function ComplaintForm() {
                     placeholder="Raised By"
                     className={inputStyle}
                     required
-                    readOnly={editMode ? !canEdit : !canAdd}
                   />
                 </div>
 
@@ -653,9 +573,9 @@ export default function ComplaintForm() {
                     onChange={handleChange}
                     className={inputStyle}
                     required
-                    disabled={editMode ? !canEdit : !canAdd}
                   >
-                    <option value="Pending">Pending</option>
+                    {!editMode && <option value="Pending">Pending</option>}
+                    {editMode && <option value="Pending">Pending</option>}
                     <option value="Accepted">Accepted</option>
                     <option value="Rejected">Rejected</option>
                     <option value="Closed">Closed</option>
@@ -673,31 +593,24 @@ export default function ComplaintForm() {
                     placeholder="Enter Remark"
                     className={inputStyle}
                     required
-                    readOnly={editMode ? !canEdit : !canAdd}
                   />
                 </div>
               </div>
 
-              {(!editMode && canAdd) || (editMode && canEdit) ? (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 hover:scale-[1.01] active:scale-[0.99] text-white py-4 rounded-2xl text-lg font-bold shadow-xl transition-all duration-300 disabled:opacity-60 flex justify-center gap-2 items-center"
-                >
-                  <Send size={18} />
-                  {loading
-                    ? editMode
-                      ? "Updating..."
-                      : "Submitting..."
-                    : editMode
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 hover:scale-[1.01] active:scale-[0.99] text-white py-4 rounded-2xl text-lg font-bold shadow-xl transition-all duration-300 disabled:opacity-60 flex justify-center gap-2 items-center"
+              >
+                <Send size={18} />
+                {loading
+                  ? editMode
+                    ? "Updating..."
+                    : "Submitting..."
+                  : editMode
                     ? "Update Complaint"
                     : "Submit Complaint"}
-                </button>
-              ) : (
-                <div className="w-full bg-yellow-50 text-yellow-700 border border-yellow-200 py-4 rounded-2xl text-center font-black">
-                  {formBlockedText}
-                </div>
-              )}
+              </button>
             </form>
           </div>
 
@@ -775,46 +688,27 @@ export default function ComplaintForm() {
 
                         <td className="p-3">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-black ${
-                              item.status === "Accepted"
+                            className={`px-3 py-1 rounded-full text-xs font-black ${item.status === "Accepted"
                                 ? "bg-emerald-100 text-emerald-700"
                                 : item.status === "Rejected"
-                                ? "bg-red-100 text-red-700"
-                                : item.status === "Closed"
-                                ? "bg-slate-200 text-slate-700"
-                                : "bg-amber-100 text-amber-700"
-                            }`}
+                                  ? "bg-red-100 text-red-700"
+                                  : item.status === "Closed"
+                                    ? "bg-slate-200 text-slate-700"
+                                    : "bg-amber-100 text-amber-700"
+                              }`}
                           >
                             {item.status || "Pending"}
                           </span>
                         </td>
 
                         <td className="p-3">
-                          <div className="flex gap-2 justify-center">
-                            {canEdit ? (
-                              <button
-                                onClick={() => handleEdit(item)}
-                                className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-2"
-                              >
-                                <Edit size={16} />
-                                Edit
-                              </button>
-                            ) : (
-                              <span className="text-xs font-black text-slate-400">
-                                View Only
-                              </span>
-                            )}
-
-                            {canDelete && (
-                              <button
-                                onClick={() => handleDelete(item)}
-                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-2"
-                              >
-                                <Trash2 size={16} />
-                                Delete
-                              </button>
-                            )}
-                          </div>
+                          <button
+                            onClick={() => handleEdit(item)}
+                            className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 mx-auto"
+                          >
+                            <Edit size={16} />
+                            Edit
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -833,13 +727,6 @@ export default function ComplaintForm() {
             margin-bottom: 8px;
             font-weight: 800;
             color: #334155;
-          }
-
-          input:read-only,
-          textarea:read-only,
-          select:disabled {
-            background: #f1f5f9;
-            cursor: not-allowed;
           }
         `}</style>
       </div>
