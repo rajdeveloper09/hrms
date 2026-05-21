@@ -10,16 +10,26 @@ import {
   Gift,
   Search,
   Image,
+  Edit,
+  Trash2,
+  X,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import SideNav from "../SideNav";
 
-const EMPLOYEE_API = "https://ojmee.in/employee/get_employee";
-const REWARD_GET_API = "https://ojmee.in/employee/emp_rewards";
-const REWARD_POST_API = "https://ojmee.in/employee/emp_rewards_post";
+const API = "https://ojmee.in/employee";
+const CURRENT_PATH = "/add-reward";
+
+const EMPLOYEE_API = `${API}/get_employee`;
+const REWARD_GET_API = `${API}/emp_rewards`;
+const REWARD_POST_API = `${API}/emp_rewards_post`;
+const REWARD_UPDATE_API = `${API}/emp_rewards_update`;
+const REWARD_DELETE_API = `${API}/emp_rewards_delete`;
 
 export default function EmployeeRewardForm() {
   const emptyForm = {
+    id: "",
+    reward_id: "",
     emp_id: "",
     emp_name: "",
     current_salary: "",
@@ -39,6 +49,22 @@ export default function EmployeeRewardForm() {
   const [rewardImage, setRewardImage] = useState(null);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
+  const [editMode, setEditMode] = useState(false);
+
+  const role = localStorage.getItem("role") || "view";
+  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+
+  const pagePermission =
+    role === "superAdmin"
+      ? { can_view: 1, can_add: 1, can_edit: 1, can_delete: 1 }
+      : permissions.find((p) => p.route_path === CURRENT_PATH) || {};
+
+  const canView = role === "superAdmin" || Number(pagePermission.can_view) === 1;
+  const canAdd = role === "superAdmin" || Number(pagePermission.can_add) === 1;
+  const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
+  const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
+
+  const formAllowed = editMode ? canEdit : canAdd;
 
   useEffect(() => {
     fetchEmployees();
@@ -99,7 +125,6 @@ export default function EmployeeRewardForm() {
 
     if (type === "Fixed") return fixed;
     if (type === "Percentage") return (sal * percent) / 100;
-
     return 0;
   };
 
@@ -110,6 +135,8 @@ export default function EmployeeRewardForm() {
     });
 
   const handleEmployeeSelect = (empId) => {
+    if (!canAdd) return toast.error("You do not have add permission");
+
     const emp = employees.find(
       (e) =>
         String(e.employee_id) === String(empId) ||
@@ -140,6 +167,9 @@ export default function EmployeeRewardForm() {
   };
 
   const handleChange = (e) => {
+    if (!editMode && !canAdd) return toast.error("You do not have add permission");
+    if (editMode && !canEdit) return toast.error("You do not have edit permission");
+
     const { name, value } = e.target;
 
     setForm((prev) => {
@@ -176,58 +206,78 @@ export default function EmployeeRewardForm() {
     });
   };
 
-  const resetForm = () => {
-    setRewardImage(null);
-    setForm(emptyForm);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (
-      !form.emp_id ||
-      !form.reward_type ||
-      !form.reward_date ||
-      !form.total_reward_amount
-    ) {
-      toast.error("Employee, Reward Type, Date and Amount required");
+  const handleFileChange = (e) => {
+    if (!formAllowed) {
+      toast.error(editMode ? "You do not have edit permission" : "You do not have add permission");
       return;
     }
 
+    setRewardImage(e.target.files[0]);
+  };
+
+  const resetForm = () => {
+    setRewardImage(null);
+    setForm(emptyForm);
+    setEditMode(false);
+  };
+
+  const validateForm = () => {
+    if (!form.emp_id || !form.reward_type || !form.reward_date || !form.total_reward_amount) {
+      return "Employee, Reward Type, Date and Amount required";
+    }
+
+    if (form.reward_type === "Fixed" && !form.fixed_amount) {
+      return "Fixed amount required";
+    }
+
+    if (form.reward_type === "Percentage" && !form.percentage_value) {
+      return "Percentage required";
+    }
+
+    return "";
+  };
+
+  const createFormData = () => {
     const formData = new FormData();
 
-    formData.append("emp_id", form.emp_id);
-    formData.append("emp_name", form.emp_name);
-    formData.append("current_salary", form.current_salary);
-    formData.append("reward_type", form.reward_type);
+    Object.keys(form).forEach((key) => {
+      formData.append(key, form[key] || "");
+    });
+
     formData.append(
       "fixed_amount",
       form.reward_type === "Fixed" ? form.fixed_amount : 0
     );
+
     formData.append(
       "percentage_value",
       form.reward_type === "Percentage" ? form.percentage_value : 0
     );
-    formData.append("total_reward_amount", form.total_reward_amount);
-    formData.append("reward_date", form.reward_date);
-    formData.append("reward_month", form.reward_month);
-    formData.append("order_by", form.order_by);
-    formData.append("remark", form.remark);
-    formData.append("status", form.status);
 
     if (rewardImage) {
       formData.append("reward_image", rewardImage);
     }
 
+    return formData;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!canAdd) return toast.error("You do not have add permission");
+
+    const error = validateForm();
+    if (error) return toast.error(error);
+
     try {
       const res = await fetch(REWARD_POST_API, {
         method: "POST",
-        body: formData,
+        body: createFormData(),
       });
 
       const json = await res.json();
 
-      if (json.success) {
+      if (json.success || json.status) {
         toast.success("Reward saved successfully");
         resetForm();
         fetchRewards();
@@ -239,6 +289,104 @@ export default function EmployeeRewardForm() {
     }
   };
 
+  const handleEdit = (item) => {
+    if (!canEdit) return toast.error("You do not have edit permission");
+
+    setEditMode(true);
+    setRewardImage(null);
+
+    setForm({
+      id: item.id || "",
+      reward_id: item.reward_id || "",
+      emp_id: item.emp_id || "",
+      emp_name: item.emp_name || item.employee_name || item.full_name || "",
+      current_salary: item.current_salary || "",
+      reward_type: item.reward_type || "Fixed",
+      fixed_amount: item.fixed_amount || "",
+      percentage_value: item.percentage_value || "",
+      total_reward_amount: item.total_reward_amount || "",
+      reward_date: item.reward_date || "",
+      reward_month: item.reward_month || "",
+      order_by: item.order_by || "",
+      remark: item.remark || "",
+      status: item.status || "Pending",
+    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    if (!canEdit) return toast.error("You do not have edit permission");
+    if (!form.id) return toast.error("Reward ID missing");
+
+    const error = validateForm();
+    if (error) return toast.error(error);
+
+    try {
+      const res = await fetch(REWARD_UPDATE_API, {
+        method: "POST",
+        body: createFormData(),
+      });
+
+      const json = await res.json();
+
+      if (json.success || json.status) {
+        toast.success("Reward updated successfully");
+        resetForm();
+        fetchRewards();
+      } else {
+        toast.error(json.message || "Reward update failed");
+      }
+    } catch {
+      toast.error("Update server error");
+    }
+  };
+
+  const handleDelete = async (item) => {
+    if (!canDelete) return toast.error("You do not have delete permission");
+
+    if (!window.confirm("Delete this reward?")) return;
+
+    try {
+      const res = await fetch(REWARD_DELETE_API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: item.id }),
+      });
+
+      const json = await res.json();
+
+      if (json.success || json.status) {
+        toast.success("Reward deleted successfully");
+        fetchRewards();
+      } else {
+        toast.error(json.message || "Delete failed");
+      }
+    } catch {
+      toast.error("Delete server error");
+    }
+  };
+
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-72 p-6">
+          <div className="bg-white rounded-3xl p-10 text-center shadow-xl">
+            <h1 className="text-2xl font-black text-red-600">Access Denied</h1>
+            <p className="text-slate-500 mt-2">
+              You do not have permission to view this page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
       <Toaster />
@@ -247,9 +395,6 @@ export default function EmployeeRewardForm() {
       <div className="flex-1 w-full lg:ml-72 p-3 sm:p-4 md:p-5 overflow-y-auto min-h-screen">
         <div className="mx-auto space-y-6 mt-[70px] sm:mt-0">
           <div className="relative overflow-hidden rounded-[34px] bg-gradient-to-r from-emerald-700 via-teal-600 to-cyan-600 p-4 text-white shadow-2xl mb-6">
-            <div className="absolute -top-24 -right-20 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
-            <div className="absolute -bottom-24 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-
             <div className="relative z-10 flex items-center justify-between gap-6">
               <div className="flex items-center gap-5">
                 <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center shadow-xl">
@@ -272,16 +417,37 @@ export default function EmployeeRewardForm() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-            {/* LEFT FORM */}
             <div className="bg-white/90 backdrop-blur-xl rounded-[34px] border border-white shadow-2xl overflow-hidden">
-              <div className="p-5 bg-slate-900 text-white">
-                <h2 className="text-xl font-black">Create Reward</h2>
-                <p className="text-sm text-slate-300">
-                  Fill reward details carefully
-                </p>
+              <div className="p-5 bg-slate-900 text-white flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-black">
+                    {editMode ? "Update Reward" : "Create Reward"}
+                  </h2>
+                  <p className="text-sm text-slate-300">
+                    {formAllowed
+                      ? "Fill reward details carefully"
+                      : editMode
+                      ? "View Only Permission - Edit Not Allowed"
+                      : "View Only Permission - Add Not Allowed"}
+                  </p>
+                </div>
+
+                {editMode && (
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="bg-white text-emerald-700 px-4 py-2 rounded-xl font-black flex items-center gap-2"
+                  >
+                    <X size={16} />
+                    Cancel
+                  </button>
+                )}
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <form
+                onSubmit={editMode ? handleUpdate : handleSubmit}
+                className="p-6 space-y-5"
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <Field label="Employee" icon={<User size={16} />}>
                     <select
@@ -289,6 +455,7 @@ export default function EmployeeRewardForm() {
                       onChange={(e) => handleEmployeeSelect(e.target.value)}
                       className="input"
                       required
+                      disabled={editMode || !canAdd}
                     >
                       <option value="">Select employee</option>
 
@@ -322,6 +489,7 @@ export default function EmployeeRewardForm() {
                       value={form.reward_type}
                       onChange={handleChange}
                       className="input"
+                      disabled={!formAllowed}
                     >
                       <option value="Fixed">Amount Fixed</option>
                       <option value="Percentage">Percentage</option>
@@ -337,6 +505,7 @@ export default function EmployeeRewardForm() {
                         onChange={handleChange}
                         placeholder="Enter amount"
                         className="input"
+                        readOnly={!formAllowed}
                         required
                       />
                     </Field>
@@ -349,6 +518,7 @@ export default function EmployeeRewardForm() {
                         onChange={handleChange}
                         placeholder="Enter %"
                         className="input"
+                        readOnly={!formAllowed}
                         required
                       />
                     </Field>
@@ -371,6 +541,7 @@ export default function EmployeeRewardForm() {
                       value={form.reward_date}
                       onChange={handleChange}
                       className="input"
+                      readOnly={!formAllowed}
                       required
                     />
                   </Field>
@@ -391,15 +562,31 @@ export default function EmployeeRewardForm() {
                       onChange={handleChange}
                       placeholder="Order by"
                       className="input"
+                      readOnly={!formAllowed}
                     />
+                  </Field>
+
+                  <Field label="Status" icon={<ClipboardPen size={16} />}>
+                    <select
+                      name="status"
+                      value={form.status}
+                      onChange={handleChange}
+                      className="input"
+                      disabled={!formAllowed}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Accepted">Accepted</option>
+                      <option value="Rejected">Rejected</option>
+                    </select>
                   </Field>
 
                   <Field label="Upload Image" icon={<Upload size={16} />}>
                     <input
                       type="file"
                       accept=".jpg,.jpeg,.png,.webp"
-                      onChange={(e) => setRewardImage(e.target.files[0])}
+                      onChange={handleFileChange}
                       className="input"
+                      disabled={!formAllowed}
                     />
                   </Field>
                 </div>
@@ -412,20 +599,28 @@ export default function EmployeeRewardForm() {
                     rows="4"
                     placeholder="Write reward remark..."
                     className="input resize-none"
+                    readOnly={!formAllowed}
                   />
                 </Field>
 
-                <button
-                  type="submit"
-                  className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 hover:scale-[1.01] active:scale-[0.98] text-white px-10 py-4 rounded-2xl font-black shadow-xl transition-all"
-                >
-                  <Send size={20} />
-                  Submit Reward
-                </button>
+                {formAllowed ? (
+                  <button
+                    type="submit"
+                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-white px-10 py-4 rounded-2xl font-black shadow-xl"
+                  >
+                    <Send size={20} />
+                    {editMode ? "Update Reward" : "Submit Reward"}
+                  </button>
+                ) : (
+                  <div className="w-full bg-yellow-50 border border-yellow-200 text-yellow-700 px-10 py-4 rounded-2xl font-black text-center">
+                    {editMode
+                      ? "View Only Permission - Edit Not Allowed"
+                      : "View Only Permission - Add Not Allowed"}
+                  </div>
+                )}
               </form>
             </div>
 
-            {/* RIGHT LIST */}
             <div className="bg-white rounded-[34px] border border-white shadow-2xl overflow-hidden">
               <div className="p-5 bg-slate-900 text-white">
                 <h2 className="text-xl font-black">Reward History</h2>
@@ -456,13 +651,14 @@ export default function EmployeeRewardForm() {
                       <th className="p-3">Date</th>
                       <th className="p-3">Amount</th>
                       <th className="p-3">Image</th>
+                      <th className="p-3">Action</th>
                     </tr>
                   </thead>
 
                   <tbody>
                     {filteredRewards.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="p-8 text-center text-slate-500">
+                        <td colSpan="6" className="p-8 text-center text-slate-500">
                           No reward data found
                         </td>
                       </tr>
@@ -509,7 +705,7 @@ export default function EmployeeRewardForm() {
                           <td className="p-3">
                             {item.reward_image ? (
                               <a
-                                href={`https://ojmee.in/employee/${item.reward_image}`}
+                                href={`${API}/${item.reward_image}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-1 text-blue-600 font-bold underline"
@@ -521,6 +717,34 @@ export default function EmployeeRewardForm() {
                               "-"
                             )}
                           </td>
+
+                          <td className="p-3">
+                            <div className="flex gap-2 justify-center">
+                              {canEdit ? (
+                                <button
+                                  onClick={() => handleEdit(item)}
+                                  className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1"
+                                >
+                                  <Edit size={15} />
+                                  Edit
+                                </button>
+                              ) : (
+                                <span className="text-xs font-black text-slate-400">
+                                  View Only
+                                </span>
+                              )}
+
+                              {canDelete && (
+                                <button
+                                  onClick={() => handleDelete(item)}
+                                  className="bg-red-600 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1"
+                                >
+                                  <Trash2 size={15} />
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -531,49 +755,53 @@ export default function EmployeeRewardForm() {
           </div>
 
           <style>{`
-          .field-card {
-            background: linear-gradient(180deg, #ffffff, #f8fafc);
-            border: 1px solid #e2e8f0;
-            padding: 18px;
-            border-radius: 24px;
-            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
-          }
+            .field-card {
+              background: linear-gradient(180deg, #ffffff, #f8fafc);
+              border: 1px solid #e2e8f0;
+              padding: 18px;
+              border-radius: 24px;
+              box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+            }
 
-          .label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            font-weight: 800;
-            color: #334155;
-            margin-bottom: 10px;
-          }
+            .label {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 14px;
+              font-weight: 800;
+              color: #334155;
+              margin-bottom: 10px;
+            }
 
-          .input {
-            width: 100%;
-            border: 1px solid #dbe4ee;
-            border-radius: 16px;
-            padding: 13px 15px;
-            outline: none;
-            font-size: 14px;
-            background: white;
-            transition: all 0.25s ease;
-          }
+            .input {
+              width: 100%;
+              border: 1px solid #dbe4ee;
+              border-radius: 16px;
+              padding: 13px 15px;
+              outline: none;
+              font-size: 14px;
+              background: white;
+              transition: all 0.25s ease;
+            }
 
-          .input:hover {
-            border-color: #14b8a6;
-          }
+            .input:focus {
+              border-color: #10b981;
+              box-shadow: 0 0 0 4px rgba(16,185,129,0.15);
+            }
 
-          .input:focus {
-            border-color: #10b981;
-            box-shadow: 0 0 0 4px rgba(16,185,129,0.15);
-          }
+            .input:read-only,
+            .input:disabled,
+            textarea:read-only {
+              background: #f8fafc;
+              color: #475569;
+              cursor: not-allowed;
+            }
 
-          .read {
-            background: #f8fafc;
-            color: #475569;
-          }
-        `}</style>
+            .read {
+              background: #f8fafc;
+              color: #475569;
+            }
+          `}</style>
         </div>
       </div>
     </div>

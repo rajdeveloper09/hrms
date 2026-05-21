@@ -1,46 +1,59 @@
-import React from 'react';
-import { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell
 } from "recharts";
 import { motion } from "framer-motion";
+import {API_BASE_URL} from "../../config/api";
 
 export default function Chart4() {
-
-    const roleDataByBranch = {
-        Delhi: [
-            { name: "Staff", value: 40 },
-            { name: "Manager", value: 15 },
-            { name: "Area Manager", value: 8 },
-            { name: "Cashier", value: 20 },
-            { name: "Accountant", value: 10 },
-            { name: "abcd", value: 20 },
-            { name: "dfssdf", value: 10 },
-        ],
-        Mumbai: [
-            { name: "Staff", value: 50 },
-            { name: "Manager", value: 18 },
-            { name: "Area Manager", value: 10 },
-            { name: "Cashier", value: 22 },
-            { name: "Accountant", value: 12 },
-            { name: "abcd", value: 20 },
-            { name: "dfssdf", value: 10 },
-        ],
-        Bangalore: [
-            { name: "Staff", value: 35 },
-            { name: "Manager", value: 12 },
-            { name: "Area Manager", value: 6 },
-            { name: "Cashier", value: 18 },
-            { name: "Accountant", value: 9 },
-            { name: "abcd", value: 20 },
-            { name: "dfssdf", value: 10 },
-        ],
-    };
+    
 
     const COLORS = ["#ec4899", "#3b82f6", "#22c55e", "#f97316", "#a855f7"];
 
     const [selectedBranchRole, setSelectedBranchRole] = useState("All");
+    const [roleDataByBranch, setRoleDataByBranch] = useState({});
+    const [branches, setBranches] = useState([]);
+
+    useEffect(() => {
+        fetchEmployees();
+    }, []);
+
+    const fetchEmployees = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/get_employee`);
+            const json = await res.json();
+
+            if (json.status === true && Array.isArray(json.data)) {
+                const grouped = {};
+
+                json.data.forEach((emp) => {
+                    const branch = emp.work_location || "Unknown";
+                    const designation = emp.designation || "Unknown";
+
+                    if (!grouped[branch]) grouped[branch] = {};
+
+                    grouped[branch][designation] =
+                        (grouped[branch][designation] || 0) + 1;
+                });
+
+                const finalData = {};
+
+                Object.keys(grouped).forEach((branch) => {
+                    finalData[branch] = Object.keys(grouped[branch]).map((key) => ({
+                        name: key,
+                        value: grouped[branch][key],
+                    }));
+                });
+
+                setRoleDataByBranch(finalData);
+                setBranches(Object.keys(finalData));
+            }
+        } catch (error) {
+            console.error("Employee API fetch error:", error);
+        }
+    };
+
     const getAllBranchRoleData = () => {
         const result = {};
 
@@ -56,18 +69,18 @@ export default function Chart4() {
         }));
     };
 
-    const roleData = React.useMemo(() => {
+    const roleData = useMemo(() => {
         const data =
             selectedBranchRole === "All"
                 ? getAllBranchRoleData()
-                : roleDataByBranch[selectedBranchRole];
+                : roleDataByBranch[selectedBranchRole] || [];
 
         return [...data].sort((a, b) => b.value - a.value);
-    }, [selectedBranchRole]);
+    }, [selectedBranchRole, roleDataByBranch]);
+
     return (
         <div className="bg-white rounded-2xl shadow-md p-4">
 
-            {/* Header */}
             <div className="flex items-center justify-between gap-3 mb-5">
                 <div>
 
@@ -92,23 +105,24 @@ export default function Chart4() {
                 <div className="items-center gap-2">
 
                     <select
+                        value={selectedBranchRole}
+                        onChange={(e) => setSelectedBranchRole(e.target.value)}
                         className="text-sm border border-pink-200 rounded-xl px-4 py-2 bg-pink-50 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
                     >
-                        <option>All Branch</option>
-                        <option>Delhi</option>
-                        <option>Mumbai</option>
-                        <option>Bangalore</option>
+                        <option value="All">All Branch</option>
+                        {branches.map((branch) => (
+                            <option key={branch} value={branch}>
+                                {branch}
+                            </option>
+                        ))}
                     </select>
-
 
                 </div>
 
             </div>
 
-            {/* Bottom Content */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-5">
 
-                {/* Left Chart */}
                 <div className="w-full md:w-1/2">
 
                     <ResponsiveContainer width="100%" height={260}>
@@ -137,8 +151,6 @@ export default function Chart4() {
 
                 </div>
 
-                {/* Right List */}
-                {/* Right List */}
                 <div className="w-full md:w-1/2">
 
                     <div className="space-y-2 max-h-[360px]">
@@ -165,7 +177,6 @@ export default function Chart4() {
                                 }}
                             >
 
-                                {/* Left */}
                                 <div className="flex items-center gap-2">
 
                                     <motion.span
@@ -192,7 +203,6 @@ export default function Chart4() {
 
                                 </div>
 
-                                {/* Right Value */}
                                 <motion.p
                                     className="font-bold text-gray-800"
                                     initial={{

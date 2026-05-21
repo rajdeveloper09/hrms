@@ -8,14 +8,21 @@ import {
   Send,
   Upload,
   Search,
+  Edit,
+  Trash2,
+  X,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import SideNav from "../SideNav";
 
-const EMPLOYEE_API = "https://ojmee.in/employee/get_employee";
-const RESIGNATION_GET_API = "https://ojmee.in/employee/emp_resignation";
-const RESIGNATION_POST_API = "https://ojmee.in/employee/emp_resignation_post";
-const RESIGNATION_UPDATE_API = "https://ojmee.in/employee/emp_resignation_update";
+const API = "https://ojmee.in/employee";
+const CURRENT_PATH = "/add-resignation";
+
+const EMPLOYEE_API = `${API}/get_employee`;
+const RESIGNATION_GET_API = `${API}/emp_resignation`;
+const RESIGNATION_POST_API = `${API}/emp_resignation_post`;
+const RESIGNATION_UPDATE_API = `${API}/emp_resignation_update`;
+const RESIGNATION_DELETE_API = `${API}/emp_resignation_delete`;
 
 export default function EmployeeResignationForm() {
   const emptyForm = {
@@ -41,6 +48,19 @@ export default function EmployeeResignationForm() {
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
   const [editMode, setEditMode] = useState(false);
+
+  const role = localStorage.getItem("role") || "view";
+  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+
+  const pagePermission =
+    role === "superAdmin"
+      ? { can_view: 1, can_add: 1, can_edit: 1, can_delete: 1 }
+      : permissions.find((p) => p.route_path === CURRENT_PATH) || {};
+
+  const canView = role === "superAdmin" || Number(pagePermission.can_view) === 1;
+  const canAdd = role === "superAdmin" || Number(pagePermission.can_add) === 1;
+  const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
+  const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
 
   useEffect(() => {
     fetchAllData();
@@ -75,16 +95,13 @@ export default function EmployeeResignationForm() {
   const activeEmployees = employees.filter((emp) => {
     const empId = String(emp.employee_id || emp.emp_id || emp.id || "");
 
-    if (editMode && String(form.emp_id) === empId) {
-      return true;
-    }
+    if (editMode && String(form.emp_id) === empId) return true;
 
     return !resignedEmpIds.includes(empId);
   });
 
   const filteredResignations = useMemo(() => {
     const q = search.toLowerCase().trim();
-
     if (!q) return resignations;
 
     return resignations.filter((item) =>
@@ -123,7 +140,14 @@ export default function EmployeeResignationForm() {
     return diffDays >= 0 ? diffDays : 0;
   };
 
+  const formAllowed = editMode ? canEdit : canAdd;
+
   const handleEmployeeSelect = (empId) => {
+    if (!canAdd) {
+      toast.error("You do not have add permission");
+      return;
+    }
+
     const emp = activeEmployees.find(
       (e) =>
         String(e.employee_id) === String(empId) ||
@@ -135,7 +159,11 @@ export default function EmployeeResignationForm() {
       emp?.joining_date || emp?.join_date || emp?.date_of_joining || "";
 
     const branchId =
-      emp?.branch_id || emp?.branch_code || emp?.branch || emp?.work_location || "";
+      emp?.branch_id ||
+      emp?.branch_code ||
+      emp?.branch ||
+      emp?.work_location ||
+      "";
 
     const branchName =
       emp?.branch_name || emp?.branch || emp?.work_location || branchId || "";
@@ -154,6 +182,16 @@ export default function EmployeeResignationForm() {
   };
 
   const handleChange = (e) => {
+    if (!editMode && !canAdd) {
+      toast.error("You do not have add permission");
+      return;
+    }
+
+    if (editMode && !canEdit) {
+      toast.error("You do not have edit permission");
+      return;
+    }
+
     const { name, value } = e.target;
 
     setForm((prev) => {
@@ -167,16 +205,58 @@ export default function EmployeeResignationForm() {
     });
   };
 
+  const handleFileChange = (e) => {
+    if (!formAllowed) {
+      toast.error(editMode ? "You do not have edit permission" : "You do not have add permission");
+      return;
+    }
+
+    setLetterFile(e.target.files[0]);
+  };
+
   const resetForm = () => {
     setLetterFile(null);
     setForm(emptyForm);
   };
 
+  const cancelEdit = () => {
+    setEditMode(false);
+    resetForm();
+  };
+
+  const validateForm = () => {
+    if (!form.emp_id || !form.branch_id || !form.start_date) {
+      return "Employee, Branch and Start Date required";
+    }
+
+    return "";
+  };
+
+  const createFormData = () => {
+    const formData = new FormData();
+
+    Object.entries(form).forEach(([key, value]) => {
+      formData.append(key, value || "");
+    });
+
+    if (letterFile) {
+      formData.append("resignation_letter", letterFile);
+    }
+
+    return formData;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.emp_id || !form.branch_id || !form.start_date) {
-      toast.error("Employee, Branch and Start Date required");
+    if (!canAdd) {
+      toast.error("You do not have add permission");
+      return;
+    }
+
+    const error = validateForm();
+    if (error) {
+      toast.error(error);
       return;
     }
 
@@ -189,25 +269,15 @@ export default function EmployeeResignationForm() {
       return;
     }
 
-    const formData = new FormData();
-
-    Object.entries(form).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-
-    if (letterFile) {
-      formData.append("resignation_letter", letterFile);
-    }
-
     try {
       const res = await fetch(RESIGNATION_POST_API, {
         method: "POST",
-        body: formData,
+        body: createFormData(),
       });
 
       const json = await res.json();
 
-      if (json.success) {
+      if (json.success || json.status) {
         toast.success("Resignation saved successfully");
         resetForm();
         fetchResignations();
@@ -220,6 +290,11 @@ export default function EmployeeResignationForm() {
   };
 
   const handleEdit = (item) => {
+    if (!canEdit) {
+      toast.error("You do not have edit permission");
+      return;
+    }
+
     setEditMode(true);
 
     setForm({
@@ -243,38 +318,34 @@ export default function EmployeeResignationForm() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const cancelEdit = () => {
-    setEditMode(false);
-    resetForm();
-  };
-
   const handleUpdate = async (e) => {
     e.preventDefault();
 
-    if (!form.id || !form.emp_id || !form.branch_id || !form.start_date) {
-      toast.error("ID, Employee, Branch and Start Date required");
+    if (!canEdit) {
+      toast.error("You do not have edit permission");
       return;
     }
 
-    const formData = new FormData();
+    const error = validateForm();
+    if (error) {
+      toast.error(error);
+      return;
+    }
 
-    Object.entries(form).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-
-    if (letterFile) {
-      formData.append("resignation_letter", letterFile);
+    if (!form.id) {
+      toast.error("Resignation ID missing");
+      return;
     }
 
     try {
       const res = await fetch(RESIGNATION_UPDATE_API, {
         method: "POST",
-        body: formData,
+        body: createFormData(),
       });
 
       const json = await res.json();
 
-      if (json.success) {
+      if (json.success || json.status) {
         toast.success("Resignation updated successfully");
         setEditMode(false);
         resetForm();
@@ -286,6 +357,52 @@ export default function EmployeeResignationForm() {
       toast.error("Server error");
     }
   };
+
+  const handleDelete = async (item) => {
+    if (!canDelete) {
+      toast.error("You do not have delete permission");
+      return;
+    }
+
+    if (!window.confirm("Delete this resignation?")) return;
+
+    try {
+      const res = await fetch(RESIGNATION_DELETE_API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: item.id }),
+      });
+
+      const json = await res.json();
+
+      if (json.success || json.status) {
+        toast.success("Resignation deleted successfully");
+        fetchResignations();
+      } else {
+        toast.error(json.message || "Delete failed");
+      }
+    } catch {
+      toast.error("Delete server error");
+    }
+  };
+
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-72 p-6">
+          <div className="bg-white rounded-3xl p-10 text-center shadow-xl">
+            <h1 className="text-2xl font-black text-red-600">Access Denied</h1>
+            <p className="text-slate-500 mt-2">
+              You do not have permission to view this page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
@@ -302,18 +419,37 @@ export default function EmployeeResignationForm() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-            {/* LEFT FORM */}
             <div className="bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden">
-              <div className="p-5 bg-orange-50 border-b border-orange-100">
-                <h2 className="text-xl font-black text-slate-800">
-                  {editMode ? "Update Resignation" : "Resignation Form"}
-                </h2>
-                <p className="text-sm text-slate-500">
-                  Fill employee resignation details carefully
-                </p>
+              <div className="p-5 bg-orange-50 border-b border-orange-100 flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-black text-slate-800">
+                    {editMode ? "Update Resignation" : "Resignation Form"}
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    {formAllowed
+                      ? "Fill employee resignation details carefully"
+                      : editMode
+                      ? "View Only Permission - Edit Not Allowed"
+                      : "View Only Permission - Add Not Allowed"}
+                  </p>
+                </div>
+
+                {editMode && (
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="bg-slate-700 text-white px-4 py-2 rounded-xl font-black flex items-center gap-2"
+                  >
+                    <X size={16} />
+                    Cancel
+                  </button>
+                )}
               </div>
 
-              <form onSubmit={editMode ? handleUpdate : handleSubmit} className="p-6 space-y-5">
+              <form
+                onSubmit={editMode ? handleUpdate : handleSubmit}
+                className="p-6 space-y-5"
+              >
                 <div>
                   <label className="label">
                     <User size={16} /> Employee ID & Name
@@ -324,6 +460,7 @@ export default function EmployeeResignationForm() {
                     onChange={(e) => handleEmployeeSelect(e.target.value)}
                     className="input"
                     required
+                    disabled={editMode || !canAdd}
                   >
                     <option value="">Select employee</option>
 
@@ -340,7 +477,7 @@ export default function EmployeeResignationForm() {
                     })}
                   </select>
 
-                  {activeEmployees.length === 0 && (
+                  {activeEmployees.length === 0 && !editMode && (
                     <p className="text-sm text-red-600 mt-2">
                       No employee available. All employees already resigned.
                     </p>
@@ -348,32 +485,16 @@ export default function EmployeeResignationForm() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    icon={<User size={16} />}
-                    label="Employee Name"
-                    value={form.emp_name}
-                    readOnly
-                  />
+                  <Input icon={<User size={16} />} label="Employee Name" value={form.emp_name} readOnly />
 
                   <Input
                     icon={<Building2 size={16} />}
                     label="Branch ID & Name"
-                    value={
-                      form.branch_id
-                        ? `${form.branch_id} - ${form.branch_name}`
-                        : ""
-                    }
+                    value={form.branch_id ? `${form.branch_id} - ${form.branch_name}` : ""}
                     readOnly
                   />
 
-                  <Input
-                    icon={<CalendarDays size={16} />}
-                    label="Joining Date"
-                    type="date"
-                    name="joining_date"
-                    value={form.joining_date}
-                    readOnly
-                  />
+                  <Input icon={<CalendarDays size={16} />} label="Joining Date" type="date" name="joining_date" value={form.joining_date} readOnly />
 
                   <Input
                     icon={<CalendarDays size={16} />}
@@ -382,6 +503,7 @@ export default function EmployeeResignationForm() {
                     name="start_date"
                     value={form.start_date}
                     onChange={handleChange}
+                    readOnly={!formAllowed}
                     required
                   />
 
@@ -392,16 +514,13 @@ export default function EmployeeResignationForm() {
                     name="end_date"
                     value={form.end_date}
                     onChange={handleChange}
+                    readOnly={!formAllowed}
                   />
 
                   <Input
                     icon={<CalendarDays size={16} />}
                     label="Day Difference"
-                    value={
-                      form.total_working_days !== ""
-                        ? `${form.total_working_days} Days`
-                        : ""
-                    }
+                    value={form.total_working_days !== "" ? `${form.total_working_days} Days` : ""}
                     readOnly
                   />
 
@@ -412,7 +531,9 @@ export default function EmployeeResignationForm() {
                     value={form.accepted_by}
                     onChange={handleChange}
                     placeholder="Accepted by"
+                    readOnly={!formAllowed}
                   />
+
                   {editMode && (
                     <div>
                       <label className="label">
@@ -425,15 +546,15 @@ export default function EmployeeResignationForm() {
                         onChange={handleChange}
                         className="input"
                         required
+                        disabled={!canEdit}
                       >
+                        <option value="Pending">Pending</option>
                         <option value="Accepted">Accepted</option>
                         <option value="Rejected">Rejected</option>
                       </select>
                     </div>
                   )}
-
                 </div>
-
 
                 <TextArea
                   icon={<FileText size={16} />}
@@ -442,6 +563,7 @@ export default function EmployeeResignationForm() {
                   value={form.reason}
                   onChange={handleChange}
                   placeholder="Enter resignation reason"
+                  readOnly={!formAllowed}
                 />
 
                 <div>
@@ -452,8 +574,9 @@ export default function EmployeeResignationForm() {
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                    onChange={(e) => setLetterFile(e.target.files[0])}
+                    onChange={handleFileChange}
                     className="input"
+                    disabled={!formAllowed}
                   />
                 </div>
 
@@ -465,17 +588,26 @@ export default function EmployeeResignationForm() {
                   onChange={handleChange}
                   placeholder="Enter remark"
                   rows="3"
+                  readOnly={!formAllowed}
                 />
 
                 <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={activeEmployees.length === 0}
-                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-red-600 text-white px-7 py-3 rounded-2xl font-black shadow-lg"
-                  >
-                    <Send size={18} />
-                    {editMode ? "Update Resignation" : "Submit Resignation"}
-                  </button>
+                  {formAllowed ? (
+                    <button
+                      type="submit"
+                      disabled={!editMode && activeEmployees.length === 0}
+                      className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-red-600 text-white px-7 py-3 rounded-2xl font-black shadow-lg disabled:opacity-60"
+                    >
+                      <Send size={18} />
+                      {editMode ? "Update Resignation" : "Submit Resignation"}
+                    </button>
+                  ) : (
+                    <div className="flex-1 bg-yellow-50 border border-yellow-200 text-yellow-700 px-7 py-3 rounded-2xl font-black text-center">
+                      {editMode
+                        ? "View Only Permission - Edit Not Allowed"
+                        : "View Only Permission - Add Not Allowed"}
+                    </div>
+                  )}
 
                   {editMode && (
                     <button
@@ -490,7 +622,6 @@ export default function EmployeeResignationForm() {
               </form>
             </div>
 
-            {/* RIGHT HISTORY */}
             <div className="bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden">
               <div className="p-5 bg-slate-900 text-white">
                 <h2 className="text-xl font-black">Resignation History</h2>
@@ -528,14 +659,14 @@ export default function EmployeeResignationForm() {
                   <tbody>
                     {filteredResignations.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="p-8 text-center text-slate-500">
+                        <td colSpan="6" className="p-8 text-center text-slate-500">
                           No resignation data found
                         </td>
                       </tr>
                     ) : (
                       filteredResignations.map((item, index) => (
                         <tr
-                          key={index}
+                          key={item.id || index}
                           className="border-b text-center hover:bg-orange-50/60"
                         >
                           <td className="p-3">
@@ -543,17 +674,12 @@ export default function EmployeeResignationForm() {
                               {item.emp_id}
                             </div>
                             <div className="text-xs text-slate-500">
-                              {item.emp_name ||
-                                item.employee_name ||
-                                item.full_name ||
-                                "-"}
+                              {item.emp_name || item.employee_name || item.full_name || "-"}
                             </div>
                           </td>
 
                           <td className="p-3">
-                            <div className="font-bold">
-                              {item.branch_id || "-"}
-                            </div>
+                            <div className="font-bold">{item.branch_id || "-"}</div>
                             <div className="text-xs text-slate-500">
                               {item.branch_name || "-"}
                             </div>
@@ -564,28 +690,45 @@ export default function EmployeeResignationForm() {
 
                           <td className="p-3">
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-black ${item.status === "Accepted"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : item.status === "Rejected"
+                              className={`px-3 py-1 rounded-full text-xs font-black ${
+                                item.status === "Accepted"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : item.status === "Rejected"
                                   ? "bg-red-100 text-red-700"
                                   : "bg-amber-100 text-amber-700"
-                                }`}
+                              }`}
                             >
                               {item.status || "Pending"}
                             </span>
                           </td>
-                          {item.status === "Pending" && (
-                            <td className="p-3">
-                              <button
-                                onClick={() => handleEdit(item)}
-                                className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-bold"
-                              >
-                                Edit
-                              </button>
-                            </td>
-                          )
-                          }
 
+                          <td className="p-3">
+                            <div className="flex gap-2 justify-center">
+                              {item.status === "Pending" && canEdit ? (
+                                <button
+                                  onClick={() => handleEdit(item)}
+                                  className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1"
+                                >
+                                  <Edit size={15} />
+                                  Edit
+                                </button>
+                              ) : (
+                                <span className="text-xs font-black text-slate-400">
+                                  View Only
+                                </span>
+                              )}
+
+                              {canDelete && (
+                                <button
+                                  onClick={() => handleDelete(item)}
+                                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1"
+                                >
+                                  <Trash2 size={15} />
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -596,35 +739,39 @@ export default function EmployeeResignationForm() {
           </div>
 
           <style>{`
-          .label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 14px;
-            font-weight: 700;
-            color: #334155;
-            margin-bottom: 6px;
-          }
+            .label {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              font-size: 14px;
+              font-weight: 700;
+              color: #334155;
+              margin-bottom: 6px;
+            }
 
-          .input {
-            width: 100%;
-            border: 1px solid #cbd5e1;
-            border-radius: 14px;
-            padding: 12px 14px;
-            outline: none;
-            font-size: 14px;
-            background: white;
-          }
+            .input {
+              width: 100%;
+              border: 1px solid #cbd5e1;
+              border-radius: 14px;
+              padding: 12px 14px;
+              outline: none;
+              font-size: 14px;
+              background: white;
+            }
 
-          .input:focus {
-            border-color: #f97316;
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
-          }
+            .input:focus {
+              border-color: #f97316;
+              box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+            }
 
-          .input[readonly] {
-            background: #f8fafc;
-          }
-        `}</style>
+            .input[readonly],
+            .input:disabled,
+            textarea[readonly] {
+              background: #f8fafc;
+              color: #64748b;
+              cursor: not-allowed;
+            }
+          `}</style>
         </div>
       </div>
     </div>

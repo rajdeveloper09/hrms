@@ -58,6 +58,8 @@ export default function ComplaintForm() {
   const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
   const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
 
+  const formAllowed = editMode ? canEdit : canAdd;
+
   useEffect(() => {
     fetchEmployees();
     fetchComplaints();
@@ -66,10 +68,12 @@ export default function ComplaintForm() {
   const fetchEmployees = async () => {
     try {
       setLoadingEmployees(true);
+
       const response = await fetch(`${API_BASE_URL}/get_employee`);
       const data = await response.json();
 
       let employeeList = [];
+
       if (Array.isArray(data)) employeeList = data;
       else if (Array.isArray(data.data)) employeeList = data.data;
       else if (Array.isArray(data.result)) employeeList = data.result;
@@ -135,12 +139,13 @@ export default function ComplaintForm() {
   }, [complaints, search]);
 
   const handleEmployeeSelect = (e) => {
-    if (!canAdd && !editMode) {
+    if (!canAdd) {
       toast.error("You do not have add permission");
       return;
     }
 
     const selectedEmpId = e.target.value;
+
     const selectedEmployee = employees.find(
       (emp) => getEmployeeId(emp) === selectedEmpId
     );
@@ -156,9 +161,33 @@ export default function ComplaintForm() {
   };
 
   const handleChange = (e) => {
+    if (!formAllowed) {
+      toast.error(editMode ? "You do not have edit permission" : "You do not have add permission");
+      return;
+    }
+
     const { name, value } = e.target;
 
     setFormData((prev) => {
+      if (name === "complaint_type") {
+        return {
+          ...prev,
+          complaint_type: value,
+          second_employee_id: "",
+          other_person_name: "",
+          suspected_employee: "",
+          suspected_type: "Employee",
+        };
+      }
+
+      if (name === "second_employee_id") {
+        return {
+          ...prev,
+          second_employee_id: value,
+          suspected_employee: "",
+        };
+      }
+
       if (name === "suspected_type") {
         return {
           ...prev,
@@ -174,9 +203,17 @@ export default function ComplaintForm() {
     });
   };
 
-  const secondEmployeeOptions = employees.filter(
-    (emp) => getEmployeeId(emp) !== formData.emp_id
-  );
+  const secondEmployeeOptions = employees.filter((emp) => {
+    const empId = getEmployeeId(emp);
+    const empBranch = getEmployeeBranch(emp);
+
+    if (!formData.emp_id) return false;
+
+    return (
+      empId !== formData.emp_id &&
+      String(empBranch).trim() === String(branchName).trim()
+    );
+  });
 
   let suspectedEmployeeOptions = [];
 
@@ -218,7 +255,9 @@ export default function ComplaintForm() {
 
       const response = await fetch(`${API_BASE_URL}/emp_complaints_post`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
 
@@ -296,7 +335,9 @@ export default function ComplaintForm() {
 
       const response = await fetch(`${API_BASE_URL}/emp_complaints_update`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
 
@@ -327,7 +368,9 @@ export default function ComplaintForm() {
     try {
       const response = await fetch(`${API_BASE_URL}/emp_complaints_delete`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ id: item.id }),
       });
 
@@ -345,7 +388,7 @@ export default function ComplaintForm() {
   };
 
   const inputStyle =
-    "w-full border border-slate-200 bg-slate-50 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent transition-all";
+    "w-full border border-slate-200 bg-slate-50 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent transition-all disabled:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-500";
 
   if (!canView) {
     return (
@@ -363,10 +406,6 @@ export default function ComplaintForm() {
     );
   }
 
-  const formBlockedText = !editMode
-    ? "View Only Permission - Add Not Allowed"
-    : "View Only Permission - Edit Not Allowed";
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
       <Toaster position="top-right" />
@@ -374,6 +413,8 @@ export default function ComplaintForm() {
 
       <div className="flex-1 w-full lg:ml-72 p-4 md:p-5 overflow-y-auto min-h-screen">
         <div className="relative bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 rounded-[32px] p-4 overflow-hidden shadow-2xl mb-6">
+          <div className="absolute -top-20 -right-10 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+
           <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div className="pl-4">
               <div className="flex gap-10">
@@ -418,9 +459,13 @@ export default function ComplaintForm() {
                   {editMode ? "Update Complaint" : "Complaint Form"}
                 </h2>
                 <p className="text-sm text-slate-300">
-                  {editMode
-                    ? "Only status and complaint details update"
-                    : "Submit new incident complaint"}
+                  {formAllowed
+                    ? editMode
+                      ? "Only status and complaint details update"
+                      : "Submit new incident complaint"
+                    : editMode
+                      ? "View Only Permission - Edit Not Allowed"
+                      : "View Only Permission - Add Not Allowed"}
                 </p>
               </div>
 
@@ -453,7 +498,7 @@ export default function ComplaintForm() {
                     onChange={handleEmployeeSelect}
                     className={inputStyle}
                     required
-                    disabled={editMode || (!editMode && !canAdd)}
+                    disabled={editMode || !canAdd}
                   >
                     <option value="">
                       {loadingEmployees ? "Loading..." : "Select Employee"}
@@ -492,7 +537,7 @@ export default function ComplaintForm() {
                     value={formData.complaint_type}
                     onChange={handleChange}
                     className={inputStyle}
-                    disabled={editMode || (!editMode && !canAdd)}
+                    disabled={editMode || !canAdd}
                   >
                     <option value="Emp vs Emp">Emp vs Emp</option>
                     <option value="Emp vs Other">Emp vs Other</option>
@@ -513,7 +558,7 @@ export default function ComplaintForm() {
                         onChange={handleChange}
                         className={inputStyle}
                         required
-                        disabled={editMode || (!editMode && !canAdd)}
+                        disabled={editMode || !canAdd}
                       >
                         <option value="">Select Second Employee</option>
 
@@ -537,7 +582,7 @@ export default function ComplaintForm() {
                         onChange={handleChange}
                         className={inputStyle}
                         required
-                        disabled={editMode || (!editMode && !canAdd)}
+                        disabled={editMode || !canAdd}
                       >
                         <option value="">Select Suspected Employee</option>
 
@@ -565,81 +610,113 @@ export default function ComplaintForm() {
                         placeholder="Enter Other Person Name"
                         className={inputStyle}
                         required
-                        readOnly={editMode || (!editMode && !canAdd)}
+                        readOnly={editMode || !canAdd}
                       />
                     </div>
 
                     <div>
                       <label className="label">
                         <AlertTriangle size={18} />
-                        Suspected Employee
+                        Suspected Type
                       </label>
 
-                      <input
-                        type="text"
-                        name="suspected_employee"
-                        value={formData.suspected_employee}
+                      <select
+                        name="suspected_type"
+                        value={formData.suspected_type}
                         onChange={handleChange}
-                        placeholder="Suspected Person"
                         className={inputStyle}
                         required
-                        readOnly={editMode || (!editMode && !canAdd)}
-                      />
+                        disabled={editMode || !canAdd}
+                      >
+                        <option value="Employee">Employee</option>
+                        <option value="Other">Other</option>
+                      </select>
                     </div>
+
+                    {formData.suspected_type === "Employee" ? (
+                      <div>
+                        <label className="label">
+                          <AlertTriangle size={18} />
+                          Suspected Employee
+                        </label>
+
+                        <select
+                          name="suspected_employee"
+                          value={formData.suspected_employee}
+                          onChange={handleChange}
+                          className={inputStyle}
+                          required
+                          disabled={editMode || !canAdd}
+                        >
+                          <option value="">Select Suspected Employee</option>
+
+                          {employees
+                            .filter((emp) => getEmployeeId(emp) === formData.emp_id)
+                            .map((emp) => (
+                              <option key={getEmployeeId(emp)} value={getEmployeeId(emp)}>
+                                {getEmployeeId(emp)} - {getEmployeeName(emp)}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="label">
+                          <AlertTriangle size={18} />
+                          Suspected Other
+                        </label>
+
+                        <input
+                          type="text"
+                          name="suspected_employee"
+                          value={formData.suspected_employee}
+                          onChange={handleChange}
+                          placeholder="Other"
+                          className={inputStyle}
+                          required
+                          readOnly={editMode || !canAdd}
+                        />
+                      </div>
+                    )}
                   </>
                 )}
 
-                <div>
-                  <label className="label">
-                    <CalendarDays size={18} />
-                    Incident Date & Time
-                  </label>
+                <Input
+                  label="Incident Date & Time"
+                  icon={<CalendarDays size={18} />}
+                  type="datetime-local"
+                  name="incident_datetime"
+                  value={formData.incident_datetime}
+                  onChange={handleChange}
+                  readOnly={!formAllowed}
+                  inputStyle={inputStyle}
+                />
 
-                  <input
-                    type="datetime-local"
-                    name="incident_datetime"
-                    value={formData.incident_datetime}
-                    onChange={handleChange}
-                    className={inputStyle}
-                    readOnly={editMode ? !canEdit : !canAdd}
-                  />
-                </div>
+                <Input
+                  label="Incident Place"
+                  icon={<MapPin size={18} />}
+                  type="text"
+                  name="incident_place"
+                  value={formData.incident_place}
+                  onChange={handleChange}
+                  placeholder="Incident Place"
+                  readOnly={!formAllowed}
+                  required
+                  inputStyle={inputStyle}
+                />
 
-                <div>
-                  <label className="label">
-                    <MapPin size={18} />
-                    Incident Place
-                  </label>
-
-                  <input
-                    type="text"
-                    name="incident_place"
-                    value={formData.incident_place}
-                    onChange={handleChange}
-                    placeholder="Incident Place"
-                    className={inputStyle}
-                    required
-                    readOnly={editMode ? !canEdit : !canAdd}
-                  />
-                </div>
-
-                <div>
-                  <label className="label">
-                    <ClipboardPen size={18} />
-                    Complaint Raise By
-                  </label>
-
-                  <input
-                    type="text"
-                    name="complaint_raise_by"
-                    value={formData.complaint_raise_by}
-                    onChange={handleChange}
-                    placeholder="Raised By"
-                    className={inputStyle}
-                    required
-                    readOnly={editMode ? !canEdit : !canAdd}
-                  />
-                </div>
+                <Input
+                  label="Complaint Raise By"
+                  icon={<ClipboardPen size={18} />}
+                  type="text"
+                  name="complaint_raise_by"
+                  value={formData.complaint_raise_by}
+                  onChange={handleChange}
+                  placeholder="Raised By"
+                  readOnly={!formAllowed}
+                  required
+                  inputStyle={inputStyle}
+                />
 
                 <div>
                   <label className="label">
@@ -653,7 +730,7 @@ export default function ComplaintForm() {
                     onChange={handleChange}
                     className={inputStyle}
                     required
-                    disabled={editMode ? !canEdit : !canAdd}
+                    disabled={!formAllowed}
                   >
                     <option value="Pending">Pending</option>
                     <option value="Accepted">Accepted</option>
@@ -673,12 +750,12 @@ export default function ComplaintForm() {
                     placeholder="Enter Remark"
                     className={inputStyle}
                     required
-                    readOnly={editMode ? !canEdit : !canAdd}
+                    readOnly={!formAllowed}
                   />
                 </div>
               </div>
 
-              {(!editMode && canAdd) || (editMode && canEdit) ? (
+              {formAllowed ? (
                 <button
                   type="submit"
                   disabled={loading}
@@ -690,12 +767,14 @@ export default function ComplaintForm() {
                       ? "Updating..."
                       : "Submitting..."
                     : editMode
-                    ? "Update Complaint"
-                    : "Submit Complaint"}
+                      ? "Update Complaint"
+                      : "Submit Complaint"}
                 </button>
               ) : (
-                <div className="w-full bg-yellow-50 text-yellow-700 border border-yellow-200 py-4 rounded-2xl text-center font-black">
-                  {formBlockedText}
+                <div className="w-full bg-yellow-50 border border-yellow-200 text-yellow-700 py-4 rounded-2xl text-center font-black">
+                  {editMode
+                    ? "View Only Permission - Edit Not Allowed"
+                    : "View Only Permission - Add Not Allowed"}
                 </div>
               )}
             </form>
@@ -775,15 +854,14 @@ export default function ComplaintForm() {
 
                         <td className="p-3">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-black ${
-                              item.status === "Accepted"
+                            className={`px-3 py-1 rounded-full text-xs font-black ${item.status === "Accepted"
                                 ? "bg-emerald-100 text-emerald-700"
                                 : item.status === "Rejected"
-                                ? "bg-red-100 text-red-700"
-                                : item.status === "Closed"
-                                ? "bg-slate-200 text-slate-700"
-                                : "bg-amber-100 text-amber-700"
-                            }`}
+                                  ? "bg-red-100 text-red-700"
+                                  : item.status === "Closed"
+                                    ? "bg-slate-200 text-slate-700"
+                                    : "bg-amber-100 text-amber-700"
+                              }`}
                           >
                             {item.status || "Pending"}
                           </span>
@@ -794,7 +872,7 @@ export default function ComplaintForm() {
                             {canEdit ? (
                               <button
                                 onClick={() => handleEdit(item)}
-                                className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-2"
+                                className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2"
                               >
                                 <Edit size={16} />
                                 Edit
@@ -808,7 +886,7 @@ export default function ComplaintForm() {
                             {canDelete && (
                               <button
                                 onClick={() => handleDelete(item)}
-                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-2"
+                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2"
                               >
                                 <Trash2 size={16} />
                                 Delete
@@ -839,10 +917,28 @@ export default function ComplaintForm() {
           textarea:read-only,
           select:disabled {
             background: #f1f5f9;
+            color: #64748b;
             cursor: not-allowed;
           }
         `}</style>
       </div>
+    </div>
+  );
+}
+
+function Input({
+  label,
+  icon,
+  inputStyle,
+  ...props
+}) {
+  return (
+    <div>
+      <label className="label">
+        {icon}
+        {label}
+      </label>
+      <input {...props} className={inputStyle} />
     </div>
   );
 }
