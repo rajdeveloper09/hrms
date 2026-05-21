@@ -34,12 +34,33 @@ export default function AddOfficeAssetsForm() {
     const [editMode, setEditMode] = useState(false);
     const [search, setSearch] = useState("");
 
+    const currentPath = "/add-office-assets";
+
+    const loginRole = localStorage.getItem("role") || "view";
+    const savedPermissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+
+    const pagePermission =
+        loginRole === "superAdmin"
+            ? {
+                can_view: 1,
+                can_add: 1,
+                can_edit: 1,
+                can_delete: 1,
+            }
+            : savedPermissions.find((p) => p.route_path === currentPath) || {};
+
+    const canView = loginRole === "superAdmin" || Number(pagePermission.can_view) === 1;
+    const canAdd = loginRole === "superAdmin" || Number(pagePermission.can_add) === 1;
+    const canEdit = loginRole === "superAdmin" || Number(pagePermission.can_edit) === 1;
+    const canDelete = loginRole === "superAdmin" || Number(pagePermission.can_delete) === 1;
+
     useEffect(() => {
         fetchAssets();
         fetchEmployees();
         fetchAssetTypes();
         fetchAssetCompanies();
     }, []);
+
 
     const fetchAssets = async () => {
         try {
@@ -217,6 +238,14 @@ export default function AddOfficeAssetsForm() {
     const submitForm = async (e) => {
         e.preventDefault();
 
+        if (!editMode && !canAdd) {
+            return alert("You do not have add permission");
+        }
+
+        if (editMode && !canEdit) {
+            return alert("You do not have edit permission");
+        }
+
         if (!form.asset_type_id && !form.asset_type) {
             return alert("Asset type required");
         }
@@ -262,6 +291,10 @@ export default function AddOfficeAssetsForm() {
     };
 
     const handleEdit = async (item) => {
+        if (!canEdit) {
+            return alert("You do not have edit permission");
+        }
+
         setEditMode(true);
 
         const typeList = assetTypes.length ? assetTypes : await fetchAssetTypes();
@@ -292,6 +325,11 @@ export default function AddOfficeAssetsForm() {
     };
 
     const assignAsset = async () => {
+        if (!canEdit) {
+            return alert("You do not have edit permission");
+        }
+
+        if (!form.id) return alert("Please select asset first");
         if (!form.id) return alert("Please select asset first");
         if (!form.allow_employee_id) return alert("Employee required");
         if (!form.allow_emp_date) return alert("Allow employee date required");
@@ -313,6 +351,11 @@ export default function AddOfficeAssetsForm() {
     };
 
     const releaseAsset = async () => {
+        if (!canEdit) {
+            return alert("You do not have edit permission");
+        }
+
+        if (!form.id) return alert("Please select asset first");
         if (!form.id) return alert("Please select asset first");
         if (!form.disallow_emp_date) {
             return alert("Disallow Employee Date required");
@@ -339,6 +382,22 @@ export default function AddOfficeAssetsForm() {
         setForm({ ...emptyForm, create_date: today });
         fetchAssetCompanies();
     };
+
+    if (!canView) {
+        return (
+            <div className="min-h-screen bg-slate-100 flex">
+                <SideNav />
+                <div className="flex-1 lg:ml-72 p-6">
+                    <div className="bg-white rounded-3xl p-10 text-center shadow-xl">
+                        <h1 className="text-2xl font-black text-red-600">Access Denied</h1>
+                        <p className="text-slate-500 mt-2">
+                            You do not have permission to view this page.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-cyan-50 flex">
@@ -513,28 +572,40 @@ export default function AddOfficeAssetsForm() {
 
                                 <div className="md:col-span-2 flex flex-col gap-3">
                                     {!editMode ? (
-                                        <button className="bg-gradient-to-r from-blue-700 to-cyan-600 text-white py-3 rounded-2xl font-black shadow-lg">
-                                            Create Asset
-                                        </button>
+                                        canAdd ? (
+                                            <button className="bg-gradient-to-r from-blue-700 to-cyan-600 text-white py-3 rounded-2xl font-black shadow-lg">
+                                                Create Asset
+                                            </button>
+                                        ) : (
+                                            <div className="bg-yellow-50 text-yellow-700 p-4 rounded-2xl font-bold text-center">
+                                                View Only Permission - Create Not Allowed
+                                            </div>
+                                        )
                                     ) : (
                                         <>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={assignAsset}
-                                                    className="bg-emerald-600 text-white py-3 rounded-2xl font-black shadow-lg"
-                                                >
-                                                    Assign / Active Employee
-                                                </button>
+                                            {canEdit ? (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={assignAsset}
+                                                        className="bg-emerald-600 text-white py-3 rounded-2xl font-black shadow-lg"
+                                                    >
+                                                        Assign / Active Employee
+                                                    </button>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={releaseAsset}
-                                                    className="bg-red-600 text-white py-3 rounded-2xl font-black shadow-lg"
-                                                >
-                                                    Release / Inactive Employee
-                                                </button>
-                                            </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={releaseAsset}
+                                                        className="bg-red-600 text-white py-3 rounded-2xl font-black shadow-lg"
+                                                    >
+                                                        Release / Inactive Employee
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-yellow-50 text-yellow-700 p-4 rounded-2xl font-bold text-center">
+                                                    View Only Permission - Modify Not Allowed
+                                                </div>
+                                            )}
 
                                             <button
                                                 type="button"
@@ -628,12 +699,18 @@ export default function AddOfficeAssetsForm() {
                                                     </td>
 
                                                     <td className="p-3">
-                                                        <button
-                                                            onClick={() => handleEdit(item)}
-                                                            className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold"
-                                                        >
-                                                            Modify
-                                                        </button>
+                                                        {canEdit ? (
+                                                            <button
+                                                                onClick={() => handleEdit(item)}
+                                                                className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold"
+                                                            >
+                                                                Modify
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-xs font-black text-slate-400">
+                                                                View Only
+                                                            </span>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))
