@@ -40,6 +40,7 @@ export default function Login({ setIsAuth }) {
       localStorage.setItem("emp_id", data.user.employee_id);
       localStorage.setItem("role", data.user.role);
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("permissions",JSON.stringify(data.permissions || []));
 
       setIsAuth(true);
       setLoading(false);

@@ -30,20 +30,33 @@ export default function CreateLoginNewUser() {
     };
 
     const filteredUsers = useMemo(() => {
-        const q = search.toLowerCase().trim();
-        if (!q) return users;
 
-        return users.filter((u) =>
+        const nonSuperAdminUsers =
+            users.filter(
+                (u) => u.role !== "superAdmin"
+            );
+
+        const q = search.toLowerCase().trim();
+
+        if (!q) return nonSuperAdminUsers;
+
+        return nonSuperAdminUsers.filter((u) =>
+
             [
                 u.employee_id,
                 u.full_name,
                 u.role,
                 u.status,
             ]
-                .map((v) => String(v || "").toLowerCase())
+                .map((v) =>
+                    String(v || "")
+                        .toLowerCase()
+                )
                 .join(" ")
                 .includes(q)
+
         );
+
     }, [users, search]);
 
     const handleChange = (e) => {
@@ -89,33 +102,82 @@ export default function CreateLoginNewUser() {
     };
 
     const handleEdit = (user) => {
+
+        if (
+            user.role === "superAdmin"
+        ) {
+
+            return alert(
+                "Super Admin cannot be modified."
+            );
+
+        }
+
         setEditMode(true);
 
         setForm({
             id: user.id || "",
-            employee_id: user.employee_id || "",
-            full_name: user.full_name || "",
+            employee_id:
+                user.employee_id || "",
+            full_name:
+                user.full_name || "",
             pin: "",
-            role: user.role || "view",
-            status: user.status || "Active",
+            role:
+                user.role || "view",
+            status:
+                user.status || "Active",
         });
 
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
     };
 
     const deleteUser = async (user) => {
-        if (!window.confirm(`Delete ${user.employee_id}?`)) return;
 
-        const res = await axios.post(`${API}/delete_login_user`, {
-            id: user.id,
-        });
+        if (
+            user.role === "superAdmin"
+        ) {
+
+            return alert(
+                "Super Admin cannot be deleted."
+            );
+
+        }
+
+        if (
+            !window.confirm(
+                `Delete ${user.employee_id}?`
+            )
+        ) return;
+
+        const res =
+            await axios.post(
+                `${API}/delete_login_user`,
+                {
+                    id: user.id
+                }
+            );
 
         if (res.data.status) {
-            alert(res.data.message);
+
+            alert(
+                res.data.message
+            );
+
             fetchUsers();
+
         } else {
-            alert(res.data.message || "Delete failed");
+
+            alert(
+                res.data.message ||
+                "Delete failed"
+            );
+
         }
+
     };
 
     const cancelEdit = () => {
@@ -191,10 +253,17 @@ export default function CreateLoginNewUser() {
                                         onChange={handleChange}
                                         className="input"
                                     >
-                                        <option value="view">View</option>
-                                        <option value="contributor">Contributor</option>
-                                        <option value="admin">Admin</option>
-                                        <option value="superAdmin">Super Admin</option>
+                                        <option value="view">
+                                            View
+                                        </option>
+
+                                        <option value="contributor">
+                                            Contributor
+                                        </option>
+
+                                        <option value="admin">
+                                            Admin
+                                        </option>
                                     </select>
                                 </div>
 
@@ -283,8 +352,8 @@ export default function CreateLoginNewUser() {
                                                     <td className="p-3">
                                                         <span
                                                             className={`px-3 py-1 rounded-full text-xs font-black ${user.status === "Active"
-                                                                    ? "bg-emerald-100 text-emerald-700"
-                                                                    : "bg-red-100 text-red-700"
+                                                                ? "bg-emerald-100 text-emerald-700"
+                                                                : "bg-red-100 text-red-700"
                                                                 }`}
                                                         >
                                                             {user.status}

@@ -14,6 +14,57 @@ import {
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 
+const NAV_ITEMS = [
+  {
+    type: "link",
+    label: "Dashboard",
+    path: "/dashboard",
+    icon: <LayoutDashboard size={20} />,
+  },
+  {
+    type: "link",
+    label: "Add Permission",
+    path: "/create-user-permission",
+    icon: <FileText size={20} />,
+  },
+  {
+    type: "link",
+    label: "All Reports",
+    path: "/all-report",
+    icon: <FileText size={20} />,
+  },
+  {
+    type: "link",
+    label: "Employee List",
+    path: "/employees-list",
+    icon: <Users size={20} />,
+  },
+  {
+    type: "group",
+    label: "Add/Update Reports",
+    key: "reports",
+    icon: <Wallet size={20} />,
+    children: [
+      { label: "Create Login User", path: "/create-login-user" },
+      { label: "Add New Employee", path: "/create-user" },
+      { label: "Add ESIC & PF", path: "/add-EsicPf" },
+      { label: "Add Office Assets Category", path: "/add-office-assets-category" },
+      { label: "Add Office Assets", path: "/add-office-assets" },
+      { label: "Add Expenses", path: "/add-expenses" },
+      { label: "Add Advance", path: "/add-advance" },
+      { label: "Add Bonus", path: "/add-bonus" },
+      { label: "Add Penalty", path: "/add-penalty" },
+      { label: "Add Reward", path: "/add-reward" },
+      { label: "Add Complaint", path: "/add-complaint" },
+      { label: "Add Increment", path: "/add-increment" },
+      { label: "Add Meeting", path: "/add-meeting" },
+      { label: "Add Resignation", path: "/add-resignation" },
+      { label: "Add Overtime", path: "/add-overtime" },
+      { label: "Add Transfer", path: "/add-transfer" },
+    ],
+  },
+];
+
 export default function SideNav() {
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState("");
@@ -23,7 +74,35 @@ export default function SideNav() {
   const role = localStorage.getItem("role") || user.role || "view";
   const empId = localStorage.getItem("emp_id") || user.employee_id || "User";
 
-  const canShow = (allowedRoles) => allowedRoles.includes(role);
+  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+
+  const hasViewPermission = (path) => {
+    if (role === "superAdmin") return true;
+
+    return permissions.some(
+      (p) =>
+        p.route_path === path &&
+        Number(p.can_view) === 1
+    );
+  };
+
+  const visibleNavItems = NAV_ITEMS.map((item) => {
+    if (item.type === "link") {
+      return hasViewPermission(item.path) ? item : null;
+    }
+
+    if (item.type === "group") {
+      const children = item.children.filter((child) =>
+        hasViewPermission(child.path)
+      );
+
+      if (children.length === 0) return null;
+
+      return { ...item, children };
+    }
+
+    return null;
+  }).filter(Boolean);
 
   const linkClass = ({ isActive }) =>
     isActive
@@ -35,15 +114,12 @@ export default function SideNav() {
       ? "block text-sm font-bold text-rose-600 bg-white border border-rose-100 px-4 py-2.5 rounded-xl shadow-sm"
       : "block text-sm font-semibold text-slate-500 hover:text-rose-600 hover:bg-white px-4 py-2.5 rounded-xl transition-all";
 
-  const toggleMenu = (menu) => {
-    setOpenMenu(openMenu === menu ? "" : menu);
-  };
-
   const logout = () => {
     localStorage.removeItem("login");
     localStorage.removeItem("emp_id");
     localStorage.removeItem("role");
     localStorage.removeItem("user");
+    localStorage.removeItem("permissions");
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     navigate("/login", { replace: true });
@@ -68,15 +144,9 @@ export default function SideNav() {
       </div>
 
       <div
-        className={`
-          fixed top-0 left-0 h-screen w-72 z-50
-          bg-white/95 backdrop-blur-xl shadow-2xl
-          border-r border-rose-100
-          transform transition-transform duration-300
-          flex flex-col overflow-hidden
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0
-        `}
+        className={`fixed top-0 left-0 h-screen w-72 z-50 bg-white/95 backdrop-blur-xl shadow-2xl border-r border-rose-100 transform transition-transform duration-300 flex flex-col overflow-hidden ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0`}
       >
         <div className="shrink-0 bg-white/95 backdrop-blur-xl border-b border-rose-100 p-5">
           <NavLink to="/dashboard" className="flex items-center gap-3">
@@ -88,106 +158,40 @@ export default function SideNav() {
               <h1 className="text-2xl font-black bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
                 Admin
               </h1>
-              <p className="text-xs font-semibold text-slate-400">
-                {role}
-              </p>
+              <p className="text-xs font-semibold text-slate-400">{role}</p>
             </div>
           </NavLink>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-2 sidebar-scroll">
-          {canShow(["view", "contributor", "admin", "superAdmin"]) && (
-            <NavLink to="/dashboard" end className={linkClass}>
-              <LayoutDashboard size={20} />
-              Dashboard
-            </NavLink>
-          )}
-
-          {canShow(["superAdmin"]) && (
-            <NavLink to="/create-user-permission" className={linkClass}>
-              <FileText size={20} />
-              Add Permission
-            </NavLink>
-          )}
-
-          {canShow(["view", "admin", "superAdmin"]) && (
-            <NavLink to="/all-report" className={linkClass}>
-              <FileText size={20} />
-              All Reports
-            </NavLink>
-          )}
-
-          {canShow(["contributor", "admin", "superAdmin"]) && (
-            <NavLink to="/employees-list" className={linkClass}>
-              <Users size={20} />
-              Employee List
-            </NavLink>
-          )}
-
-          {canShow(["contributor", "admin", "superAdmin"]) && (
-            <MenuGroup
-              title="Add/Update Reports"
-              icon={<Wallet size={20} />}
-              open={openMenu === "reports"}
-              onClick={() => toggleMenu("reports")}
-            >
-              {canShow(["superAdmin"]) && (
-                <NavLink to="/create-login-user" className={subLinkClass}>
-                  Create Login User
+          {visibleNavItems.map((item) => {
+            if (item.type === "link") {
+              return (
+                <NavLink key={item.path} to={item.path} end className={linkClass}>
+                  {item.icon}
+                  {item.label}
                 </NavLink>
-              )}
+              );
+            }
 
-              {canShow(["admin", "superAdmin"]) && (
-                <>
-                  <NavLink to="/create-user" className={subLinkClass}>
-                    Add New Employee
+            return (
+              <MenuGroup
+                key={item.key}
+                title={item.label}
+                icon={item.icon}
+                open={openMenu === item.key}
+                onClick={() =>
+                  setOpenMenu(openMenu === item.key ? "" : item.key)
+                }
+              >
+                {item.children.map((child) => (
+                  <NavLink key={child.path} to={child.path} className={subLinkClass}>
+                    {child.label}
                   </NavLink>
-
-                  <NavLink to="/add-EsicPf" className={subLinkClass}>
-                    Add ESIC & PF
-                  </NavLink>
-
-                  <NavLink to="/add-office-assets-category" className={subLinkClass}>
-                    Add Office Assets Category
-                  </NavLink>
-                </>
-              )}
-
-              {canShow(["contributor", "admin", "superAdmin"]) && (
-                <>
-                  <NavLink to="/add-office-assets" className={subLinkClass}>
-                    Add Office Assets
-                  </NavLink>
-
-                  <NavLink to="/add-expenses" className={subLinkClass}>
-                    Add Expenses
-                  </NavLink>
-
-                  <NavLink to="/add-advance" className={subLinkClass}>
-                    Add Advance
-                  </NavLink>
-
-                  <NavLink to="/add-bonus" className={subLinkClass}>
-                    Add Bonus
-                  </NavLink>
-
-                  <NavLink to="/add-penalty" className={subLinkClass}>
-                    Add Penalty
-                  </NavLink>
-
-                  <NavLink to="/add-reward" className={subLinkClass}>
-                    Add Reward
-                  </NavLink>
-                </>
-              )}
-            </MenuGroup>
-          )}
-
-          {role === "view" && (
-            <div className="mt-4 rounded-2xl bg-blue-50 border border-blue-100 p-4 text-sm font-bold text-blue-700">
-              View role: only Dashboard and Reports allowed.
-            </div>
-          )}
+                ))}
+              </MenuGroup>
+            );
+          })}
         </div>
 
         <div className="shrink-0 p-4 bg-white/95 backdrop-blur-xl border-t border-rose-100">
@@ -209,7 +213,7 @@ export default function SideNav() {
 
             <button
               onClick={logout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 text-white font-black shadow-lg shadow-pink-200 hover:scale-[1.03] active:scale-95 transition-all duration-300"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 text-white font-black shadow-lg"
             >
               <LogOut size={18} />
               Logout
@@ -233,10 +237,11 @@ function MenuGroup({ title, icon, open, onClick, children }) {
     <div className="rounded-2xl">
       <button
         onClick={onClick}
-        className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all duration-300 ${open
-          ? "bg-gradient-to-r from-rose-50 to-pink-50 text-rose-600"
-          : "text-slate-600 hover:bg-rose-50 hover:text-rose-600"
-          }`}
+        className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all duration-300 ${
+          open
+            ? "bg-gradient-to-r from-rose-50 to-pink-50 text-rose-600"
+            : "text-slate-600 hover:bg-rose-50 hover:text-rose-600"
+        }`}
       >
         <div className="flex items-center gap-3 font-bold">
           {icon}

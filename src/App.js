@@ -83,7 +83,6 @@ function App() {
           <Route path="/add-advance" element={<EmployeeAdvanceForm />} />
           <Route path="/add-expenses" element={<EmployeeExpensesForm />} />
           <Route path="/add-areaManagerBranch" element={<AreaManagerBranchForm />} />
-          <Route path="/add-areaManagerBranch" element={<AreaManagerBranchForm />} />
           <Route path="/add-EsicPf" element={<EmployeeEsicPfForm />} />
           <Route path="/add-office-assets" element={<AddOfficeAssetsForm />} />
           <Route path="/add-office-assets-category" element={<AddOfficeAssetsCategory />} />
