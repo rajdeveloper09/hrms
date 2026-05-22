@@ -34,7 +34,6 @@ export default function FinalSalaryCurrentMonth() {
   const canView = role === "superAdmin" || Number(pagePermission.can_view) === 1;
   const canAdd = role === "superAdmin" || Number(pagePermission.can_add) === 1;
   const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
-  const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
 
   useEffect(() => {
     if (canView) fetchSalary();
@@ -47,7 +46,7 @@ export default function FinalSalaryCurrentMonth() {
       setLoading(true);
 
       const res = await axios.get(
-        `${API}/emp_final_salary_current_month?month=${month}`
+        `${API}/get_monthly_salary?month=${month}`
       );
 
       if (res.data.status) {
@@ -73,6 +72,7 @@ export default function FinalSalaryCurrentMonth() {
       [
         item.employee_id,
         item.full_name,
+        item.salary_month,
         item.current_salary,
         item.bonus,
         item.reward,
@@ -94,6 +94,9 @@ export default function FinalSalaryCurrentMonth() {
       maximumFractionDigits: 2,
     })}`;
 
+  const sum = (key) =>
+    filteredData.reduce((total, item) => total + Number(item[key] || 0), 0);
+
   const exportCSV = () => {
     if (!canAdd && !canEdit) {
       alert("Export not allowed. Add or Edit permission required.");
@@ -106,8 +109,11 @@ export default function FinalSalaryCurrentMonth() {
     }
 
     const headers = [
+      "Month",
       "Employee ID",
       "Name",
+      "Basic Salary",
+      "Allowances",
       "Current Salary",
       "Bonus",
       "Reward",
@@ -117,11 +123,15 @@ export default function FinalSalaryCurrentMonth() {
       "Advance",
       "ESIC/PF",
       "Final Salary",
+      "Generated On",
     ];
 
     const rows = filteredData.map((item) => [
+      item.salary_month || "",
       item.employee_id || "",
       item.full_name || "",
+      item.basic_salary || 0,
+      item.allowances || 0,
       item.current_salary || 0,
       item.bonus || 0,
       item.reward || 0,
@@ -131,6 +141,7 @@ export default function FinalSalaryCurrentMonth() {
       item.advance_amount || 0,
       item.esicpf || 0,
       item.final_salary || 0,
+      item.generated_on || "",
     ]);
 
     const csv =
@@ -143,18 +154,11 @@ export default function FinalSalaryCurrentMonth() {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = `final_salary_${month}.csv`;
+    a.download = `monthly_salary_${month}.csv`;
     a.click();
 
     URL.revokeObjectURL(url);
   };
-
-  function sum(key) {
-    return filteredData.reduce(
-      (total, item) => total + Number(item[key] || 0),
-      0
-    );
-  }
 
   if (!canView) {
     return (
@@ -179,11 +183,11 @@ export default function FinalSalaryCurrentMonth() {
       <div className="flex-1 w-full lg:ml-72 p-4 md:p-6 overflow-y-auto">
         <div className="bg-gradient-to-r from-slate-900 via-pink-700 to-rose-600 rounded-[32px] p-6 text-white shadow-2xl mb-6">
           <h1 className="text-3xl font-black flex items-center gap-3">
-            <Wallet /> Final Salary Current Month
+            <Wallet /> Monthly Final Salary
           </h1>
 
           <p className="text-pink-100 mt-2">
-            Salary + Bonus + Reward + Increment + Overtime - Penalty - Advance - ESIC/PF
+            Data from employee_monthly_salary saved table
           </p>
         </div>
 
@@ -198,11 +202,9 @@ export default function FinalSalaryCurrentMonth() {
           <div className="p-5 bg-slate-900 text-white">
             <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
               <div>
-                <h2 className="text-xl font-black">Salary List</h2>
+                <h2 className="text-xl font-black">Saved Monthly Salary List</h2>
                 <p className="text-sm text-slate-300">
-                  {canAdd || canEdit
-                    ? "Employee wise current month final salary"
-                    : "View Only Permission - Export Not Allowed"}
+                  Fetch from employee_monthly_salary table
                 </p>
               </div>
 
@@ -261,7 +263,9 @@ export default function FinalSalaryCurrentMonth() {
               <thead className="bg-pink-50 text-slate-700 sticky top-0 z-10">
                 <tr>
                   <th className="p-3">Employee</th>
-                  <th className="p-3">Salary</th>
+                  <th className="p-3">Basic</th>
+                  <th className="p-3">Allow.</th>
+                  <th className="p-3">Current</th>
                   <th className="p-3">Bonus</th>
                   <th className="p-3">Reward</th>
                   <th className="p-3">Increment</th>
@@ -276,18 +280,24 @@ export default function FinalSalaryCurrentMonth() {
               <tbody>
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan="10" className="p-8 text-center text-slate-500">
-                      No salary data found
+                    <td colSpan="12" className="p-8 text-center text-slate-500">
+                      No saved salary data found. First run generate_monthly_salary.php.
                     </td>
                   </tr>
                 ) : (
                   filteredData.map((item) => (
-                    <tr key={item.employee_id} className="border-b text-center hover:bg-pink-50/60">
+                    <tr key={item.id} className="border-b text-center hover:bg-pink-50/60">
                       <td className="p-3">
-                        <div className="font-black text-slate-800">{item.employee_id}</div>
-                        <div className="text-xs text-slate-500">{item.full_name}</div>
+                        <div className="font-black text-slate-800">
+                          {item.employee_id}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {item.full_name}
+                        </div>
                       </td>
 
+                      <td className="p-3">{money(item.basic_salary)}</td>
+                      <td className="p-3">{money(item.allowances)}</td>
                       <td className="p-3 font-bold">{money(item.current_salary)}</td>
                       <td className="p-3 text-emerald-600 font-bold">{money(item.bonus)}</td>
                       <td className="p-3 text-emerald-600 font-bold">{money(item.reward)}</td>
@@ -311,6 +321,8 @@ export default function FinalSalaryCurrentMonth() {
                 <tfoot className="bg-slate-100 font-black sticky bottom-0">
                   <tr className="text-center">
                     <td className="p-3">Total</td>
+                    <td className="p-3">{money(sum("basic_salary"))}</td>
+                    <td className="p-3">{money(sum("allowances"))}</td>
                     <td className="p-3">{money(sum("current_salary"))}</td>
                     <td className="p-3 text-emerald-700">{money(sum("bonus"))}</td>
                     <td className="p-3 text-emerald-700">{money(sum("reward"))}</td>
@@ -326,12 +338,6 @@ export default function FinalSalaryCurrentMonth() {
             </table>
           </div>
         </div>
-
-        {canDelete && (
-          <div className="mt-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 font-bold">
-            Delete permission is not used on this salary report page because this is a calculated report, not a delete module.
-          </div>
-        )}
       </div>
     </div>
   );
