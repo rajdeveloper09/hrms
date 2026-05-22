@@ -45,11 +45,12 @@ const NAV_ITEMS = [
     key: "reports",
     icon: <Wallet size={20} />,
     children: [
-      { label: "Create Login User", path: "/create-login-user" },
-      { label: "Add New Employee", path: "/create-user" },
+      //{ label: "Create Login User", path: "/create-login-user" },
+      { label: "Create Login User", path: "/create-user" },
       { label: "Add ESIC & PF", path: "/add-EsicPf" },
       { label: "Add Office Assets Category", path: "/add-office-assets-category" },
       { label: "Add Office Assets", path: "/add-office-assets" },
+      { label: "Add Employee Assets", path: "/add-assests" },
       { label: "Add Expenses", path: "/add-expenses" },
       { label: "Add Advance", path: "/add-advance" },
       { label: "Add Bonus", path: "/add-bonus" },
@@ -144,9 +145,8 @@ export default function SideNav() {
       </div>
 
       <div
-        className={`fixed top-0 left-0 h-screen w-72 z-50 bg-white/95 backdrop-blur-xl shadow-2xl border-r border-rose-100 transform transition-transform duration-300 flex flex-col overflow-hidden ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
+        className={`fixed top-0 left-0 h-screen w-72 z-50 bg-white/95 backdrop-blur-xl shadow-2xl border-r border-rose-100 transform transition-transform duration-300 flex flex-col overflow-hidden ${mobileOpen ? "translate-x-0" : "-translate-x-full"
+          } md:translate-x-0`}
       >
         <div className="shrink-0 bg-white/95 backdrop-blur-xl border-b border-rose-100 p-5">
           <NavLink to="/dashboard" className="flex items-center gap-3">
@@ -237,11 +237,10 @@ function MenuGroup({ title, icon, open, onClick, children }) {
     <div className="rounded-2xl">
       <button
         onClick={onClick}
-        className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all duration-300 ${
-          open
+        className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all duration-300 ${open
             ? "bg-gradient-to-r from-rose-50 to-pink-50 text-rose-600"
             : "text-slate-600 hover:bg-rose-50 hover:text-rose-600"
-        }`}
+          }`}
       >
         <div className="flex items-center gap-3 font-bold">
           {icon}
