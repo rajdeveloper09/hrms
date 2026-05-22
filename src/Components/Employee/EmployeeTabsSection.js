@@ -1394,12 +1394,16 @@ const EmployeeTabsSection = ({
             "Penalty",
             "Rewards",
             "Complaint",
+            "Advance",
             "Increment",
-            "Assest",
+            "Emp Assest",
+            "Office Assest",
             "Overtime",
             "EsicPF",
             "Meeting",
             "Resignation",
+            "Transfer",
+            "Expenses"
           ].map((tab, index) => (
 
             <button

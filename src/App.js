@@ -27,7 +27,8 @@ import AddOfficeAssetsForm from "./Components/Reports/AddOfficeAssetsForm";
 import AddOfficeAssetsCategory from "./Components/Reports/AddOfficeAssetsCategory";
 import CreateLoginNewUser from "./Components/CreateLoginNewUser";
 import EmployeePermissionPage from "./Components/EmployeePermissionPage";
-
+import EmployeeAssetsListForm from "./Components/Reports/EmployeeAssetsListForm"
+import FinalSalaryCurrentMonth from "./Components/Reports/FinalSalaryCurrentMonth"
 
 
 function App() {
@@ -92,7 +93,8 @@ function App() {
           <Route path="/add-office-assets-category" element={<AddOfficeAssetsCategory />} />
           <Route path="/create-user" element={<CreateLoginNewUser />} />
           <Route path="/create-user-permission" element={<EmployeePermissionPage />} />
-
+          <Route path="/add-employee-assets-list" element={<EmployeeAssetsListForm />} />
+          <Route path="/final-salary" element={<FinalSalaryCurrentMonth />} />
         </Routes>
       </Router>
     </>

@@ -48,6 +48,7 @@ const NAV_ITEMS = [
       //{ label: "Create Login User", path: "/create-login-user" },
       { label: "Create Login User", path: "/create-user" },
       { label: "Add ESIC & PF", path: "/add-EsicPf" },
+      { label: "Final Salary", path: "/final-salary" },
       { label: "Add Office Assets Category", path: "/add-office-assets-category" },
       { label: "Add Office Assets", path: "/add-office-assets" },
       { label: "Add Employee Assets", path: "/add-assests" },
@@ -62,6 +63,7 @@ const NAV_ITEMS = [
       { label: "Add Resignation", path: "/add-resignation" },
       { label: "Add Overtime", path: "/add-overtime" },
       { label: "Add Transfer", path: "/add-transfer" },
+      { label: "Add Employee Aassets List", path: "/add-employee-assets-list" },
     ],
   },
 ];
