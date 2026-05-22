@@ -1624,8 +1624,10 @@ export default function AddEmployee() {
                     name="salary_type"
                     placeholder="Salary Type"
                     options={[
-                      { label: "Online Salary", value: "Online" },
-                      { label: "Cash Salary", value: "Cash" }
+                      { label: "Online", value: "Online" },
+                      { label: "Cheque", value: "Cheque" },
+                      { label: "Cash", value: "Cash" },
+                      { label: "Hold", value: "Hold" }
                     ]}
                     value={form.salary_type}
                     onChange={handleChange}
