@@ -39,6 +39,12 @@ const NAV_ITEMS = [
     path: "/employees-list",
     icon: <Users size={20} />,
   },
+   {
+    type: "link",
+    label: "Update Employee Salary Type",
+    path: "/update-salary-type",
+    icon: <Users size={20} />,
+  },
   {
     type: "group",
     label: "Add/Update Reports",

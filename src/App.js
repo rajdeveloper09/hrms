@@ -29,7 +29,7 @@ import CreateLoginNewUser from "./Components/CreateLoginNewUser";
 import EmployeePermissionPage from "./Components/EmployeePermissionPage";
 import EmployeeAssetsListForm from "./Components/Reports/EmployeeAssetsListForm"
 import FinalSalaryCurrentMonth from "./Components/Reports/FinalSalaryCurrentMonth"
-
+import UpdateEmployeeSalaryType from "./Components/Employee/UpdateEmployeeSalaryType"
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
@@ -95,6 +95,7 @@ function App() {
           <Route path="/create-user-permission" element={<EmployeePermissionPage />} />
           <Route path="/add-employee-assets-list" element={<EmployeeAssetsListForm />} />
           <Route path="/final-salary" element={<FinalSalaryCurrentMonth />} />
+          <Route path="/update-salary-type" element={<UpdateEmployeeSalaryType />} />
         </Routes>
       </Router>
     </>
