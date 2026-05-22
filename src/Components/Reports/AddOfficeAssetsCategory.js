@@ -229,280 +229,324 @@ export default function AddOfficeAssetsCategory() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-            <div className="space-y-6">
-              <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
-                <div className="p-5 border-b bg-blue-50">
-                  <h2 className="text-xl font-black text-slate-800">
-                    {typeEditMode ? "Update Asset Type" : "Create Asset Type"}
-                  </h2>
-                </div>
 
-                {canAdd || canEdit ? (
-                  <form onSubmit={submitType} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      label="Asset Type"
-                      name="asset_type"
-                      value={typeForm.asset_type}
-                      onChange={handleTypeChange}
-                      readOnly={typeEditMode && !canEdit}
-                      required
-                    />
-
-                    <div>
-                      <label className="label">Status</label>
-                      <select
-                        name="status"
-                        value={typeForm.status}
-                        onChange={handleTypeChange}
-                        className="input"
-                        disabled={typeEditMode && !canEdit}
-                      >
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                      </select>
-                    </div>
-
-                    <div className="md:col-span-2 flex gap-3">
-                      {(!typeEditMode && canAdd) || (typeEditMode && canEdit) ? (
-                        <button className="flex-1 bg-gradient-to-r from-blue-700 to-cyan-600 text-white py-3 rounded-2xl font-black shadow-lg">
-                          {typeEditMode ? "Update Asset Type" : "Create Asset Type"}
-                        </button>
-                      ) : (
-                        renderFormBlocked()
-                      )}
-
-                      {typeEditMode && (
-                        <button
-                          type="button"
-                          onClick={cancelTypeEdit}
-                          className="bg-slate-600 text-white px-8 py-3 rounded-2xl font-black"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
-                  </form>
-                ) : (
-                  <div className="p-6">{renderFormBlocked()}</div>
-                )}
+            {/* LEFT FORM */}
+            <div className="bg-white rounded-3xl shadow-xl border border-cyan-100 overflow-hidden min-h-[360px]">
+              <div className="p-5 border-b bg-blue-50">
+                <h2 className="text-xl font-black text-slate-800">
+                  {typeEditMode ? "Update Asset Type" : "Create Asset Type"}
+                </h2>
               </div>
 
-              <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
-                <div className="p-5 border-b bg-cyan-50">
-                  <h2 className="text-xl font-black text-slate-800">
-                    {companyEditMode ? "Update Asset Company" : "Create Asset Company"}
-                  </h2>
-                </div>
+              {canAdd || canEdit ? (
+                <form
+                  onSubmit={submitType}
+                  className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
 
-                {canAdd || canEdit ? (
-                  <form onSubmit={submitCompany} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="label">Asset Type</label>
-                      <select
-                        name="asset_type_id"
-                        value={companyForm.asset_type_id}
-                        onChange={handleCompanyChange}
-                        className="input"
-                        required
-                        disabled={companyEditMode && !canEdit}
-                      >
-                        <option value="">Select Asset Type</option>
-                        {types
-                          .filter((item) => item.status === "Active")
-                          .map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.asset_type}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <Input
-                      label="Company Name"
-                      name="company_name"
-                      value={companyForm.company_name}
-                      onChange={handleCompanyChange}
-                      readOnly={companyEditMode && !canEdit}
-                      required
-                    />
-
-                    <div>
-                      <label className="label">Status</label>
-                      <select
-                        name="status"
-                        value={companyForm.status}
-                        onChange={handleCompanyChange}
-                        className="input"
-                        disabled={companyEditMode && !canEdit}
-                      >
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                      </select>
-                    </div>
-
-                    <div className="md:col-span-2 flex gap-3">
-                      {(!companyEditMode && canAdd) || (companyEditMode && canEdit) ? (
-                        <button className="flex-1 bg-gradient-to-r from-cyan-700 to-blue-600 text-white py-3 rounded-2xl font-black shadow-lg">
-                          {companyEditMode ? "Update Asset Company" : "Create Asset Company"}
-                        </button>
-                      ) : (
-                        renderFormBlocked()
-                      )}
-
-                      {companyEditMode && (
-                        <button
-                          type="button"
-                          onClick={cancelCompanyEdit}
-                          className="bg-slate-600 text-white px-8 py-3 rounded-2xl font-black"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
-                  </form>
-                ) : (
-                  <div className="p-6">{renderFormBlocked()}</div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
-              <div className="p-5 bg-slate-900 text-white">
-                <h2 className="text-xl font-black">Asset Category List</h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search type / company..."
-                    className="w-full px-4 py-3 rounded-2xl text-slate-800 outline-none"
+                  <Input
+                    label="Asset Type"
+                    name="asset_type"
+                    value={typeForm.asset_type}
+                    onChange={handleTypeChange}
+                    required
                   />
 
-                  <select
-                    value={filterTypeId}
-                    onChange={handleFilterChange}
-                    className="w-full px-4 py-3 rounded-2xl text-slate-800 outline-none"
-                  >
-                    <option value="">All Asset Types</option>
-                    {types.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.asset_type}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  <div>
+                    <label className="label">Status</label>
+
+                    <select
+                      name="status"
+                      value={typeForm.status}
+                      onChange={handleTypeChange}
+                      className="input"
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2 flex gap-3">
+
+                    <button className="flex-1 bg-gradient-to-r from-blue-700 to-cyan-600 text-white py-3 rounded-2xl font-black">
+                      {typeEditMode ? "Update Type" : "Create Type"}
+                    </button>
+
+                    {typeEditMode && (
+                      <button
+                        type="button"
+                        onClick={cancelTypeEdit}
+                        className="bg-slate-600 text-white px-8 py-3 rounded-2xl font-black"
+                      >
+                        Cancel
+                      </button>
+                    )}
+
+                  </div>
+
+                </form>
+              ) : (
+                <div className="p-6">{renderFormBlocked()}</div>
+              )}
+            </div>
+
+            {/* RIGHT FORM */}
+            <div className="bg-white rounded-3xl shadow-xl border border-cyan-100 overflow-hidden min-h-[360px]">
+
+              <div className="p-5 border-b bg-cyan-50">
+                <h2 className="text-xl font-black text-slate-800">
+                  {companyEditMode
+                    ? "Update Asset Company"
+                    : "Create Asset Company"}
+                </h2>
               </div>
 
-              <div className="p-5">
-                <h3 className="font-black text-slate-800 mb-3">Asset Types</h3>
+              {canAdd || canEdit ? (
+                <form
+                  onSubmit={submitCompany}
+                  className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
 
-                <div className="overflow-x-auto mb-6">
-                  <table className="w-full text-sm">
-                    <thead className="bg-blue-50 text-slate-700">
-                      <tr>
-                        <th className="p-3">ID</th>
-                        <th className="p-3">Asset Type</th>
-                        <th className="p-3">Status</th>
-                        <th className="p-3">Action</th>
-                      </tr>
-                    </thead>
+                  <div>
+                    <label className="label">Asset Type</label>
 
-                    <tbody>
-                      {filteredTypes.length === 0 ? (
-                        <tr>
-                          <td colSpan="4" className="p-5 text-center text-slate-500">
-                            No asset type found
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredTypes.map((item) => (
-                          <tr key={item.id} className="border-b text-center hover:bg-blue-50/50">
-                            <td className="p-3 font-black">{item.id}</td>
-                            <td className="p-3 font-bold">{item.asset_type}</td>
-                            <td className="p-3">
-                              <StatusBadge status={item.status} />
-                            </td>
-                            <td className="p-3">
-                              {canEdit ? (
-                                <button
-                                  onClick={() => editType(item)}
-                                  className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold"
-                                >
-                                  Edit
-                                </button>
-                              ) : (
-                                <span className="text-xs font-black text-slate-400">
-                                  View Only
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                    <select
+                      name="asset_type_id"
+                      value={companyForm.asset_type_id}
+                      onChange={handleCompanyChange}
+                      className="input"
+                      required
+                    >
+                      <option value="">Select Asset Type</option>
 
-                <h3 className="font-black text-slate-800 mb-3">
-                  Asset Companies
+                      {types.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.asset_type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <Input
+                    label="Company Name"
+                    name="company_name"
+                    value={companyForm.company_name}
+                    onChange={handleCompanyChange}
+                    required
+                  />
+
+                  <div>
+                    <label className="label">Status</label>
+
+                    <select
+                      name="status"
+                      value={companyForm.status}
+                      onChange={handleCompanyChange}
+                      className="input"
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2 flex gap-3">
+
+                    <button className="flex-1 bg-gradient-to-r from-cyan-700 to-blue-600 text-white py-3 rounded-2xl font-black">
+                      {companyEditMode
+                        ? "Update Company"
+                        : "Create Company"}
+                    </button>
+
+                    {companyEditMode && (
+                      <button
+                        type="button"
+                        onClick={cancelCompanyEdit}
+                        className="bg-slate-600 text-white px-8 py-3 rounded-2xl font-black"
+                      >
+                        Cancel
+                      </button>
+                    )}
+
+                  </div>
+
+                </form>
+              ) : (
+                <div className="p-6">{renderFormBlocked()}</div>
+              )}
+
+            </div>
+
+          </div>
+
+          {/* BELOW LIST SECTION */}
+
+          <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
+
+            <div className="p-5 bg-slate-900 text-white">
+
+              <h2 className="text-2xl font-black">
+                Asset Type & Company List
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-5">
+
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search..."
+                  className="input"
+                />
+
+                <select
+                  value={filterTypeId}
+                  onChange={handleFilterChange}
+                  className="input"
+                >
+                  <option value="">All Asset Types</option>
+
+                  {types.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.asset_type}
+                    </option>
+                  ))}
+                </select>
+
+              </div>
+
+            </div>
+
+            <div className="p-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+              {/* TYPE LIST */}
+
+              <div>
+
+                <h3 className="text-lg font-black mb-4">
+                  Asset Type List
                 </h3>
 
-                <div className="overflow-x-auto max-h-[430px] overflow-y-auto">
+                <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+
                   <table className="w-full text-sm">
-                    <thead className="bg-cyan-50 text-slate-700 sticky top-0 z-10">
+
+                    <thead className="bg-blue-50">
+
                       <tr>
                         <th className="p-3">ID</th>
-                        <th className="p-3">Asset Type</th>
-                        <th className="p-3">Company</th>
+                        <th className="p-3">Type</th>
                         <th className="p-3">Status</th>
                         <th className="p-3">Action</th>
                       </tr>
+
                     </thead>
 
                     <tbody>
-                      {filteredCompanies.length === 0 ? (
-                        <tr>
-                          <td colSpan="5" className="p-5 text-center text-slate-500">
-                            No company found
+
+                      {filteredTypes.map((item) => (
+
+                        <tr key={item.id} className="border-b text-center">
+
+                          <td className="p-3">{item.id}</td>
+
+                          <td className="p-3 font-bold">
+                            {item.asset_type}
                           </td>
+
+                          <td className="p-3">
+                            <StatusBadge status={item.status} />
+                          </td>
+
+                          <td className="p-3">
+
+                            {canEdit && (
+                              <button
+                                onClick={() => editType(item)}
+                                className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold"
+                              >
+                                Edit
+                              </button>
+                            )}
+
+                          </td>
+
                         </tr>
-                      ) : (
-                        filteredCompanies.map((item) => (
-                          <tr key={item.id} className="border-b text-center hover:bg-cyan-50/50">
-                            <td className="p-3 font-black">{item.id}</td>
-                            <td className="p-3 font-bold">{item.asset_type}</td>
-                            <td className="p-3">{item.company_name}</td>
-                            <td className="p-3">
-                              <StatusBadge status={item.status} />
-                            </td>
-                            <td className="p-3">
-                              {canEdit ? (
-                                <button
-                                  onClick={() => editCompany(item)}
-                                  className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold"
-                                >
-                                  Edit
-                                </button>
-                              ) : (
-                                <span className="text-xs font-black text-slate-400">
-                                  View Only
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      )}
+
+                      ))}
+
                     </tbody>
+
                   </table>
+
                 </div>
 
-                {!canDelete && (
-                  <p className="text-xs text-slate-400 mt-4">
-                    Delete permission is not assigned for this page.
-                  </p>
-                )}
               </div>
+
+              {/* COMPANY LIST */}
+
+              <div>
+
+                <h3 className="text-lg font-black mb-4">
+                  Company List
+                </h3>
+
+                <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+
+                  <table className="w-full text-sm">
+
+                    <thead className="bg-cyan-50">
+
+                      <tr>
+                        <th className="p-3">ID</th>
+                        <th className="p-3">Type</th>
+                        <th className="p-3">Company</th>
+                        <th className="p-3">Action</th>
+                      </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                      {filteredCompanies.map((item) => (
+
+                        <tr key={item.id} className="border-b text-center">
+
+                          <td className="p-3">{item.id}</td>
+
+                          <td className="p-3">
+                            {item.asset_type}
+                          </td>
+
+                          <td className="p-3 font-bold">
+                            {item.company_name}
+                          </td>
+
+                          <td className="p-3">
+
+                            {canEdit && (
+                              <button
+                                onClick={() => editCompany(item)}
+                                className="bg-amber-500 text-white px-3 py-2 rounded-xl font-bold"
+                              >
+                                Edit
+                              </button>
+                            )}
+
+                          </td>
+
+                        </tr>
+
+                      ))}
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              </div>
+
             </div>
+
           </div>
         </div>
       </div>
@@ -552,11 +596,10 @@ function Input({ label, ...props }) {
 function StatusBadge({ status }) {
   return (
     <span
-      className={`px-3 py-1 rounded-full text-xs font-black ${
-        status === "Active"
-          ? "bg-emerald-100 text-emerald-700"
-          : "bg-red-100 text-red-700"
-      }`}
+      className={`px-3 py-1 rounded-full text-xs font-black ${status === "Active"
+        ? "bg-emerald-100 text-emerald-700"
+        : "bg-red-100 text-red-700"
+        }`}
     >
       {status}
     </span>

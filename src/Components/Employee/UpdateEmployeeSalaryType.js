@@ -86,7 +86,7 @@ export default function UpdateEmployeeSalaryType() {
     try {
       setLoading(true);
 
-      const res = await axios.post(`${API}/update_employee_salary_type.php`, {
+      const res = await axios.post(`${API}/update_employee_salary_type`, {
         employee_id: selectedEmpId,
         salary_type: salaryType,
       });
@@ -123,7 +123,7 @@ export default function UpdateEmployeeSalaryType() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
-      <Toaster position="top-right" />
+      <Toaster/>
       <SideNav />
 
       <div className="flex-1 w-full lg:ml-72 p-4 md:p-6 overflow-y-auto">

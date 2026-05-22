@@ -23,27 +23,27 @@ const NAV_ITEMS = [
   },
   {
     type: "link",
-    label: "Add Permission",
-    path: "/create-user-permission",
-    icon: <FileText size={20} />,
-  },
-  {
-    type: "link",
     label: "All Reports",
     path: "/all-report",
     icon: <FileText size={20} />,
   },
   {
     type: "link",
-    label: "Employee List",
-    path: "/employees-list",
+    label: "Final Salary",
+    path: "/final-salary",
     icon: <Users size={20} />,
   },
-   {
-    type: "link",
-    label: "Update Employee Salary Type",
-    path: "/update-salary-type",
+  {
+    type: "group",
+    label: "Employee",
+    key: "employee",
     icon: <Users size={20} />,
+    children: [
+      { label: "Employee List", path: "/employees-list" },
+      { label: "Update Salary Type", path: "/update-salary-type" },
+      { label: "Create Login User", path: "/create-user" },
+      { label: "Add Permission", path: "/create-user-permission" },
+    ],
   },
   {
     type: "group",
@@ -51,10 +51,7 @@ const NAV_ITEMS = [
     key: "reports",
     icon: <Wallet size={20} />,
     children: [
-      //{ label: "Create Login User", path: "/create-login-user" },
-      { label: "Create Login User", path: "/create-user" },
       { label: "Add ESIC & PF", path: "/add-EsicPf" },
-      { label: "Final Salary", path: "/final-salary" },
       { label: "Add Office Assets Category", path: "/add-office-assets-category" },
       { label: "Add Office Assets", path: "/add-office-assets" },
       { label: "Add Employee Assets", path: "/add-assests" },
@@ -69,7 +66,7 @@ const NAV_ITEMS = [
       { label: "Add Resignation", path: "/add-resignation" },
       { label: "Add Overtime", path: "/add-overtime" },
       { label: "Add Transfer", path: "/add-transfer" },
-      { label: "Add Employee Aassets List", path: "/add-employee-assets-list" },
+      { label: "Add Employee Assets List", path: "/add-employee-assets-list" },
     ],
   },
 ];
@@ -246,8 +243,8 @@ function MenuGroup({ title, icon, open, onClick, children }) {
       <button
         onClick={onClick}
         className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all duration-300 ${open
-            ? "bg-gradient-to-r from-rose-50 to-pink-50 text-rose-600"
-            : "text-slate-600 hover:bg-rose-50 hover:text-rose-600"
+          ? "bg-gradient-to-r from-rose-50 to-pink-50 text-rose-600"
+          : "text-slate-600 hover:bg-rose-50 hover:text-rose-600"
           }`}
       >
         <div className="flex items-center gap-3 font-bold">

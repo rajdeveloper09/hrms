@@ -524,7 +524,7 @@ export default function EmployeePenaltyForm() {
                       className="input"
                       disabled={!formAllowed || editMode}
                     >
-                      <option value="Complaint">Already Complaint</option>
+                      <option value="Complaint">Already Complaint & Status Accepted </option>
                       <option value="New">New Penalty</option>
                     </select>
                   </Field>

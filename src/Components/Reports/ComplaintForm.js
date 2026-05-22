@@ -27,6 +27,7 @@ export default function ComplaintForm() {
     branch_id: "",
     complaint_type: "Emp vs Emp",
     second_employee_id: "",
+    complaint_id: "",
     other_person_name: "",
     suspected_type: "Employee",
     suspected_employee: "",
@@ -289,6 +290,7 @@ export default function ComplaintForm() {
 
     setFormData({
       id: item.id || "",
+      complaint_id: item.complaint_id || "",
       emp_id: item.emp_id || "",
       branch_id: item.branch_id || "",
       complaint_type: complaintType,
@@ -316,7 +318,10 @@ export default function ComplaintForm() {
       return;
     }
 
-    if (!formData.id) {
+    const updateId = formData.id || "";
+    const complaintId = formData.complaint_id || "";
+
+    if (!updateId && !complaintId) {
       toast.error("Complaint ID missing");
       return;
     }
@@ -325,7 +330,8 @@ export default function ComplaintForm() {
 
     try {
       const payload = {
-        id: formData.id,
+        id: updateId,
+        complaint_id: complaintId,
         status: formData.status,
         remark: formData.remark,
         incident_datetime: formData.incident_datetime,
@@ -341,17 +347,28 @@ export default function ComplaintForm() {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      let data;
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error("Invalid API Response:", text);
+        toast.error("Invalid API response. Check PHP file path or PHP error.");
+        return;
+      }
 
       if (data.success || data.status) {
-        toast.success("Complaint updated successfully");
+        toast.success(data.message || "Complaint updated successfully");
         resetForm();
         fetchComplaints();
       } else {
-        toast.error(data.message || "Update failed");
+        toast.error(data.message || data.error || "Update failed");
+        console.error("Update failed:", data);
       }
-    } catch {
-      toast.error("Update API Error");
+    } catch (error) {
+      console.error("Update API Error:", error);
+      toast.error("Update API Error: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -408,7 +425,7 @@ export default function ComplaintForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
-      <Toaster position="top-right" />
+      <Toaster />
       <SideNav />
 
       <div className="flex-1 w-full lg:ml-72 p-4 md:p-5 overflow-y-auto min-h-screen">
@@ -733,9 +750,7 @@ export default function ComplaintForm() {
                     disabled={!formAllowed}
                   >
                     <option value="Pending">Pending</option>
-                    <option value="Accepted">Accepted</option>
-                    <option value="Rejected">Rejected</option>
-                    <option value="Closed">Closed</option>
+                    <option value="Completed">Completed</option>
                   </select>
                 </div>
 
@@ -855,12 +870,12 @@ export default function ComplaintForm() {
                         <td className="p-3">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-black ${item.status === "Accepted"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : item.status === "Rejected"
-                                  ? "bg-red-100 text-red-700"
-                                  : item.status === "Closed"
-                                    ? "bg-slate-200 text-slate-700"
-                                    : "bg-amber-100 text-amber-700"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : item.status === "Rejected"
+                                ? "bg-red-100 text-red-700"
+                                : item.status === "Closed"
+                                  ? "bg-slate-200 text-slate-700"
+                                  : "bg-amber-100 text-amber-700"
                               }`}
                           >
                             {item.status || "Pending"}

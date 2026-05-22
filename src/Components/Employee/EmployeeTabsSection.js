@@ -76,6 +76,34 @@ const EmployeeTabsSection = ({
       GET ACTIVE DATA
   ========================================= */
 
+  const getItemEmpIds = (item) => {
+    return String(
+      item.employee_id ||
+      item.emp_id ||
+      item.allow_employee_id ||
+      item.employee_ids ||
+      ""
+    )
+      .split(",")
+      .map((v) => v.trim().toLowerCase())
+      .filter(Boolean);
+  };
+
+  const getItemEmpNames = (item) => {
+    return String(
+      item.employee_name ||
+      item.emp_name ||
+      item.full_name ||
+      item.name ||
+      item.allow_employee_name ||
+      item.employee_names ||
+      ""
+    )
+      .split(",")
+      .map((v) => v.trim().toLowerCase())
+      .filter(Boolean);
+  };
+
   const getActiveData = () => {
 
     let data = [...(tabData[activeTab] || [])];
@@ -83,35 +111,17 @@ const EmployeeTabsSection = ({
     /* SEARCH */
 
     if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase().trim();
 
       data = data.filter((item) => {
-
-        const empId =
-          (
-            item.employee_id ||
-            item.emp_id ||
-            ""
-          ).toLowerCase();
-
-        const empName =
-          (
-            item.employee_name ||
-            item.full_name ||
-            item.name ||
-            ""
-          ).toLowerCase();
+        const empIds = getItemEmpIds(item);
+        const empNames = getItemEmpNames(item);
 
         return (
-          empId.includes(
-            searchTerm.toLowerCase()
-          ) ||
-          empName.includes(
-            searchTerm.toLowerCase()
-          )
+          empIds.some((id) => id.includes(q)) ||
+          empNames.some((name) => name.includes(q))
         );
-
       });
-
     }
 
     /* DATE FILTER */
@@ -219,13 +229,7 @@ const EmployeeTabsSection = ({
   const uniqueEmployees = [
     ...new Set(
       originalTabData
-        .map((item) =>
-          String(
-            item.employee_id ||
-            item.emp_id ||
-            ""
-          ).trim()
-        )
+        .flatMap((item) => getItemEmpIds(item))
         .filter(Boolean)
     ),
   ];

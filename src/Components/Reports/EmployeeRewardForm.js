@@ -427,8 +427,8 @@ export default function EmployeeRewardForm() {
                     {formAllowed
                       ? "Fill reward details carefully"
                       : editMode
-                      ? "View Only Permission - Edit Not Allowed"
-                      : "View Only Permission - Add Not Allowed"}
+                        ? "View Only Permission - Edit Not Allowed"
+                        : "View Only Permission - Add Not Allowed"}
                   </p>
                 </div>
 

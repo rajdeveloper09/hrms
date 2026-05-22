@@ -316,7 +316,8 @@ export default function EmployeeList() {
                     <th className="p-4">Designation</th>
                     <th className="p-4">Salary</th>
                     <th className="p-4">Shift</th>
-                    <th className="p-4">Status</th>
+                    <th className="p-4">Salary Status</th>
+                    <th className="p-4">User Status</th>
                     <th className="p-4">Action</th>
 
                   </tr>
@@ -379,6 +380,17 @@ export default function EmployeeList() {
                       {/* SHIFT */}
                       <td className="p-4 text-gray-700">
                         {emp.shift_time}
+                      </td>
+
+                      <td className="p-4 text-gray-700">
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-semibold ${emp.salary_type === "Hold"
+                            ? "bg-red-100 text-white-700"
+                            : "bg-green-100 text-green-700"
+                            }`}
+                        >
+                          {emp.salary_type}
+                        </span>
                       </td>
 
                       {/* STATUS */}

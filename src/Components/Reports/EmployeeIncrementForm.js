@@ -108,9 +108,21 @@ export default function EmployeeIncrementDashboard() {
       }
 
       if (json.success || json.status) {
+        const safeData = {
+          ...json.data,
+          final_recommend_percent: Math.max(
+            0,
+            Number(json.data?.final_recommend_percent || 0)
+          ),
+          final_recommend_amount: Math.max(
+            0,
+            Number(json.data?.final_recommend_amount || 0)
+          ),
+        };
+
         setRecommendations((prev) => ({
           ...prev,
-          [empId]: json.data,
+          [empId]: safeData,
         }));
 
         setForms((prev) => ({
@@ -156,11 +168,17 @@ export default function EmployeeIncrementDashboard() {
       return alert("You do not have add permission");
     }
 
+    let finalValue = value;
+
+    if (name === "custom_increment_value") {
+      finalValue = Math.max(0, Number(value || 0));
+    }
+
     setForms((prev) => ({
       ...prev,
       [empId]: {
         ...prev[empId],
-        [name]: value,
+        [name]: finalValue,
       },
     }));
   };
@@ -178,10 +196,10 @@ export default function EmployeeIncrementDashboard() {
 
     const salary = Number(rec.current_salary || 0);
     const type = form.custom_increment_type;
-    const value = Number(form.custom_increment_value || 0);
+    const value = Math.max(0, Number(form.custom_increment_value || 0));
 
-    let currentPercent = Number(rec.final_recommend_percent || 0);
-    let amount = Number(rec.final_recommend_amount || 0);
+    let currentPercent = Math.max(0, Number(rec.final_recommend_percent || 0));
+    let amount = Math.max(0, Number(rec.final_recommend_amount || 0));
 
     if (type === "percentage") {
       currentPercent = value;
@@ -194,8 +212,8 @@ export default function EmployeeIncrementDashboard() {
     }
 
     return {
-      currentPercent: Number(currentPercent.toFixed(2)),
-      amount: Number(amount.toFixed(2)),
+      currentPercent: Math.max(0, Number(currentPercent.toFixed(2))),
+      amount: Math.max(0, Number(amount.toFixed(2))),
     };
   };
 
@@ -212,13 +230,37 @@ export default function EmployeeIncrementDashboard() {
       return;
     }
 
+    const preview = getPreview(empId);
+
+    if (preview.currentPercent < 0 || preview.amount < 0) {
+      alert("Increment value cannot be less than 0");
+      return;
+    }
+
+    const ok = window.confirm(
+      `Are you sure you want to complete increment for ${empId}?\n\nIncrement: ${preview.currentPercent}%\nAmount: ${formatMoney(preview.amount)}`
+    );
+
+    if (!ok) return;
+
     setSavingId(empId);
 
     try {
       const payload = {
         ...rec,
+        final_recommend_percent: Math.max(
+          0,
+          Number(rec.final_recommend_percent || 0)
+        ),
+        final_recommend_amount: Math.max(
+          0,
+          Number(rec.final_recommend_amount || 0)
+        ),
         custom_increment_type: form.custom_increment_type,
-        custom_increment_value: Number(form.custom_increment_value || 0),
+        custom_increment_value: Math.max(
+          0,
+          Number(form.custom_increment_value || 0)
+        ),
         remark: form.remark,
       };
 
@@ -440,12 +482,22 @@ export default function EmployeeIncrementDashboard() {
                                       : "text-red-600"
                                   }`}
                                 >
-                                  {rec.final_recommend_percent}%
+                                  {Math.max(
+                                    0,
+                                    Number(rec.final_recommend_percent || 0)
+                                  )}
+                                  %
                                 </p>
                               </div>
 
                               <p className="text-xs text-slate-400 mt-1">
-                                Amount: {formatMoney(rec.final_recommend_amount)}
+                                Amount:{" "}
+                                {formatMoney(
+                                  Math.max(
+                                    0,
+                                    Number(rec.final_recommend_amount || 0)
+                                  )
+                                )}
                               </p>
                             </div>
 
@@ -482,6 +534,7 @@ export default function EmployeeIncrementDashboard() {
                                 </label>
                                 <input
                                   type="number"
+                                  min="0"
                                   disabled={
                                     !canAdd ||
                                     form.custom_increment_type === "auto"

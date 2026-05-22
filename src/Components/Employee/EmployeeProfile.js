@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
-
+import html2canvas from "html2canvas";
+import { useRef } from "react";
 import {
   ArrowLeft,
   Phone,
@@ -23,6 +24,48 @@ import { Chart10 } from "../Charts/Chart10";
 import EmployeeTabsSection from "./EmployeeTabsSection";
 
 export default function EmployeeProfile() {
+
+  const waitForImages = async (element) => {
+    const images = Array.from(element.querySelectorAll("img"));
+
+    await Promise.all(
+      images.map(
+        (img) =>
+          new Promise((resolve) => {
+            if (img.complete && img.naturalWidth > 0) {
+              resolve();
+              return;
+            }
+
+            img.onload = resolve;
+            img.onerror = resolve;
+          })
+      )
+    );
+  };
+
+  const idCardRef = useRef(null);
+
+  const downloadIdCard = async () => {
+    const card = idCardRef.current;
+    if (!card) return;
+
+    await waitForImages(card);
+
+    const canvas = await html2canvas(card, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+    });
+
+    const link = document.createElement("a");
+    link.download = `${employee.employee_id}_ID_Card.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+
   const { employee_id } = useParams();
   const navigate = useNavigate();
 
@@ -228,11 +271,12 @@ export default function EmployeeProfile() {
   const getImageUrl = (path) => {
     if (!path) return "";
 
-    if (path.startsWith("http")) {
-      return path;
-    }
+    if (path.startsWith("http")) return path;
 
-    return `${API_BASE_URL}/${path}`;
+    return `${API_BASE_URL}/${path
+      .split("/")
+      .map(encodeURIComponent)
+      .join("/")}`;
   };
 
   // LOADING
@@ -273,7 +317,7 @@ export default function EmployeeProfile() {
   // STATS
   const stats = [
     {
-      title: "Total Salary",
+      title: "Month Salary",
       value: `₹${(
         Number(employee.basic_salary || 0) +
         Number(employee.allowances || 0)
@@ -281,38 +325,103 @@ export default function EmployeeProfile() {
       icon: <IndianRupee size={22} />,
     },
     {
-      title: "Total Rewards",
-      value: `₹${Number(employee.basic_salary || 0).toLocaleString(
-        "en-IN"
-      )}`,
+      title: "Total Bonus",
+      value: <span>
+        ₹{
+          bonusData
+            ?.filter(
+              (item) =>
+                item.emp_id === employee.employee_id &&
+                item.status === "Accepted"
+            )
+            .reduce(
+              (sum, item) =>
+                sum + Number(item.total_bonus_amount || 0),
+              0
+            )
+            .toLocaleString("en-IN")
+        }
+      </span>,
       icon: <IndianRupee size={22} />,
     },
     {
-      title: "Total Bonus",
-      value: `₹${Number(employee.basic_salary || 0).toLocaleString(
-        "en-IN"
-      )}`,
+      title: "Total Rewards",
+      value: <span>
+        ₹{
+          rewardsData
+            ?.filter(
+              (item) =>
+                item.emp_id === employee.employee_id &&
+                item.status === "Accepted"
+            )
+            .reduce(
+              (sum, item) =>
+                sum + Number(item.total_reward_amount || 0),
+              0
+            )
+            .toLocaleString("en-IN")
+        }
+      </span>,
       icon: <IndianRupee size={22} />,
     },
     {
       title: "Total Penalty",
-      value: `₹${Number(employee.basic_salary || 0).toLocaleString(
-        "en-IN"
-      )}`,
+      value: <span>
+        ₹{
+          penaltyData
+            ?.filter(
+              (item) =>
+                item.emp_id === employee.employee_id &&
+                item.status === "Completed"
+            )
+            .reduce(
+              (sum, item) =>
+                sum + Number(item.penalty_amount || 0),
+              0
+            )
+            .toLocaleString("en-IN")
+        }
+      </span>,
       icon: <IndianRupee size={22} />,
     },
     {
-      title: "OT Amount",
-      value: `₹${Number(employee.basic_salary || 0).toLocaleString(
-        "en-IN"
-      )}`,
+      title: "Total PF",
+      value: <span>
+        ₹{
+          empEsicPfData
+            ?.filter(
+              (item) =>
+                item.emp_id === employee.employee_id &&
+                item.status === "Active"
+            )
+            .reduce(
+              (sum, item) =>
+                sum + Number(item.pf_employee_amount || 0),
+              0
+            )
+            .toLocaleString("en-IN")
+        }
+      </span>,
       icon: <IndianRupee size={22} />,
     },
     {
-      title: "PF Amount",
-      value: `₹${Number(employee.basic_salary || 0).toLocaleString(
-        "en-IN"
-      )}`,
+      title: "Total ESIC",
+      value: <span>
+        ₹{
+          empEsicPfData
+            ?.filter(
+              (item) =>
+                item.emp_id === employee.employee_id &&
+                item.status === "Active"
+            )
+            .reduce(
+              (sum, item) =>
+                sum + Number(item.esic_employee_amount || 0),
+              0
+            )
+            .toLocaleString("en-IN")
+        }
+      </span>,
       icon: <IndianRupee size={22} />,
     },
   ];
@@ -353,6 +462,152 @@ export default function EmployeeProfile() {
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100 flex">
       <SideNav />
 
+      <div style={{ position: "fixed", left: "0px", top: "0px", opacity: 0, pointerEvents: "none", zIndex: -1 }}>
+        <div
+          ref={idCardRef}
+          style={{
+            width: "320px",
+            height: "520px",
+            borderRadius: "28px",
+            overflow: "hidden",
+            background: "#ffffff",
+            border: "2px solid #111",
+            fontFamily: "Arial, sans-serif",
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              height: "150px",
+              background: "#201b1f",
+              color: "#fff",
+              textAlign: "center",
+              paddingTop: "22px",
+            }}
+          >
+            <div style={{ fontSize: "22px", fontWeight: "800" }}>
+              OJMEE Tech Pvt Ltd
+            </div>
+            <div style={{ fontSize: "14px", marginTop: "5px" }}>
+              Employee Id Card
+            </div>
+          </div>
+
+          <div
+            style={{
+              height: "70px",
+              background: "linear-gradient(135deg,#f97316,#facc15)",
+              borderBottomLeftRadius: "100% 55%",
+              marginTop: "-35px",
+            }}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: "-55px",
+              width: "100%",
+            }}
+          >
+            <img
+              src={
+                employee.user_photo
+                  ? getImageUrl(employee.user_photo)
+                  : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+              }
+              alt="Employee"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                console.log(
+                  "ID Card image failed:",
+                  getImageUrl(employee.user_photo)
+                );
+
+                e.currentTarget.src =
+                  "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+              }}
+              style={{
+                width: "105px",
+                height: "105px",
+                objectFit: "cover",
+                borderRadius: "16px",
+                border: "5px solid #f97316",
+                background: "#fff",
+                boxShadow: "0 10px 25px rgba(0,0,0,0.18)",
+              }}
+            />
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: "18px" }}>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: "20px",
+                fontWeight: "900",
+                color: "#111",
+                textTransform: "uppercase",
+              }}
+            >
+              {employee.full_name}
+            </h2>
+
+            <p
+              style={{
+                margin: "5px 0 24px",
+                color: "#f97316",
+                fontWeight: "700",
+                fontSize: "14px",
+              }}
+            >
+              {employee.designation}
+            </p>
+          </div>
+
+          <div
+            style={{
+              padding: "0 42px",
+              fontSize: "15px",
+              lineHeight: "26px",
+              color: "#111",
+            }}
+          >
+            <div><b>Emp. Code :</b> {employee.employee_id}</div>
+            <div><b>Branch Code :</b> {employee.work_location || "-"}</div>
+            <div><b>Department :</b> {employee.department || "-"}</div>
+            <div><b>Joining Date :</b> {
+              employee.joining_date
+                ? new Date(employee.joining_date).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+                : "-"
+            }</div>
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: "50px",
+              background: "#f97316",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: "800",
+              fontSize: "14px",
+            }}
+          >
+            www.ojmeetech.in
+          </div>
+        </div>
+      </div>
+
       <div className="flex-1 xl:ml-72 p-4 md:p-6 overflow-y-auto">
         {/* HEADER */}
         <motion.div
@@ -391,14 +646,29 @@ export default function EmployeeProfile() {
               </div>
             </div>
 
-            <button
-              className={`px-5 py-2 rounded-xl font-semibold ${employee.status === "Active"
-                ? "bg-emerald-100 text-emerald-600"
-                : "bg-rose-100 text-rose-600"
-                }`}
-            >
-              {employee.status}
-            </button>
+            <div className="bg-white border border-rose-100 shadow-sm rounded-2xl px-4 py-2">
+              <button
+                onClick={downloadIdCard}
+                className="h-12 px-6 rounded-2xl mr-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-bold transition-all">
+                Download ID Card
+              </button>
+              <button
+                className={`h-12 px-6 rounded-2xl mr-4 font-semibold ${employee.salary_type === "Hold"
+                  ? "bg-rose-100 text-rose-600"
+                  : "bg-emerald-100 text-emerald-600"
+                  }`}
+              >
+                Salary Status : {employee.salary_type}
+              </button>
+              <button
+                className={`h-12 px-6 rounded-2xl font-semibold ${employee.status === "Active"
+                  ? "bg-emerald-100 text-emerald-600"
+                  : "bg-rose-100 text-rose-600"
+                  }`}
+              >
+                User Status : {employee.status}
+              </button>
+            </div>
           </div>
         </motion.div>
 
@@ -451,35 +721,44 @@ export default function EmployeeProfile() {
                 <div className="flex items-center gap-3">
                   <Mail className="text-rose-500" size={20} />
                   <span className="text-slate-700 break-all">
-                    {employee.email}
+                    Email Id : {employee.email}
                   </span>
                 </div>
 
                 <div className="flex items-start gap-3">
                   <MapPin className="text-rose-500 mt-1" size={20} />
                   <span className="text-slate-700 capitalize">
-                    {employee.address}
+                    Address : {employee.address}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <Building2 className="text-rose-500" size={20} />
                   <span className="text-slate-700">
-                    {employee.department}
+                    Department : {employee.department}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <Briefcase className="text-rose-500" size={20} />
                   <span className="text-slate-700">
-                    {employee.employment_type}
+                    Working Type : {employee.employment_type}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <Clock3 className="text-rose-500" size={20} />
                   <span className="text-slate-700">
-                    {employee.shift_time}
+                    Shift Time : {
+                      employee.shift_time
+                        ? new Date(`2000-01-01 ${employee.shift_time}`)
+                          .toLocaleTimeString("en-IN", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          })
+                        : "-"
+                    }
                   </span>
                 </div>
               </div>
@@ -806,5 +1085,6 @@ export default function EmployeeProfile() {
         </AnimatePresence>
       </div>
     </div>
+
   );
 }

@@ -185,7 +185,7 @@ export default function AllReport() {
             <Toaster />
             <SideNav />
 
-            <div className="flex-1 xl:ml-72 p-4 md:p-6 overflow-y-auto mt-20">
+            <div className="flex-1 xl:ml-72 p-4 md:p-6 overflow-y-auto">
 
                 <EmployeeTabsSection
                     attendanceData={empAttendance}

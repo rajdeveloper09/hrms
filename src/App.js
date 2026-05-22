@@ -28,7 +28,7 @@ import AddOfficeAssetsCategory from "./Components/Reports/AddOfficeAssetsCategor
 import CreateLoginNewUser from "./Components/CreateLoginNewUser";
 import EmployeePermissionPage from "./Components/EmployeePermissionPage";
 import EmployeeAssetsListForm from "./Components/Reports/EmployeeAssetsListForm"
-import FinalSalaryCurrentMonth from "./Components/Reports/FinalSalaryCurrentMonth"
+import FinalSalaryCurrentMonth from "./Components/FinalSalaryCurrentMonth"
 import UpdateEmployeeSalaryType from "./Components/Employee/UpdateEmployeeSalaryType"
 
 function App() {

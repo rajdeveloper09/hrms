@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import SideNav from "../SideNav";
+import SideNav from "./SideNav";
 import {
   Search,
   RefreshCcw,
