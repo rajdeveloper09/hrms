@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 const API = "https://ojmee.in/employee";
+const CURRENT_PATH = "/final-salary";
 
 export default function FinalSalaryCurrentMonth() {
   const currentMonth = new Date().toISOString().slice(0, 7);
@@ -22,16 +23,31 @@ export default function FinalSalaryCurrentMonth() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const role = localStorage.getItem("role") || "view";
+  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+
+  const pagePermission =
+    role === "superAdmin"
+      ? { can_view: 1, can_add: 1, can_edit: 1, can_delete: 1 }
+      : permissions.find((p) => p.route_path === CURRENT_PATH) || {};
+
+  const canView = role === "superAdmin" || Number(pagePermission.can_view) === 1;
+  const canAdd = role === "superAdmin" || Number(pagePermission.can_add) === 1;
+  const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
+  const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
+
   useEffect(() => {
-    fetchSalary();
+    if (canView) fetchSalary();
   }, []);
 
   const fetchSalary = async () => {
+    if (!canView) return alert("You do not have view permission");
+
     try {
       setLoading(true);
 
       const res = await axios.get(
-        `${API}/emp_final_salary_current_month.php?month=${month}`
+        `${API}/emp_final_salary_current_month?month=${month}`
       );
 
       if (res.data.status) {
@@ -79,6 +95,11 @@ export default function FinalSalaryCurrentMonth() {
     })}`;
 
   const exportCSV = () => {
+    if (!canAdd && !canEdit) {
+      alert("Export not allowed. Add or Edit permission required.");
+      return;
+    }
+
     if (filteredData.length === 0) {
       alert("No data to export");
       return;
@@ -128,6 +149,29 @@ export default function FinalSalaryCurrentMonth() {
     URL.revokeObjectURL(url);
   };
 
+  function sum(key) {
+    return filteredData.reduce(
+      (total, item) => total + Number(item[key] || 0),
+      0
+    );
+  }
+
+  if (!canView) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-72 p-6">
+          <div className="bg-white rounded-3xl p-10 text-center shadow-xl">
+            <h1 className="text-2xl font-black text-red-600">Access Denied</h1>
+            <p className="text-slate-500 mt-2">
+              You do not have permission to view this page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex">
       <SideNav />
@@ -144,26 +188,10 @@ export default function FinalSalaryCurrentMonth() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card
-            icon={<CalendarDays />}
-            title="Month"
-            value={summary.month || month}
-          />
-          <Card
-            icon={<Users />}
-            title="Total Employees"
-            value={summary.total_employees || 0}
-          />
-          <Card
-            icon={<IndianRupee />}
-            title="Total Final Salary"
-            value={money(summary.total_final_salary)}
-          />
-          <Card
-            icon={<Wallet />}
-            title="Records Showing"
-            value={filteredData.length}
-          />
+          <Card icon={<CalendarDays />} title="Month" value={summary.month || month} />
+          <Card icon={<Users />} title="Total Employees" value={summary.total_employees || 0} />
+          <Card icon={<IndianRupee />} title="Total Final Salary" value={money(summary.total_final_salary)} />
+          <Card icon={<Wallet />} title="Records Showing" value={filteredData.length} />
         </div>
 
         <div className="bg-white rounded-[28px] shadow-xl border border-pink-100 overflow-hidden">
@@ -172,7 +200,9 @@ export default function FinalSalaryCurrentMonth() {
               <div>
                 <h2 className="text-xl font-black">Salary List</h2>
                 <p className="text-sm text-slate-300">
-                  Employee wise current month final salary
+                  {canAdd || canEdit
+                    ? "Employee wise current month final salary"
+                    : "View Only Permission - Export Not Allowed"}
                 </p>
               </div>
 
@@ -194,14 +224,20 @@ export default function FinalSalaryCurrentMonth() {
                   {loading ? "Loading..." : "Fetch"}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={exportCSV}
-                  className="bg-emerald-500 text-white px-5 py-3 rounded-2xl font-black flex items-center justify-center gap-2"
-                >
-                  <FileDown size={17} />
-                  Export
-                </button>
+                {(canAdd || canEdit) ? (
+                  <button
+                    type="button"
+                    onClick={exportCSV}
+                    className="bg-emerald-500 text-white px-5 py-3 rounded-2xl font-black flex items-center justify-center gap-2"
+                  >
+                    <FileDown size={17} />
+                    Export
+                  </button>
+                ) : (
+                  <div className="bg-yellow-50 text-yellow-700 px-5 py-3 rounded-2xl font-black">
+                    View Only
+                  </div>
+                )}
               </div>
             </div>
 
@@ -246,50 +282,20 @@ export default function FinalSalaryCurrentMonth() {
                   </tr>
                 ) : (
                   filteredData.map((item) => (
-                    <tr
-                      key={item.employee_id}
-                      className="border-b text-center hover:bg-pink-50/60"
-                    >
+                    <tr key={item.employee_id} className="border-b text-center hover:bg-pink-50/60">
                       <td className="p-3">
-                        <div className="font-black text-slate-800">
-                          {item.employee_id}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          {item.full_name}
-                        </div>
+                        <div className="font-black text-slate-800">{item.employee_id}</div>
+                        <div className="text-xs text-slate-500">{item.full_name}</div>
                       </td>
 
-                      <td className="p-3 font-bold">
-                        {money(item.current_salary)}
-                      </td>
-
-                      <td className="p-3 text-emerald-600 font-bold">
-                        {money(item.bonus)}
-                      </td>
-
-                      <td className="p-3 text-emerald-600 font-bold">
-                        {money(item.reward)}
-                      </td>
-
-                      <td className="p-3 text-emerald-600 font-bold">
-                        {money(item.increment_amount)}
-                      </td>
-
-                      <td className="p-3 text-emerald-600 font-bold">
-                        {money(item.overtime)}
-                      </td>
-
-                      <td className="p-3 text-red-600 font-bold">
-                        -{money(item.penalty)}
-                      </td>
-
-                      <td className="p-3 text-red-600 font-bold">
-                        -{money(item.advance_amount)}
-                      </td>
-
-                      <td className="p-3 text-red-600 font-bold">
-                        -{money(item.esicpf)}
-                      </td>
+                      <td className="p-3 font-bold">{money(item.current_salary)}</td>
+                      <td className="p-3 text-emerald-600 font-bold">{money(item.bonus)}</td>
+                      <td className="p-3 text-emerald-600 font-bold">{money(item.reward)}</td>
+                      <td className="p-3 text-emerald-600 font-bold">{money(item.increment_amount)}</td>
+                      <td className="p-3 text-emerald-600 font-bold">{money(item.overtime)}</td>
+                      <td className="p-3 text-red-600 font-bold">-{money(item.penalty)}</td>
+                      <td className="p-3 text-red-600 font-bold">-{money(item.advance_amount)}</td>
+                      <td className="p-3 text-red-600 font-bold">-{money(item.esicpf)}</td>
 
                       <td className="p-3">
                         <span className="px-4 py-2 rounded-full bg-slate-900 text-white font-black">
@@ -320,16 +326,15 @@ export default function FinalSalaryCurrentMonth() {
             </table>
           </div>
         </div>
+
+        {canDelete && (
+          <div className="mt-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 font-bold">
+            Delete permission is not used on this salary report page because this is a calculated report, not a delete module.
+          </div>
+        )}
       </div>
     </div>
   );
-
-  function sum(key) {
-    return filteredData.reduce(
-      (total, item) => total + Number(item[key] || 0),
-      0
-    );
-  }
 }
 
 function Card({ title, value, icon }) {
