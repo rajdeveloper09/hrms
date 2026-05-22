@@ -85,7 +85,7 @@ export default function EmployeeAssetsForm() {
 
   const fetchAssets = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/get_office_assets`);
+      const res = await axios.get(`${API_BASE_URL}/employee_assets_list_get`);
       setAssetList(res.data.data || []);
     } catch (error) {
       console.log("Assets API Error:", error);
