@@ -267,6 +267,16 @@ export default function EmployeeProfile() {
 
   }, []);
 
+  const userEmpId =
+    EmployeeProfile?.emp_id || EmployeeProfile?.employee_id;
+
+  const userComplaint = (empComplaint || []).filter(
+    (item) => item.emp_id === userEmpId
+  );
+
+  const userPenalty = (penaltyData || []).filter(
+    (item) => item.emp_id === userEmpId
+  );
 
 
   // EMPLOYEE FETCH
@@ -1019,7 +1029,7 @@ export default function EmployeeProfile() {
               transition={{ duration: 0.5 }}
               className="mt-6"
             >
-              <Chart10 complaintData={empComplaint}  penaltyData={penaltyData} />
+              <Chart10 complaintData={empComplaint} penaltyData={penaltyData} />
             </motion.div>
           </motion.div>
         </div>

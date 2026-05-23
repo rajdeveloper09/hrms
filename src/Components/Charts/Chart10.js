@@ -22,10 +22,6 @@ import {
 export const Chart10 = ({
   complaintData = [],
   penaltyData = [],
-  empId = "",
-  emp = {},
-  rec = {},
-  preview = {},
 }) => {
 
   const complaintCount = Array.isArray(complaintData)
