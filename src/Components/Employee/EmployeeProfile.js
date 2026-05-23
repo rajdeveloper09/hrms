@@ -16,6 +16,7 @@ import {
   Eye,
   X,
   Image as ImageIcon,
+  FileText,
 } from "lucide-react";
 
 import SideNav from "../SideNav";
@@ -24,6 +25,8 @@ import { Chart10 } from "../Charts/Chart10";
 import EmployeeTabsSection from "./EmployeeTabsSection";
 
 export default function EmployeeProfile() {
+
+
 
   const waitForImages = async (element) => {
     const images = Array.from(element.querySelectorAll("img"));
@@ -62,6 +65,26 @@ export default function EmployeeProfile() {
 
     const link = document.createElement("a");
     link.download = `${employee.employee_id}_ID_Card.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+
+  const [showKyc, setShowKyc] = useState(false);
+  const kycRef = useRef(null);
+  const downloadKycForm = async () => {
+    const form = kycRef.current;
+    if (!form) return;
+
+    const canvas = await html2canvas(form, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+    });
+
+    const link = document.createElement("a");
+    link.download = `${employee.employee_id}_KYC_Form.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
   };
@@ -461,6 +484,190 @@ export default function EmployeeProfile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100 flex">
       <SideNav />
+      {/* Download KYE */}
+      <AnimatePresence>
+        {showKyc && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 40 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 40 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden"
+            >
+              <div className="bg-slate-900 text-white px-5 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-black">KYC Form Preview</h2>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={downloadKycForm}
+                    className="px-5 py-2 rounded-xl bg-rose-600 text-white font-bold"
+                  >
+                    Download KYC
+                  </button>
+
+                  <button
+                    onClick={() => setShowKyc(false)}
+                    className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-auto max-h-[88vh] bg-slate-200 p-4">
+                <div
+                  ref={kycRef}
+                  className="bg-white mx-auto text-black"
+                  style={{
+                    width: "794px",
+                    minHeight: "1123px",
+                    padding: "18px",
+                    fontFamily: "Arial, sans-serif",
+                    fontSize: "12px",
+                  }}
+                >
+                  <div className="border-2 border-black">
+                    <div className="grid grid-cols-12 border-b-2 border-black">
+                      <div className="col-span-3 p-2 text-[11px] font-bold leading-tight">
+                        OJMEE TECHNOLOGY (P) LIMITED <br />
+                        C-9 T V K Industrial Estate <br />
+                        Gurgaon - 600 032
+                      </div>
+
+                      <div className="col-span-6 text-center p-2">
+                        <h1 className="text-2xl font-black">Know Your Customer (KYC) Form</h1>
+                      </div>
+
+                      <div className="col-span-3 p-2 text-right">
+                        <div className="text-blue-600 text-xl font-black">OJMEECARD</div>
+                        <div className="text-orange-500 text-xs font-black">DO MORE</div>
+                      </div>
+                    </div>
+
+                    <div className="text-center text-[11px] font-bold border-b border-black py-1">
+                      INSTRUCTIONS : Please fill the form in BLOCK LETTERS in English only.
+                    </div>
+
+                    <SectionTitle title="IDENTITY DETAILS" />
+
+                    <div className="grid grid-cols-12 gap-2 p-3">
+                      <div className="col-span-9 space-y-3">
+                        <KycLine label="1. NAME OF THE APPLICANT" value={employee.full_name} />
+                        <KycLine label="2. FATHER / MOTHER NAME" value={employee.father_name || employee.mother_name} />
+                        <KycLine label="3. RESIDENTIAL ADDRESS" value={employee.address} />
+                        <KycLine label="4. TOWN / CITY / DISTRICT" value={employee.work_location} />
+                        <KycLine label="5. STATE / UNION TERRITORY" value="" />
+                      </div>
+
+                      <div className="col-span-3 flex justify-center">
+                        <div className="w-28 h-36 border border-black flex items-center justify-center text-[10px]">
+                          {employee.user_photo ? (
+                            <img
+                              src={getImageUrl(employee.user_photo)}
+                              crossOrigin="anonymous"
+                              alt="Photo"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            "PHOTO"
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-2 px-3 pb-2">
+                      <div className="col-span-4">
+                        <KycSmall label="6. PINCODE" value="" />
+                      </div>
+                      <div className="col-span-4">
+                        <KycSmall label="7. TELEPHONE NO" value="" />
+                      </div>
+                      <div className="col-span-4">
+                        <KycSmall label="8. MOBILE NO" value={employee.mobile} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-2 px-3 pb-2">
+                      <div className="col-span-4">
+                        <KycSmall label="9. D.O.B" value={employee.dob} />
+                      </div>
+                      <div className="col-span-8">
+                        <KycSmall label="10. EMAIL" value={employee.email} />
+                      </div>
+                    </div>
+
+                    <div className="px-3 pb-2">
+                      <KycLine
+                        label="11. IDENTITY DETAILS PLEASE TICK ANY ONE"
+                        value={`Aadhaar: ${employee.aadhaar || "-"} / PAN: ${employee.pan || "-"}`}
+                      />
+                    </div>
+
+                    <SectionTitle title="ADDRESS PROOF FOR VERIFICATION" />
+
+                    <div className="px-3 py-2 grid grid-cols-4 gap-2 text-[11px]">
+                      <CheckBox label="Passport" />
+                      <CheckBox label="Voter ID" />
+                      <CheckBox label="PAN Card" checked={!!employee.pan} />
+                      <CheckBox label="Latest Electricity Bill" />
+                      <CheckBox label="Aadhaar Card" checked={!!employee.aadhaar} />
+                      <CheckBox label="Bank Proof" checked={!!employee.bank_proff} />
+                      <CheckBox label="Ration Card" />
+                      <CheckBox label="LPG Receipt" />
+                    </div>
+
+                    <div className="grid grid-cols-12 gap-2 px-3 py-2 border-t border-black">
+                      <div className="col-span-6">
+                        <KycSmall label="13. PAN NO" value={employee.pan} />
+                      </div>
+                      <div className="col-span-6">
+                        <KycSmall label="14. NATIONALITY" value="Indian" />
+                      </div>
+                    </div>
+
+                    <SectionTitle title="Verification" />
+
+                    <div className="px-3 py-4 text-[11px] leading-6">
+                      I ______________________________ do hereby declare that what I stated above is true to the best of my knowledge and belief.
+                    </div>
+
+                    <SectionTitle title="Terms and conditions" />
+
+                    <div className="px-5 py-3 text-[11px] leading-6 space-y-2">
+                      <p>1. Redemption of card is not allowed as per RBI guidelines.</p>
+                      <p>2. For any misuse or fraudulent activity using the card will lead to severe legal action.</p>
+                      <p>3. These terms and conditions are part of a contract between customer and company.</p>
+                      <p>4. Card should not be used for any cross border transactions.</p>
+                      <p>5. Card once submitted for purchase will not be cancelled.</p>
+                      <p>6. Company is not responsible for any merchant/service provider issue.</p>
+                      <p>7. The card is property of company and must be returned when requested.</p>
+                      <p>8. You agree to pay full amount of the card.</p>
+                      <p>9. Company is not responsible for misuse of card.</p>
+                      <p>10. Company reserves the right to amend or withdraw the card without prior notice.</p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 px-5 py-5 text-[11px]">
+                      <div>Verified By __________________</div>
+                      <div>Signature / Seal ______________</div>
+                      <div>Date __________________</div>
+                    </div>
+
+                    <div className="px-5 pb-5 text-[10px]">
+                      For Head Office use / Record purpose only.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Download KYE */}
 
       <div style={{ position: "fixed", left: "0px", top: "0px", opacity: 0, pointerEvents: "none", zIndex: -1 }}>
         <div
@@ -647,6 +854,13 @@ export default function EmployeeProfile() {
             </div>
 
             <div className="bg-white border border-rose-100 shadow-sm rounded-2xl px-4 py-2">
+              <button
+                onClick={() => setShowKyc(true)}
+                className="h-12 px-6 rounded-2xl mr-4 bg-gradient-to-r from-slate-900 to-slate-700 text-white text-sm font-bold transition-all flex items-center gap-2"
+              >
+                <FileText size={18} />
+                KYC Form
+              </button>
               <button
                 onClick={downloadIdCard}
                 className="h-12 px-6 rounded-2xl mr-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-bold transition-all">
@@ -1086,5 +1300,46 @@ export default function EmployeeProfile() {
       </div>
     </div>
 
+  );
+}
+
+function SectionTitle({ title }) {
+  return (
+    <div className="bg-slate-200 border-y border-black px-2 py-1 text-[11px] font-black">
+      {title}
+    </div>
+  );
+}
+
+function KycLine({ label, value }) {
+  return (
+    <div className="grid grid-cols-12 gap-2 items-center">
+      <div className="col-span-4 text-[10px] font-bold">{label}</div>
+      <div className="col-span-8 border-b border-black min-h-[22px] text-[12px] font-bold uppercase px-2">
+        {value || ""}
+      </div>
+    </div>
+  );
+}
+
+function KycSmall({ label, value }) {
+  return (
+    <div>
+      <div className="text-[10px] font-bold mb-1">{label}</div>
+      <div className="border-b border-black min-h-[22px] text-[12px] font-bold uppercase px-2">
+        {value || ""}
+      </div>
+    </div>
+  );
+}
+
+function CheckBox({ label, checked }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-3 h-3 border border-black inline-flex items-center justify-center text-[9px]">
+        {checked ? "✓" : ""}
+      </span>
+      <span>{label}</span>
+    </div>
   );
 }
