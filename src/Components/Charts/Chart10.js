@@ -19,7 +19,22 @@ import {
   TrendingDown,
 } from "lucide-react";
 
-export const Chart10 = () => {
+export const Chart10 = ({
+  complaintData = [],
+  penaltyData = [],
+  empId = "",
+  emp = {},
+  rec = {},
+  preview = {},
+}) => {
+
+  const complaintCount = Array.isArray(complaintData)
+    ? complaintData.length
+    : 0;
+
+  const penaltyCount = Array.isArray(penaltyData)
+    ? penaltyData.length
+    : 0;
 
   // LAST + RECOMMENDED
   const lastIncrement = 2000;
@@ -134,10 +149,9 @@ export const Chart10 = () => {
               <div
                 className={`
                   px-3 py-2 rounded-2xl border shadow-sm
-                  ${
-                    isGrowth
-                      ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                      : "bg-rose-100 text-rose-700 border-rose-200"
+                  ${isGrowth
+                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                    : "bg-rose-100 text-rose-700 border-rose-200"
                   }
                 `}
               >
@@ -189,7 +203,7 @@ export const Chart10 = () => {
                 </div>
 
                 <div className="text-[14px] font-bold text-rose-600 mt-1">
-                  5
+                  {complaintCount}
                 </div>
 
               </motion.div>
@@ -219,7 +233,7 @@ export const Chart10 = () => {
                 </div>
 
                 <div className="text-[14px] font-bold text-pink-600 mt-1">
-                  3
+                  {penaltyCount}
                 </div>
 
               </motion.div>
@@ -326,10 +340,9 @@ export const Chart10 = () => {
 
               className={`
                 rounded-2xl p-4 border text-center shadow-sm
-                ${
-                  isGrowth
-                    ? "bg-emerald-50 border-emerald-100"
-                    : "bg-pink-50 border-pink-100"
+                ${isGrowth
+                  ? "bg-emerald-50 border-emerald-100"
+                  : "bg-pink-50 border-pink-100"
                 }
               `}
             >
@@ -341,10 +354,9 @@ export const Chart10 = () => {
               <div
                 className={`
                   mt-2 text-3xl font-bold
-                  ${
-                    isGrowth
-                      ? "text-emerald-600"
-                      : "text-pink-600"
+                  ${isGrowth
+                    ? "text-emerald-600"
+                    : "text-pink-600"
                   }
                 `}
               >
@@ -354,10 +366,9 @@ export const Chart10 = () => {
               <div
                 className={`
                   mt-2 inline-flex text-xs px-3 py-1 rounded-full
-                  ${
-                    isGrowth
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-pink-100 text-pink-700"
+                  ${isGrowth
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-pink-100 text-pink-700"
                   }
                 `}
               >
@@ -408,10 +419,9 @@ export const Chart10 = () => {
             <div
               className={`
                 border rounded-2xl px-4 py-2
-                ${
-                  isGrowth
-                    ? "bg-emerald-50 border-emerald-100"
-                    : "bg-rose-50 border-rose-100"
+                ${isGrowth
+                  ? "bg-emerald-50 border-emerald-100"
+                  : "bg-rose-50 border-rose-100"
                 }
               `}
             >
@@ -423,10 +433,9 @@ export const Chart10 = () => {
               <div
                 className={`
                   text-lg font-bold
-                  ${
-                    isGrowth
-                      ? "text-emerald-600"
-                      : "text-rose-600"
+                  ${isGrowth
+                    ? "text-emerald-600"
+                    : "text-rose-600"
                   }
                 `}
               >

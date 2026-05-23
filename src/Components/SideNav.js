@@ -33,6 +33,17 @@ const NAV_ITEMS = [
     path: "/final-salary",
     icon: <Users size={20} />,
   },
+   {
+    type: "link",
+    label: "Add Increment",
+    path: "/add-increment",
+    icon: <Users size={20} />,
+  }, {
+    type: "link",
+    label: "Add Overtime",
+    path: "/add-overtime",
+    icon: <Users size={20} />,
+  },
   {
     type: "group",
     label: "Employee",
@@ -50,7 +61,8 @@ const NAV_ITEMS = [
     label: "Add/Update Reports",
     key: "reports",
     icon: <Wallet size={20} />,
-    children: [
+    children: [      
+      { label: "Add Area Manager", path: "/add-areaManagerBranch" },
       { label: "Add ESIC & PF", path: "/add-EsicPf" },
       { label: "Add Office Assets Category", path: "/add-office-assets-category" },
       { label: "Add Office Assets", path: "/add-office-assets" },
@@ -61,10 +73,10 @@ const NAV_ITEMS = [
       { label: "Add Penalty", path: "/add-penalty" },
       { label: "Add Reward", path: "/add-reward" },
       { label: "Add Complaint", path: "/add-complaint" },
-      { label: "Add Increment", path: "/add-increment" },
+      //{ label: "Add Increment", path: "/add-increment" },
       { label: "Add Meeting", path: "/add-meeting" },
       { label: "Add Resignation", path: "/add-resignation" },
-      { label: "Add Overtime", path: "/add-overtime" },
+      //{ label: "Add Overtime", path: "/add-overtime" },
       { label: "Add Transfer", path: "/add-transfer" },
       { label: "Add Employee Assets List", path: "/add-employee-assets-list" },
     ],

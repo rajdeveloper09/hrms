@@ -318,64 +318,147 @@ const EmployeeTabsSection = ({
 
     return map;
   }, [employeeData]);
-
-  const toMinutes = (time = "00:00") => {
+  const toMinutes = (time) => {
+    if (!time) return 0;
     const [h, m] = String(time).split(":").map(Number);
     return h * 60 + m;
   };
 
-  const formatMinutes = (totalMinutes) => {
-    const h = Math.floor(totalMinutes / 60);
-    const m = totalMinutes % 60;
-    return `${h}h ${m}m`;
+  const formatMinutes = (mins) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+
+    if (h > 0 && m > 0) return `${h}h ${m}m`;
+    if (h > 0) return `${h}h`;
+    return `${m}m`;
   };
 
   const getAttendanceCalc = (item) => {
     const emp = employeeMap[item.employee_id] || {};
 
-    const inPunch = item.punches?.find((p) => Number(p.status) === 0);
-    const outPunch = item.punches?.find((p) => Number(p.status) === 1);
+    /* overtimeData se employee OT settings */
+    const otInfo =
+      overtimeData?.find(
+        (x) =>
+          String(x.emp_id) === String(item.employee_id) &&
+          String(x.status) === "1"
+      ) || {};
 
-    const shiftTime = emp.shift_time || "09:30";
-    const requiredHours = Number(emp.working_hours || 0);
+    const otAllow = String(otInfo.ot_allow || "0") === "1";
+
+    const inPunches =
+      item.punches?.filter((p) => Number(p.status) === 0) || [];
+
+    const outPunches =
+      item.punches?.filter((p) => Number(p.status) === 1) || [];
+
+    const inPunch = inPunches[0];
+    const outPunch = outPunches[outPunches.length - 1];
+
+    /* OT config priority */
+    const shiftTime =
+      otInfo.shift_time ||
+      emp.shift_time ||
+      "09:30";
+
+    const requiredHours = Number(
+      otInfo.working_hours ||
+      emp.working_hours ||
+      0
+    );
 
     let workingHours = "-";
-    let lateOt = "-";
+    let lateText = "On Time";
+    let otText = otAllow ? "-" : "OT Not Allowed";
+    let finalStatus = "-";
 
-    if (inPunch?.time && outPunch?.time) {
-      const inMin = toMinutes(inPunch.time);
-      const outMin = toMinutes(outPunch.time);
-      const diffMin = outMin >= inMin ? outMin - inMin : 1440 - inMin + outMin;
-
-      workingHours = formatMinutes(diffMin);
-
-      const requiredMin = requiredHours * 60;
-
-      if (diffMin >= requiredMin) {
-        const otMin = diffMin - requiredMin;
-        lateOt = otMin > 0 ? `OT ${formatMinutes(otMin)}` : "Complete";
-      } else {
-        const shortMin = requiredMin - diffMin;
-        lateOt = `Short ${formatMinutes(shortMin)}`;
-      }
-    }
-
+    /* Late calculation */
     if (inPunch?.time) {
       const shiftMin = toMinutes(shiftTime);
       const inMin = toMinutes(inPunch.time);
 
       if (inMin > shiftMin) {
-        lateOt = `Late ${inMin - shiftMin} min`;
-      } else if (lateOt === "-") {
-        lateOt = "On Time";
+        lateText = `Late ${inMin - shiftMin} min`;
       }
+    }
+
+    /* Working / OT calculation */
+    if (inPunch?.time && outPunch?.time) {
+      const shiftMin = toMinutes(shiftTime);
+      const inMin = toMinutes(inPunch.time);
+      const outMin = toMinutes(outPunch.time);
+
+      /* shift start se pahile OT count nahi */
+      const calcStartMin =
+        inMin < shiftMin
+          ? shiftMin
+          : inMin;
+
+      const diffMin =
+        outMin >= calcStartMin
+          ? outMin - calcStartMin
+          : 1440 - calcStartMin + outMin;
+
+      workingHours = formatMinutes(diffMin);
+
+      const requiredMin =
+        requiredHours * 60;
+
+      if (requiredMin > 0) {
+
+        if (diffMin > requiredMin) {
+
+          const otMin =
+            diffMin - requiredMin;
+
+          /* OT sirf allow hone par */
+          if (otAllow) {
+            otText = `OT ${formatMinutes(otMin)}`;
+          } else {
+            otText = "Complete";
+          }
+
+        } else if (
+          diffMin === requiredMin
+        ) {
+          otText = "Complete";
+
+        } else {
+
+          const shortMin =
+            requiredMin - diffMin;
+
+          otText =
+            `Short ${formatMinutes(shortMin)}`;
+        }
+      }
+    }
+
+    /* final text */
+    if (
+      lateText !== "On Time" &&
+      otText !== "-"
+    ) {
+      finalStatus =
+        `${lateText} | ${otText}`;
+
+    } else if (
+      lateText !== "On Time"
+    ) {
+      finalStatus = lateText;
+
+    } else {
+      finalStatus = otText;
     }
 
     return {
       inTime: inPunch?.time || "-",
       outTime: outPunch?.time || "-",
       workingHours,
-      lateOt,
+      lateOt: finalStatus,
+      lateText,
+      otText,
+      otAllow,
       shiftTime,
       requiredHours,
     };

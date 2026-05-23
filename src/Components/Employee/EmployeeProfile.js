@@ -853,19 +853,7 @@ export default function EmployeeProfile() {
               </div>
             </div>
 
-            <div className="bg-white border border-rose-100 shadow-sm rounded-2xl px-4 py-2">
-              <button
-                onClick={() => setShowKyc(true)}
-                className="h-12 px-6 rounded-2xl mr-4 bg-gradient-to-r from-slate-900 to-slate-700 text-white text-sm font-bold transition-all flex items-center gap-2"
-              >
-                <FileText size={18} />
-                KYC Form
-              </button>
-              <button
-                onClick={downloadIdCard}
-                className="h-12 px-6 rounded-2xl mr-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-bold transition-all">
-                Download ID Card
-              </button>
+            <div className="flex bg-white border border-rose-100 shadow-sm rounded-2xl px-4 py-2">
               <button
                 className={`h-12 px-6 rounded-2xl mr-4 font-semibold ${employee.salary_type === "Hold"
                   ? "bg-rose-100 text-rose-600"
@@ -881,6 +869,18 @@ export default function EmployeeProfile() {
                   }`}
               >
                 User Status : {employee.status}
+              </button>
+              <button
+                onClick={() => setShowKyc(true)}
+                className="h-12 px-6 rounded-2xl ml-4 mr-4 bg-gradient-to-r from-slate-900 to-slate-700 text-white text-sm font-bold transition-all flex items-center gap-2"
+              >
+                <FileText size={18} />
+                KYC Form
+              </button>
+              <button
+                onClick={downloadIdCard}
+                className="h-12 px-6 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 text-white text-sm font-bold transition-all">
+                Download ID Card
               </button>
             </div>
           </div>
@@ -1019,7 +1019,7 @@ export default function EmployeeProfile() {
               transition={{ duration: 0.5 }}
               className="mt-6"
             >
-              <Chart10 />
+              <Chart10 complaintData={empComplaint}  penaltyData={penaltyData} />
             </motion.div>
           </motion.div>
         </div>

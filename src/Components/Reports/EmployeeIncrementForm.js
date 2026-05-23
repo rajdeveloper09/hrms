@@ -6,13 +6,13 @@ import {
   AlertTriangle,
   ShieldAlert,
   Save,
-  CheckCircle2,
   Search,
   Sparkles,
   Trash2,
+  CalendarDays,
 } from "lucide-react";
 import SideNav from "../SideNav";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 const API_BASE = "https://ojmee.in/employee";
 const CURRENT_PATH = "/add-increment";
@@ -37,21 +37,27 @@ export default function EmployeeIncrementDashboard() {
   const canView = role === "superAdmin" || Number(pagePermission.can_view) === 1;
   const canAdd = role === "superAdmin" || Number(pagePermission.can_add) === 1;
   const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
-  const canDelete =
-    role === "superAdmin" || Number(pagePermission.can_delete) === 1;
+  const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
 
   useEffect(() => {
     loadPage();
   }, []);
 
-  const filteredCompleted = useMemo(() => {
-    return completed.filter((item) => {
-      return (
-        item.emp_id?.toLowerCase().includes(search.toLowerCase()) ||
-        item.emp_name?.toLowerCase().includes(search.toLowerCase())
-      );
-    });
-  }, [completed, search]);
+  const getDefaultNextDate = () => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 6);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const safeJson = async (res) => {
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      console.log("Invalid API Response:", text);
+      return { success: false, message: "Invalid JSON response from API" };
+    }
+  };
 
   const loadPage = async () => {
     setLoading(true);
@@ -62,15 +68,12 @@ export default function EmployeeIncrementDashboard() {
   const fetchEmployees = async () => {
     try {
       const res = await fetch(`${API_BASE}/get_employee`);
-      const json = await res.json();
+      const json = await safeJson(res);
 
       if (json.status || json.success) {
         const list = json.data || [];
         setEmployees(list);
-
-        list.forEach((emp) => {
-          fetchRecommendation(emp.employee_id);
-        });
+        list.forEach((emp) => fetchRecommendation(emp.employee_id));
       }
     } catch (err) {
       console.error(err);
@@ -81,7 +84,7 @@ export default function EmployeeIncrementDashboard() {
   const fetchCompleted = async () => {
     try {
       const res = await fetch(`${API_BASE}/get_completed_increments`);
-      const json = await res.json();
+      const json = await safeJson(res);
 
       if (json.success || json.status) {
         setCompleted(json.data || []);
@@ -96,20 +99,12 @@ export default function EmployeeIncrementDashboard() {
       const res = await fetch(
         `${API_BASE}/get_increment_recommendation?emp_id=${empId}`
       );
-
-      const text = await res.text();
-      let json;
-
-      try {
-        json = JSON.parse(text);
-      } catch {
-        console.log("Invalid JSON:", text);
-        return;
-      }
+      const json = await safeJson(res);
 
       if (json.success || json.status) {
         const safeData = {
           ...json.data,
+          eligible: json.data?.eligible === true,
           final_recommend_percent: Math.max(
             0,
             Number(json.data?.final_recommend_percent || 0)
@@ -127,9 +122,11 @@ export default function EmployeeIncrementDashboard() {
 
         setForms((prev) => ({
           ...prev,
-          [empId]: {
+          [empId]: prev[empId] || {
             custom_increment_type: "auto",
             custom_increment_value: "",
+            next_increment_date:
+              safeData.next_default_date || getDefaultNextDate(),
             remark: "",
           },
         }));
@@ -138,6 +135,16 @@ export default function EmployeeIncrementDashboard() {
       console.error(err);
     }
   };
+
+  const filteredCompleted = useMemo(() => {
+    const q = search.toLowerCase();
+    return completed.filter((item) => {
+      return (
+        item.emp_id?.toLowerCase().includes(q) ||
+        item.emp_name?.toLowerCase().includes(q)
+      );
+    });
+  }, [completed, search]);
 
   const completedMap = useMemo(() => {
     const map = {};
@@ -148,12 +155,14 @@ export default function EmployeeIncrementDashboard() {
   }, [completed]);
 
   const upcomingEmployees = useMemo(() => {
+    const q = search.toLowerCase();
+
     return employees.filter((emp) => {
       const last = completedMap[emp.employee_id];
 
       const match =
-        emp.employee_id?.toLowerCase().includes(search.toLowerCase()) ||
-        emp.full_name?.toLowerCase().includes(search.toLowerCase());
+        emp.employee_id?.toLowerCase().includes(q) ||
+        emp.full_name?.toLowerCase().includes(q);
 
       if (!match) return false;
       if (!last) return true;
@@ -188,10 +197,11 @@ export default function EmployeeIncrementDashboard() {
     const form = forms[empId];
 
     if (!rec || !form) {
-      return {
-        currentPercent: 0,
-        amount: 0,
-      };
+      return { currentPercent: 0, amount: 0 };
+    }
+
+    if (rec.eligible === false) {
+      return { currentPercent: 0, amount: 0 };
     }
 
     const salary = Number(rec.current_salary || 0);
@@ -219,26 +229,37 @@ export default function EmployeeIncrementDashboard() {
 
   const saveIncrement = async (empId) => {
     if (!canAdd) {
-      return alert("You do not have add permission");
+      return toast.error("You do not have add permission");
     }
 
     const rec = recommendations[empId];
     const form = forms[empId];
+    const emp = employees.find((e) => e.employee_id === empId);
 
     if (!rec || !form) {
-      alert("Recommendation not loaded");
+      toast.error("Recommendation not loaded");
+      return;
+    }
+
+    if (!form.next_increment_date) {
+      toast.error("Please select next increment date");
+      return;
+    }
+
+    if (!form.remark || form.remark.trim() === "") {
+      toast.error("Please enter remark");
+      return;
+    }
+
+    if (rec.eligible === false) {
+      toast.error(rec.message || "You are eligible after 1 month");
       return;
     }
 
     const preview = getPreview(empId);
 
-    if (preview.currentPercent < 0 || preview.amount < 0) {
-      alert("Increment value cannot be less than 0");
-      return;
-    }
-
     const ok = window.confirm(
-      `Are you sure you want to complete increment for ${empId}?\n\nIncrement: ${preview.currentPercent}%\nAmount: ${formatMoney(preview.amount)}`
+      `Are you sure you want to complete increment for ${empId}?\n\nIncrement: ${preview.currentPercent}%\nAmount: ${formatMoney(preview.amount)}\nNext Increment Date: ${form.next_increment_date}`
     );
 
     if (!ok) return;
@@ -247,7 +268,22 @@ export default function EmployeeIncrementDashboard() {
 
     try {
       const payload = {
-        ...rec,
+        emp_id: rec.emp_id || empId,
+        emp_name: rec.emp_name || rec.full_name || emp?.full_name || "",
+        current_salary: Number(rec.current_salary || emp?.basic_salary || 0),
+
+        last_increment_date:
+          rec.last_increment_date || new Date().toISOString().slice(0, 10),
+
+        avg_late_minutes: Number(rec.avg_late_minutes || 0),
+        complaint_count: Number(rec.complaint_count || 0),
+        penalty_count: Number(rec.penalty_count || 0),
+
+        late_deduction_percent: Number(rec.late_deduction_percent || 0),
+        complaint_deduction_percent: Number(rec.complaint_deduction_percent || 0),
+        penalty_deduction_percent: Number(rec.penalty_deduction_percent || 0),
+        base_increment_percent: Number(rec.base_increment_percent || 0),
+
         final_recommend_percent: Math.max(
           0,
           Number(rec.final_recommend_percent || 0)
@@ -256,12 +292,14 @@ export default function EmployeeIncrementDashboard() {
           0,
           Number(rec.final_recommend_amount || 0)
         ),
-        custom_increment_type: form.custom_increment_type,
+
+        custom_increment_type: form.custom_increment_type || "auto",
         custom_increment_value: Math.max(
           0,
           Number(form.custom_increment_value || 0)
         ),
-        remark: form.remark,
+        next_increment_date: form.next_increment_date,
+        remark: form.remark || "",
       };
 
       const res = await fetch(`${API_BASE}/save_increment_recommendation`, {
@@ -272,11 +310,12 @@ export default function EmployeeIncrementDashboard() {
         body: JSON.stringify(payload),
       });
 
-      const json = await res.json();
+      const json = await safeJson(res);
 
       if (json.success || json.status) {
-        alert("Increment completed successfully");
+        alert(json.message || "Increment completed successfully");
         await fetchCompleted();
+        await fetchEmployees();
       } else {
         alert(json.message || "Save failed");
       }
@@ -301,16 +340,15 @@ export default function EmployeeIncrementDashboard() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          id: item.id,
-        }),
+        body: JSON.stringify({ id: item.id }),
       });
 
-      const json = await res.json();
+      const json = await safeJson(res);
 
       if (json.success || json.status) {
         alert(json.message || "Increment deleted successfully");
-        fetchCompleted();
+        await fetchCompleted();
+        await fetchEmployees();
       } else {
         alert(json.message || "Delete failed");
       }
@@ -431,7 +469,7 @@ export default function EmployeeIncrementDashboard() {
                                 {emp.employee_id} - {emp.full_name}
                               </h3>
                               <p className="text-xs text-slate-300">
-                                Joining: {emp.joining_date || "N/A"}
+                                Joining Date: {emp.joining_date || "N/A"}
                               </p>
                             </div>
 
@@ -455,18 +493,27 @@ export default function EmployeeIncrementDashboard() {
                               />
                               <MiniBox
                                 icon={<Clock size={17} />}
-                                title="Shift"
-                                value={rec.shift_time}
+                                title="Shift Start"
+                                value={
+                                  rec.shift_time
+                                    ? new Date(`2000-01-01T${rec.shift_time}`).toLocaleTimeString("en-US", {
+                                      hour: "numeric",
+                                      minute: "2-digit",
+                                      hour12: true,
+                                    })
+                                    : "-"
+                                }
                               />
                               <MiniBox
                                 icon={<AlertTriangle size={17} />}
                                 title="Complaints"
-                                value={rec.complaint_count}
+                                value={Number(rec.complaint_count || 0)}
                               />
+
                               <MiniBox
                                 icon={<ShieldAlert size={17} />}
                                 title="Penalty"
-                                value={rec.penalty_count}
+                                value={Number(rec.penalty_count || 0)}
                               />
                             </div>
 
@@ -475,28 +522,28 @@ export default function EmployeeIncrementDashboard() {
                                 <p className="text-sm text-slate-500">
                                   Auto Recommendation
                                 </p>
+
                                 <p
-                                  className={`font-black text-xl ${
-                                    Number(rec.final_recommend_percent) >= 0
-                                      ? "text-emerald-600"
-                                      : "text-red-600"
-                                  }`}
+                                  className={`font-black text-xl ${rec.eligible === false ? "text-red-600" : "text-emerald-600"
+                                    }`}
                                 >
-                                  {Math.max(
-                                    0,
-                                    Number(rec.final_recommend_percent || 0)
-                                  )}
-                                  %
+                                  {Math.max(0, Number(rec.final_recommend_percent || 0))}%
                                 </p>
+
+
                               </div>
+
+                              <p className="text-xs text-slate-400 mt-1">
+                                {rec.eligible === false
+                                  ? rec.message || "You are eligible after 1 month"
+                                  : `${rec.completed_months || 0} month completed = ${rec.base_increment_percent || 0
+                                  }% base increment`}
+                              </p>
 
                               <p className="text-xs text-slate-400 mt-1">
                                 Amount:{" "}
                                 {formatMoney(
-                                  Math.max(
-                                    0,
-                                    Number(rec.final_recommend_amount || 0)
-                                  )
+                                  Math.max(0, Number(rec.final_recommend_amount || 0))
                                 )}
                               </p>
                             </div>
@@ -557,6 +604,27 @@ export default function EmployeeIncrementDashboard() {
                               </div>
                             </div>
 
+                            <div>
+                              <label className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                                <CalendarDays size={14} />
+                                Next Increment Date
+                              </label>
+                              <input
+                                type="date"
+                                value={form.next_increment_date || ""}
+                                required
+                                onChange={(e) =>
+                                  handleFormChange(
+                                    emp.employee_id,
+                                    "next_increment_date",
+                                    e.target.value
+                                  )
+                                }
+                                disabled={!canAdd}
+                                className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                              />
+                            </div>
+
                             <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4">
                               <p className="text-xs text-blue-600 font-bold">
                                 Selected Increment Preview
@@ -573,6 +641,7 @@ export default function EmployeeIncrementDashboard() {
 
                             <textarea
                               value={form.remark || ""}
+                              required
                               onChange={(e) =>
                                 handleFormChange(
                                   emp.employee_id,
@@ -586,20 +655,20 @@ export default function EmployeeIncrementDashboard() {
                               className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:ring-2 focus:ring-blue-500 read-only:bg-slate-100 read-only:cursor-not-allowed"
                             />
 
-                            {canAdd ? (
+                            {canAdd && rec.eligible !== false ? (
                               <button
                                 onClick={() => saveIncrement(emp.employee_id)}
                                 disabled={savingId === emp.employee_id}
                                 className="w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-black flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
                               >
                                 <Save size={18} />
-                                {savingId === emp.employee_id
-                                  ? "Saving..."
-                                  : "Complete Increment"}
+                                {savingId === emp.employee_id ? "Saving..." : "Complete Increment"}
                               </button>
                             ) : (
                               <div className="w-full bg-yellow-50 border border-yellow-200 text-yellow-700 py-3 rounded-xl font-black text-center">
-                                View Only Permission - Add Not Allowed
+                                {rec.eligible === false
+                                  ? rec.message || "You are eligible after 1 month"
+                                  : "View Only Permission - Add Not Allowed"}
                               </div>
                             )}
                           </div>
@@ -616,13 +685,10 @@ export default function EmployeeIncrementDashboard() {
                 <h2 className="text-xl font-black text-slate-800">
                   Completed Increment
                 </h2>
-                <p className="text-sm text-slate-500">
-                  Completed employee increment list
-                </p>
               </div>
 
               <div className="p-5 max-h-[75vh] overflow-y-auto space-y-4">
-                {completed.length === 0 && (
+                {filteredCompleted.length === 0 && (
                   <div className="text-center py-10 text-slate-500">
                     No completed increment
                   </div>
@@ -633,46 +699,33 @@ export default function EmployeeIncrementDashboard() {
                     key={item.id}
                     className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-black text-slate-800">
-                          {item.emp_id} - {item.emp_name}
-                        </h3>
-                        <p className="text-xs text-slate-400">
-                          {item.created_at}
-                        </p>
-                      </div>
-
-                      <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                        <CheckCircle2 size={21} />
-                      </div>
-                    </div>
+                    <h3 className="font-black text-slate-800">
+                      {item.emp_id} - {item.emp_name}
+                    </h3>
 
                     <div className="grid grid-cols-2 gap-3 mt-4">
                       <HistoryBox
-                        title="Current"
-                        value={`${
-                          item.current_recommendation_percent ||
-                          item.final_recommend_percent
-                        }%`}
-                      />
-                      <HistoryBox
                         title="Final"
-                        value={`${
-                          item.final_increment_percent ||
-                          item.final_recommend_percent
-                        }%`}
+                        value={`${item.final_increment_percent ||
+                          item.final_recommend_percent ||
+                          0
+                          }%`}
                       />
                       <HistoryBox
                         title="Amount"
                         value={formatMoney(
                           item.final_increment_amount ||
-                            item.final_recommend_amount
+                          item.final_recommend_amount ||
+                          0
                         )}
                       />
                       <HistoryBox
                         title="Next Date"
                         value={item.next_increment_date || "N/A"}
+                      />
+                      <HistoryBox
+                        title="Status"
+                        value={item.approval_status || "Approved"}
                       />
                     </div>
 
@@ -700,8 +753,7 @@ export default function EmployeeIncrementDashboard() {
           {!canEdit && (
             <p className="text-xs text-slate-400">
               Edit permission is not used on this page because increment records
-              are completed as new entries. Add permission controls “Complete
-              Increment”; Delete permission controls completed record removal.
+              are completed as new entries.
             </p>
           )}
         </div>
