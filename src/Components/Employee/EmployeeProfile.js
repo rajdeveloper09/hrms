@@ -22,7 +22,7 @@ import {
 import SideNav from "../SideNav";
 import { API_BASE_URL } from "../../config/api";
 import { Chart10 } from "../Charts/Chart10";
-import EmployeeTabsSection from "./EmployeeTabsSection";
+import EmployeeProfileTabsSection from "./EmployeeProfileTabsSection";
 
 export default function EmployeeProfile() {
 
@@ -1029,7 +1029,13 @@ export default function EmployeeProfile() {
               transition={{ duration: 0.5 }}
               className="mt-6"
             >
-              <Chart10 complaintData={empComplaint} penaltyData={penaltyData} />
+              <Chart10
+                employeeId={employee.employee_id}
+                complaintData={empComplaint}
+                penaltyData={penaltyData}
+                attendanceData={empAttendance}
+                employeeData={empList}
+              />
             </motion.div>
           </motion.div>
         </div>
@@ -1039,7 +1045,8 @@ export default function EmployeeProfile() {
           {/* LEFT */}
 
           <div className="col-span-12 xl:col-span-8">
-            <EmployeeTabsSection
+            <EmployeeProfileTabsSection
+              employeeId={employee.employee_id}
               attendanceData={empAttendance}
               salaryData={salaryData}
               bonusData={bonusData}
