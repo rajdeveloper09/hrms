@@ -223,17 +223,16 @@ export default function EmployeeProfile() {
     );
 
     fetchData(
-      `${API_BASE_URL}/emp_increments`,
+      `${API_BASE_URL}/get_completed_increments`,
       setEmpIncrement,
       "Increment"
     );
+
     fetchData(
       `${API_BASE_URL}/emp_esicpf`,
       setEmpEsicPfData,
       "Increment"
     );
-
-
 
     fetchData(
       `${API_BASE_URL}/emp_overtime`,
@@ -1035,6 +1034,7 @@ export default function EmployeeProfile() {
                 penaltyData={penaltyData}
                 attendanceData={empAttendance}
                 employeeData={empList}
+                incrementData={empIncrement}
               />
             </motion.div>
           </motion.div>

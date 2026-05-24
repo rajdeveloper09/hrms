@@ -713,23 +713,35 @@ const EmployeeProfileTabsSection = ({
           <tr>
 
             <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
-              Employee
+              Inc Date
             </th>
 
             <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
-              Suspected
+              Last Inc. Date
             </th>
 
             <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
-              Type
+              Late Avg Min.
+            </th>
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Complaint
+            </th>
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Before Inc.
+            </th>
+             <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+             Penalty
             </th>
 
             <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
-              Status
+              After Inc.
             </th>
 
             <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
-              Date
+              Final Inc.
+            </th>
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Next Inc. Date
             </th>
 
           </tr>
@@ -1241,23 +1253,66 @@ const EmployeeProfileTabsSection = ({
             >
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {item.emp_id}
+                {
+                  item.created_at
+                    ? new Date(
+                      String(item.created_at).replace(" ", "T")
+                    ).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                    : "-"
+                }
+              </td>
+              <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
+                {
+                  item.created_at
+                    ? new Date(
+                      String(item.last_increment_date).replace(" ", "T")
+                    ).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                    : "-"
+                }
+              </td>
+              <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
+                {item.avg_late_minutes}
               </td>
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {item.emp_id}
+                {Math.round(item.complaint_deduction_percent)}
               </td>
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {item.emp_id}
+                {Math.round(item.penalty_deduction_percent)}
+              </td>
+              <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
+                {Math.round(item.old_salary)}
               </td>
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {item.emp_id}
+                {Math.round(item.new_salary)}
               </td>
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
-                {item.emp_id}
+                {Math.round(item.new_salary - item.old_salary)}
+              </td>
+
+              <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
+                {
+                  item.created_at
+                    ? new Date(
+                      String(item.next_increment_date).replace(" ", "T")
+                    ).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                    : "-"
+                }
               </td>
 
             </tr>

@@ -25,6 +25,7 @@ export const Chart10 = ({
   penaltyData = [],
   attendanceData = [],
   employeeData = [],
+  incrementNewData = [],
 }) => {
 
   const currentEmpId = String(employeeId || "").trim().toUpperCase();
@@ -172,21 +173,47 @@ export const Chart10 = ({
     penaltyDeduction -
     lateDeduction
   );
-  const lastIncrement = 2000;
-  const recommendationAmount = finalPercent;
+  const incrementRecord = Array.isArray(incrementNewData)
+    ? incrementNewData.find(
+      (item) =>
+        String(item.emp_id || "")
+          .trim()
+          .toUpperCase() === currentEmpId
+    )
+    : null;
+
+  const oldSalary = Number(incrementRecord?.old_salary || 0);
+  const newSalary = Number(incrementRecord?.new_salary || 0);
+
+  const lastIncrement = Number(
+    incrementRecord?.custom_increment_value ||
+    incrementRecord?.final_recommend_amount ||
+    incrementRecord?.final_increment_amount ||
+    0
+  );
+
+  const recommendationAmount = Number(
+    incrementRecord?.final_increment_amount ||
+    incrementRecord?.final_recommend_amount ||
+    0
+  );
+
+  const recommendationPercent = Number(
+    incrementRecord?.final_increment_percent ||
+    incrementRecord?.final_recommend_percent ||
+    finalPercent ||
+    0
+  );
+
+  const nextIncrementDate = incrementRecord?.next_increment_date || "-";
+
   const isGrowth = recommendationAmount >= lastIncrement;
 
   const data = [
-    { name: "Jan", value: 1200 },
-    { name: "Feb", value: 1400 },
-    { name: "Mar", value: 1600 },
-    { name: "Apr", value: 1700 },
-    { name: "May", value: 1900 },
-    { name: "Jun", value: 2100 },
-    { name: "Jul", value: 2200 },
-    { name: "Aug", value: 2350 },
-    { name: "Sep", value: 2450 },
-    { name: "Oct", value: recommendationAmount },
+    { name: "Old Salary", value: oldSalary },
+    { name: "Last Inc", value: lastIncrement },
+    { name: "New Salary", value: newSalary },
+    { name: "Recommend", value: recommendationAmount },
   ];
 
   const growthPercent = Math.round(
@@ -322,7 +349,7 @@ export const Chart10 = ({
               <div className="text-[12px] text-slate-500">Last Increment</div>
 
               <div className="mt-2 text-3xl font-bold text-rose-700">
-                ₹{lastIncrement}
+                ₹{lastIncrement.toLocaleString("en-IN")}
               </div>
 
               <div className="mt-2 inline-flex bg-rose-100 text-rose-700 text-xs px-3 py-1 rounded-full">
@@ -346,7 +373,7 @@ export const Chart10 = ({
                 className={`mt-2 text-3xl font-bold ${isGrowth ? "text-emerald-600" : "text-pink-600"
                   }`}
               >
-                {finalPercent}%
+               {recommendationPercent}%
               </div>
 
               <div
@@ -391,7 +418,7 @@ export const Chart10 = ({
                 className={`text-lg font-bold ${isGrowth ? "text-emerald-600" : "text-rose-600"
                   }`}
               >
-                ₹{recommendationAmount}
+                ₹{recommendationAmount.toLocaleString("en-IN")}
               </div>
             </div>
           </div>

@@ -202,7 +202,7 @@ export default function EmployeeIncrementDashboard() {
         remark: form.remark,
       };
 
-      const res = await fetch(`${API_BASE}/save_increment_recommendation`, {
+      const res = await fetch(`${API_BASE}/post_increment_recommendation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

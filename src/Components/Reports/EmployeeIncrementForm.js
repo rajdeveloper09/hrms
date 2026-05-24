@@ -26,6 +26,8 @@ export default function EmployeeIncrementDashboard() {
   const [search, setSearch] = useState("");
   const [forms, setForms] = useState({});
 
+  const [attendanceData, setAttendanceData] = useState([]);
+
   const role = localStorage.getItem("role") || "view";
   const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
 
@@ -61,8 +63,74 @@ export default function EmployeeIncrementDashboard() {
 
   const loadPage = async () => {
     setLoading(true);
-    await Promise.all([fetchEmployees(), fetchCompleted()]);
+    await Promise.all([fetchEmployees(), fetchCompleted(), fetchAttendance()]);
     setLoading(false);
+  };
+
+  const fetchAttendance = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/emp_attendance`);
+      const json = await safeJson(res);
+
+      const list = json.data || json.result || json || [];
+      setAttendanceData(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+
+  const toMinutes = (time) => {
+    if (!time) return 0;
+
+    const str = String(time).trim();
+
+    if (str.includes(" ")) {
+      return toMinutes(str.split(" ")[1]);
+    }
+
+    if (str.includes("AM") || str.includes("PM")) {
+      const date = new Date(`2000-01-01 ${str}`);
+      return date.getHours() * 60 + date.getMinutes();
+    }
+
+    const [h, m] = str.split(":").map(Number);
+    return (Number(h) || 0) * 60 + (Number(m) || 0);
+  };
+
+  const getAverageLateMinutes = (empId, shiftTime) => {
+    const list = attendanceData.filter(
+      (item) =>
+        String(item.employee_id || item.emp_id || "")
+          .trim()
+          .toUpperCase() === String(empId).trim().toUpperCase()
+    );
+
+    const lateList = list
+      .map((item) => {
+        const inPunches =
+          item.punches?.filter((p) => Number(p.status) === 0) || [];
+
+        const inPunch = inPunches[0];
+
+        if (!inPunch?.time) return 0;
+
+        const shiftMin = toMinutes(shiftTime || "09:30");
+        const inMin = toMinutes(inPunch.time);
+
+        if (!shiftMin || !inMin) return 0;
+
+        return inMin > shiftMin ? inMin - shiftMin : 0;
+      })
+      .filter((mins) => mins > 0);
+
+    if (lateList.length === 0) return 0;
+
+    return Number(
+      (
+        lateList.reduce((sum, mins) => sum + mins, 0) / lateList.length
+      ).toFixed(2)
+    );
   };
 
   const fetchEmployees = async () => {
@@ -100,6 +168,88 @@ export default function EmployeeIncrementDashboard() {
         `${API_BASE}/get_increment_recommendation?emp_id=${empId}`
       );
       const json = await safeJson(res);
+
+      if (json.success || json.status) {
+
+        const emp = employees.find(
+          (e) => e.employee_id === empId
+        );
+
+        const shiftTime =
+          json.data?.shift_time ||
+          emp?.shift_time ||
+          emp?.start_time ||
+          emp?.shift_start_time ||
+          "09:30";
+
+        const avgLate = getAverageLateMinutes(
+          empId,
+          shiftTime
+        );
+
+        const lateDeduction = Number(
+          ((avgLate / 15) * 1).toFixed(2)
+        );
+
+        const basePercent = Number(
+          json.data?.base_increment_percent || 0
+        );
+
+        const complaintDeduction = Number(
+          json.data?.complaint_deduction_percent || 0
+        );
+
+        const penaltyDeduction = Number(
+          json.data?.penalty_deduction_percent || 0
+        );
+
+        const finalPercent = Math.max(
+          0,
+          Number(
+            (
+              basePercent -
+              lateDeduction -
+              complaintDeduction -
+              penaltyDeduction
+            ).toFixed(2)
+          )
+        );
+
+        const salary = Number(
+          json.data?.current_salary || 0
+        );
+
+        const finalAmount = Number(
+          ((salary * finalPercent) / 100).toFixed(2)
+        );
+
+        const safeData = {
+          ...json.data,
+          shift_time: shiftTime,
+          avg_late_minutes: avgLate,
+          late_deduction_percent: lateDeduction,
+          final_recommend_percent: finalPercent,
+          final_recommend_amount: finalAmount,
+          eligible: json.data?.eligible === true,
+        };
+
+        setRecommendations((prev) => ({
+          ...prev,
+          [empId]: safeData,
+        }));
+
+        setForms((prev) => ({
+          ...prev,
+          [empId]: prev[empId] || {
+            custom_increment_type: "auto",
+            custom_increment_value: "",
+            next_increment_date:
+              safeData.next_default_date ||
+              getDefaultNextDate(),
+            remark: "",
+          },
+        }));
+      }
 
       if (json.success || json.status) {
         const safeData = {
@@ -302,7 +452,7 @@ export default function EmployeeIncrementDashboard() {
         remark: form.remark || "",
       };
 
-      const res = await fetch(`${API_BASE}/save_increment_recommendation`, {
+      const res = await fetch(`${API_BASE}/post_increment_recommendation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -469,7 +619,15 @@ export default function EmployeeIncrementDashboard() {
                                 {emp.employee_id} - {emp.full_name}
                               </h3>
                               <p className="text-xs text-slate-300">
-                                Joining Date: {emp.joining_date || "N/A"}
+                                Joining Date: {
+                                  emp.joining_date
+                                    ? new Date(emp.joining_date).toLocaleDateString("en-IN", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    })
+                                    : "N/A"
+                                }
                               </p>
                             </div>
 
@@ -484,26 +642,14 @@ export default function EmployeeIncrementDashboard() {
                             Recommendation loading...
                           </div>
                         ) : (
-                          <div className="p-5 space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
+                          <div className="p-3 space-y-3">
+                            <div className="grid grid-cols-3 gap-2">
                               <MiniBox
                                 icon={<IndianRupee size={17} />}
                                 title="Salary"
                                 value={formatMoney(rec.current_salary)}
                               />
-                              <MiniBox
-                                icon={<Clock size={17} />}
-                                title="Shift Start"
-                                value={
-                                  rec.shift_time
-                                    ? new Date(`2000-01-01T${rec.shift_time}`).toLocaleTimeString("en-US", {
-                                      hour: "numeric",
-                                      minute: "2-digit",
-                                      hour12: true,
-                                    })
-                                    : "-"
-                                }
-                              />
+
                               <MiniBox
                                 icon={<AlertTriangle size={17} />}
                                 title="Complaints"
@@ -514,6 +660,24 @@ export default function EmployeeIncrementDashboard() {
                                 icon={<ShieldAlert size={17} />}
                                 title="Penalty"
                                 value={Number(rec.penalty_count || 0)}
+                              />
+                              <MiniBox
+                                icon={<Clock size={17} />}
+                                title="Shift Start"
+                                value={
+                                  rec.shift_time
+                                    ? new Date(`2000-01-01 ${rec.shift_time}`).toLocaleTimeString("en-IN", {
+                                      hour: "numeric",
+                                      minute: "2-digit",
+                                      hour12: true,
+                                    })
+                                    : "-"
+                                }
+                              />
+                              <MiniBox
+                                icon={<Clock size={17} />}
+                                title="Avg Late"
+                                value={`${Number(rec.avg_late_minutes || 0)}m`}
                               />
                             </div>
 
