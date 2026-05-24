@@ -26,6 +26,7 @@ export const Chart10 = ({
   attendanceData = [],
   employeeData = [],
 }) => {
+
   const currentEmpId = String(employeeId || "").trim().toUpperCase();
 
   const employeeMap = React.useMemo(() => {
@@ -96,25 +97,25 @@ export const Chart10 = ({
 
   const complaintCount = Array.isArray(complaintData)
     ? complaintData.filter(
-        (item) =>
-          String(item.emp_id || "").trim().toUpperCase() === currentEmpId
-      ).length
+      (item) =>
+        String(item.emp_id || "").trim().toUpperCase() === currentEmpId
+    ).length
     : 0;
 
   const penaltyCount = Array.isArray(penaltyData)
     ? penaltyData.filter(
-        (item) =>
-          String(item.emp_id || "").trim().toUpperCase() === currentEmpId
-      ).length
+      (item) =>
+        String(item.emp_id || "").trim().toUpperCase() === currentEmpId
+    ).length
     : 0;
 
   const empAttendanceList = Array.isArray(attendanceData)
     ? attendanceData.filter(
-        (item) =>
-          String(item.employee_id || item.emp_id || "")
-            .trim()
-            .toUpperCase() === currentEmpId
-      )
+      (item) =>
+        String(item.employee_id || item.emp_id || "")
+          .trim()
+          .toUpperCase() === currentEmpId
+    )
     : [];
 
   const lateMinutesList = empAttendanceList
@@ -124,13 +125,55 @@ export const Chart10 = ({
   const avgLateMinutes =
     lateMinutesList.length > 0
       ? Math.round(
-          lateMinutesList.reduce((sum, mins) => sum + mins, 0) /
-            lateMinutesList.length
-        )
+        lateMinutesList.reduce((sum, mins) => sum + mins, 0) /
+        lateMinutesList.length
+      )
       : 0;
 
+  /* ===== COMPLETED MONTHS ===== */
+
+  const currentEmployee = employeeMap[currentEmpId] || {};
+
+  const joiningDate =
+    currentEmployee.joining_date ||
+    currentEmployee.date_of_joining ||
+    currentEmployee.created_at;
+
+  let completedMonths = 0;
+
+  if (joiningDate) {
+    const join = new Date(joiningDate);
+    const today = new Date();
+
+    completedMonths =
+      (today.getFullYear() - join.getFullYear()) * 12 +
+      (today.getMonth() - join.getMonth());
+
+    completedMonths = Math.max(0, completedMonths);
+  }
+
+  /* ===== INCREMENT FORMULA ===== */
+
+  const baseIncrement = completedMonths * 1;
+
+  const complaintDeduction =
+    Math.floor(complaintCount / 2) * 1;
+
+  const penaltyDeduction =
+    Math.floor(penaltyCount / 2) * 1;
+
+  const lateDeduction =
+    Math.floor(avgLateMinutes / 15) * 1;
+
+  const finalPercent = Math.max(
+    0,
+    baseIncrement -
+    complaintDeduction -
+    penaltyDeduction -
+    lateDeduction
+  );
   const lastIncrement = 2000;
-  const recommendationAmount = 2500;
+  const recommendationAmount = finalPercent;
   const isGrowth = recommendationAmount >= lastIncrement;
 
   const data = [
@@ -186,11 +229,10 @@ export const Chart10 = ({
               </div>
 
               <div
-                className={`px-3 py-2 rounded-2xl border shadow-sm ${
-                  isGrowth
-                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                    : "bg-rose-100 text-rose-700 border-rose-200"
-                }`}
+                className={`px-3 py-2 rounded-2xl border shadow-sm ${isGrowth
+                  ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                  : "bg-rose-100 text-rose-700 border-rose-200"
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   {isGrowth ? (
@@ -293,28 +335,25 @@ export const Chart10 = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.55 }}
               whileHover={{ y: -5 }}
-              className={`rounded-2xl p-4 border text-center shadow-sm ${
-                isGrowth
-                  ? "bg-emerald-50 border-emerald-100"
-                  : "bg-pink-50 border-pink-100"
-              }`}
+              className={`rounded-2xl p-4 border text-center shadow-sm ${isGrowth
+                ? "bg-emerald-50 border-emerald-100"
+                : "bg-pink-50 border-pink-100"
+                }`}
             >
               <div className="text-[12px] text-slate-500">Recommendation</div>
 
               <div
-                className={`mt-2 text-3xl font-bold ${
-                  isGrowth ? "text-emerald-600" : "text-pink-600"
-                }`}
+                className={`mt-2 text-3xl font-bold ${isGrowth ? "text-emerald-600" : "text-pink-600"
+                  }`}
               >
-                ₹{recommendationAmount}
+                {finalPercent}%
               </div>
 
               <div
-                className={`mt-2 inline-flex text-xs px-3 py-1 rounded-full ${
-                  isGrowth
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-pink-100 text-pink-700"
-                }`}
+                className={`mt-2 inline-flex text-xs px-3 py-1 rounded-full ${isGrowth
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-pink-100 text-pink-700"
+                  }`}
               >
                 {growthPercent > 0 ? "+" : ""}
                 {growthPercent}%
@@ -341,18 +380,16 @@ export const Chart10 = ({
             </div>
 
             <div
-              className={`border rounded-2xl px-4 py-2 ${
-                isGrowth
-                  ? "bg-emerald-50 border-emerald-100"
-                  : "bg-rose-50 border-rose-100"
-              }`}
+              className={`border rounded-2xl px-4 py-2 ${isGrowth
+                ? "bg-emerald-50 border-emerald-100"
+                : "bg-rose-50 border-rose-100"
+                }`}
             >
               <div className="text-xs text-slate-500">Recommended</div>
 
               <div
-                className={`text-lg font-bold ${
-                  isGrowth ? "text-emerald-600" : "text-rose-600"
-                }`}
+                className={`text-lg font-bold ${isGrowth ? "text-emerald-600" : "text-rose-600"
+                  }`}
               >
                 ₹{recommendationAmount}
               </div>
