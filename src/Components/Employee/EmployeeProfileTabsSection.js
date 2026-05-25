@@ -15,6 +15,7 @@ const EmployeeProfileTabsSection = ({
   resignationData = [],
   assestData = [],
   employeeData = [],
+  advanceSalary = [],
 }) => {
 
   const currentEmpId = String(employeeId || "").trim().toLowerCase();
@@ -78,6 +79,7 @@ const EmployeeProfileTabsSection = ({
       EsicPF: esicPfData || [],
       Resignation: resignationData || [],
       Assest: assestData || [],
+      Advance: advanceSalary || [],
 
     };
 
@@ -94,6 +96,7 @@ const EmployeeProfileTabsSection = ({
     esicPfData,
     resignationData,
     assestData,
+    advanceSalary,
   ]);
 
   /* =========================================
@@ -532,6 +535,45 @@ const EmployeeProfileTabsSection = ({
           </tr>
         );
 
+      case "Advance":
+
+        return (
+          <tr>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Advance Date
+            </th>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Emp 1st
+            </th>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Complaint Type
+            </th>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Emp 2nd/Other
+            </th>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Suspected
+            </th>
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Complaint Raise
+            </th>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Remark
+            </th>
+
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Status
+            </th>
+
+          </tr>
+        );
+
       case "Complaint":
 
         return (
@@ -729,8 +771,8 @@ const EmployeeProfileTabsSection = ({
             <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
               Before Inc.
             </th>
-             <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
-             Penalty
+            <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
+              Penalty
             </th>
 
             <th className="text-left px-4 py-4 border-b border-white/10 font-bold uppercase tracking-wide text-xs whitespace-nowrap">
@@ -1254,9 +1296,9 @@ const EmployeeProfileTabsSection = ({
 
               <td className="px-4 py-4 border-b border-slate-100 font-medium text-slate-700 whitespace-nowrap">
                 {
-                  item.created_at
+                  item.effective_date
                     ? new Date(
-                      String(item.created_at).replace(" ", "T")
+                      String(item.effective_date).replace(" ", "T")
                     ).toLocaleDateString("en-IN", {
                       day: "2-digit",
                       month: "short",

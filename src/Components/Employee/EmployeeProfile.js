@@ -17,6 +17,8 @@ import {
   X,
   Image as ImageIcon,
   FileText,
+  TimerReset,
+  BadgeCheck,
 } from "lucide-react";
 
 import SideNav from "../SideNav";
@@ -136,6 +138,11 @@ export default function EmployeeProfile() {
 
   const [empList, setEmployeeNew] =
     useState([]);
+
+  const [salAdvance, setAdvance] =
+    useState([]);
+
+
 
   useEffect(() => {
 
@@ -264,6 +271,12 @@ export default function EmployeeProfile() {
       "Assest"
     );
 
+    fetchData(
+      `${API_BASE_URL}/emp_advance_salary`,
+      setAdvance,
+      "Assest"
+    );
+
   }, []);
 
   const userEmpId =
@@ -346,114 +359,132 @@ export default function EmployeeProfile() {
     );
   }
 
+  // CURRENT MONTH
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const empId = employee.employee_id;
+
+  const isCurrentMonth = (date) => {
+    if (!date) return false;
+    return String(date).slice(0, 7) === currentMonth;
+  };
+
+  const monthSalary =
+    Number(employee.basic_salary || 0) +
+    Number(employee.allowances || 0);
+
+  const totalBonus =
+    bonusData
+      ?.filter(
+        (item) =>
+          item.emp_id === empId &&
+          item.status === "Accepted" &&
+          isCurrentMonth(item.bonus_date || item.created_at)
+      )
+      .reduce((sum, item) => sum + Number(item.total_bonus_amount || 0), 0) || 0;
+
+  const totalReward =
+    rewardsData
+      ?.filter(
+        (item) =>
+          item.emp_id === empId &&
+          item.status === "Accepted" &&
+          isCurrentMonth(item.reward_date || item.created_at)
+      )
+      .reduce((sum, item) => sum + Number(item.total_reward_amount || 0), 0) || 0;
+
+  const totalOT =
+    empOvertime
+      ?.filter(
+        (item) =>
+          item.emp_id === empId &&
+          isCurrentMonth(item.ot_earn_month || item.created_at)
+      )
+      .reduce((sum, item) => sum + Number(item.ot_earn_amount || 0), 0) || 0;
+
+  const totalAdvance =
+    salAdvance
+      ?.filter(
+        (item) =>
+          item.emp_id === empId &&
+          item.status === "Accepted" &&
+          isCurrentMonth(item.updated_at || item.created_at)
+      )
+      .reduce((sum, item) => sum + Number(item.advance_amount || 0), 0) || 0;
+
+  const totalPenalty =
+    penaltyData
+      ?.filter(
+        (item) =>
+          item.emp_id === empId &&
+          item.status === "Completed" &&
+          isCurrentMonth(item.penalty_date || item.created_at)
+      )
+      .reduce((sum, item) => sum + Number(item.penalty_amount || 0), 0) || 0;
+
+  const totalPF =
+    empEsicPfData
+      ?.filter(
+        (item) =>
+          item.emp_id === empId &&
+          item.status === "Active"
+      )
+      .reduce((sum, item) => sum + Number(item.pf_employee_amount || 0), 0) || 0;
+
+  const totalESIC =
+    empEsicPfData
+      ?.filter(
+        (item) =>
+          item.emp_id === empId &&
+          item.status === "Active"
+      )
+      .reduce((sum, item) => sum + Number(item.esic_employee_amount || 0), 0) || 0;
+
+  const bonusReward = totalBonus + totalReward;
+  const esicPf = totalESIC + totalPF;
+
+  const netSalary =
+    monthSalary +
+    bonusReward +
+    totalOT -
+    totalAdvance -
+    totalPenalty -
+    esicPf;
+
   // STATS
   const stats = [
     {
       title: "Month Salary",
-      value: `₹${(
-        Number(employee.basic_salary || 0) +
-        Number(employee.allowances || 0)
-      ).toLocaleString("en-IN")}`,
+      value: `₹${monthSalary.toLocaleString("en-IN")}`,
       icon: <IndianRupee size={22} />,
     },
     {
-      title: "Total Bonus",
-      value: <span>
-        ₹{
-          bonusData
-            ?.filter(
-              (item) =>
-                item.emp_id === employee.employee_id &&
-                item.status === "Accepted"
-            )
-            .reduce(
-              (sum, item) =>
-                sum + Number(item.total_bonus_amount || 0),
-              0
-            )
-            .toLocaleString("en-IN")
-        }
-      </span>,
+      title: "Bonus + Reward",
+      value: `₹${bonusReward.toLocaleString("en-IN")}`,
       icon: <IndianRupee size={22} />,
     },
     {
-      title: "Total Rewards",
-      value: <span>
-        ₹{
-          rewardsData
-            ?.filter(
-              (item) =>
-                item.emp_id === employee.employee_id &&
-                item.status === "Accepted"
-            )
-            .reduce(
-              (sum, item) =>
-                sum + Number(item.total_reward_amount || 0),
-              0
-            )
-            .toLocaleString("en-IN")
-        }
-      </span>,
+      title: "Month OT",
+      value: `₹${totalOT.toLocaleString("en-IN")}`,
       icon: <IndianRupee size={22} />,
     },
     {
-      title: "Total Penalty",
-      value: <span>
-        ₹{
-          penaltyData
-            ?.filter(
-              (item) =>
-                item.emp_id === employee.employee_id &&
-                item.status === "Completed"
-            )
-            .reduce(
-              (sum, item) =>
-                sum + Number(item.penalty_amount || 0),
-              0
-            )
-            .toLocaleString("en-IN")
-        }
-      </span>,
+      title: "Advance",
+      value: `₹${totalAdvance.toLocaleString("en-IN")}`,
       icon: <IndianRupee size={22} />,
     },
     {
-      title: "Total PF",
-      value: <span>
-        ₹{
-          empEsicPfData
-            ?.filter(
-              (item) =>
-                item.emp_id === employee.employee_id &&
-                item.status === "Active"
-            )
-            .reduce(
-              (sum, item) =>
-                sum + Number(item.pf_employee_amount || 0),
-              0
-            )
-            .toLocaleString("en-IN")
-        }
-      </span>,
+      title: "Penalty",
+      value: `₹${totalPenalty.toLocaleString("en-IN")}`,
       icon: <IndianRupee size={22} />,
     },
     {
-      title: "Total ESIC",
-      value: <span>
-        ₹{
-          empEsicPfData
-            ?.filter(
-              (item) =>
-                item.emp_id === employee.employee_id &&
-                item.status === "Active"
-            )
-            .reduce(
-              (sum, item) =>
-                sum + Number(item.esic_employee_amount || 0),
-              0
-            )
-            .toLocaleString("en-IN")
-        }
-      </span>,
+      title: "ESIC + PF",
+      value: `₹${esicPf.toLocaleString("en-IN")}`,
+      icon: <IndianRupee size={22} />,
+    },
+    {
+      title: "Net Salary",
+      value: `₹${netSalary.toLocaleString("en-IN")}`,
       icon: <IndianRupee size={22} />,
     },
   ];
@@ -489,6 +520,14 @@ export default function EmployeeProfile() {
       file: employee.bank_proff,
     },
   ];
+
+  const currentOT = Array.isArray(empOvertime)
+    ? empOvertime.find(
+      (item) =>
+        String(item.emp_id || "").trim().toUpperCase() ===
+        String(employee.employee_id || "").trim().toUpperCase()
+    )
+    : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100 flex">
@@ -929,17 +968,20 @@ export default function EmployeeProfile() {
                   <p className="mt-2 text-rose-100">
                     {employee.designation}
                   </p>
+                  <p className="mt-2 text-rose-100">
+                    +91-{employee.mobile}
+                  </p>
                 </div>
               </div>
 
               {/* DETAILS */}
-              <div className="p-5 space-y-8">
-                <div className="flex items-center gap-3">
+              <div className="p-5 space-y-5">
+                {/* <div className="flex items-center gap-3">
                   <Phone className="text-rose-500" size={20} />
                   <span className="text-slate-700">
                     +91-{employee.mobile}
                   </span>
-                </div>
+                </div> */}
 
                 <div className="flex items-center gap-3">
                   <Mail className="text-rose-500" size={20} />
@@ -969,6 +1011,20 @@ export default function EmployeeProfile() {
                   </span>
                 </div>
 
+                {/* <div className="flex items-center gap-3">
+                  <TimerReset  className="text-rose-500" size={20} />
+
+                  <span className="text-slate-700">
+                    Overtime Type : {currentOT.ot_type}
+                  </span>
+                </div> */}
+                <div className="flex items-center gap-3">
+                  <Building2 className="text-rose-500" size={20} />
+                  <span className="text-slate-700">
+                    Working Type : {employee.employment_type}
+                  </span>
+                </div>
+
                 <div className="flex items-center gap-3">
                   <Clock3 className="text-rose-500" size={20} />
                   <span className="text-slate-700">
@@ -984,6 +1040,23 @@ export default function EmployeeProfile() {
                     }
                   </span>
                 </div>
+                <div className="flex items-center gap-3">
+                  <BadgeCheck className="text-rose-500" size={20} />
+
+                  <span className="text-slate-700">
+                    Overtime Allow :
+                    {" "}
+                    {
+                      currentOT
+                        ? (
+                          String(currentOT.ot_allow) === "1"
+                            ? `Yes Allowed`
+                            : "Not Allowed"
+                        )
+                        : "No OT Record"
+                    }
+                  </span>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -996,7 +1069,7 @@ export default function EmployeeProfile() {
             className="col-span-12 xl:col-span-8"
           >
             {/* STATS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-7 gap-2">
               {stats.map((item, index) => (
                 <motion.div
                   key={index}
@@ -1011,7 +1084,7 @@ export default function EmployeeProfile() {
                       {item.title}
                     </h3>
 
-                    {item.icon}
+                    {/* {item.icon} */}
                   </div>
 
                   <h2 className="text-[22px] font-bold mt-2 break-words">
@@ -1060,6 +1133,7 @@ export default function EmployeeProfile() {
               resignationData={empResignation}
               assestData={empAssest}
               employeeData={empList}
+              advanceSalary={salAdvance}
             />
           </div>
 

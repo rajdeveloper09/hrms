@@ -170,91 +170,15 @@ export default function EmployeeIncrementDashboard() {
       const json = await safeJson(res);
 
       if (json.success || json.status) {
-
-        const emp = employees.find(
-          (e) => e.employee_id === empId
-        );
-
-        const shiftTime =
-          json.data?.shift_time ||
-          emp?.shift_time ||
-          emp?.start_time ||
-          emp?.shift_start_time ||
-          "09:30";
-
-        const avgLate = getAverageLateMinutes(
-          empId,
-          shiftTime
-        );
-
-        const lateDeduction = Number(
-          ((avgLate / 15) * 1).toFixed(2)
-        );
-
-        const basePercent = Number(
-          json.data?.base_increment_percent || 0
-        );
-
-        const complaintDeduction = Number(
-          json.data?.complaint_deduction_percent || 0
-        );
-
-        const penaltyDeduction = Number(
-          json.data?.penalty_deduction_percent || 0
-        );
-
-        const finalPercent = Math.max(
-          0,
-          Number(
-            (
-              basePercent -
-              lateDeduction -
-              complaintDeduction -
-              penaltyDeduction
-            ).toFixed(2)
-          )
-        );
-
-        const salary = Number(
-          json.data?.current_salary || 0
-        );
-
-        const finalAmount = Number(
-          ((salary * finalPercent) / 100).toFixed(2)
-        );
-
-        const safeData = {
-          ...json.data,
-          shift_time: shiftTime,
-          avg_late_minutes: avgLate,
-          late_deduction_percent: lateDeduction,
-          final_recommend_percent: finalPercent,
-          final_recommend_amount: finalAmount,
-          eligible: json.data?.eligible === true,
-        };
-
-        setRecommendations((prev) => ({
-          ...prev,
-          [empId]: safeData,
-        }));
-
-        setForms((prev) => ({
-          ...prev,
-          [empId]: prev[empId] || {
-            custom_increment_type: "auto",
-            custom_increment_value: "",
-            next_increment_date:
-              safeData.next_default_date ||
-              getDefaultNextDate(),
-            remark: "",
-          },
-        }));
-      }
-
-      if (json.success || json.status) {
         const safeData = {
           ...json.data,
           eligible: json.data?.eligible === true,
+          avg_late_minutes: Number(json.data?.avg_late_minutes || 0),
+          complaint_count: Number(json.data?.complaint_count || 0),
+          penalty_count: Number(json.data?.penalty_count || 0),
+          late_deduction_percent: Number(json.data?.late_deduction_percent || 0),
+          complaint_deduction_percent: Number(json.data?.complaint_deduction_percent || 0),
+          penalty_deduction_percent: Number(json.data?.penalty_deduction_percent || 0),
           final_recommend_percent: Math.max(
             0,
             Number(json.data?.final_recommend_percent || 0)
@@ -275,8 +199,8 @@ export default function EmployeeIncrementDashboard() {
           [empId]: prev[empId] || {
             custom_increment_type: "auto",
             custom_increment_value: "",
-            next_increment_date:
-              safeData.next_default_date || getDefaultNextDate(),
+            effective_date: "",
+            next_increment_date: "",
             remark: "",
           },
         }));
@@ -391,8 +315,12 @@ export default function EmployeeIncrementDashboard() {
       return;
     }
 
+    if (!form.effective_date) {
+      toast.error("Please enter increment effective date");
+      return;
+    }
     if (!form.next_increment_date) {
-      toast.error("Please select next increment date");
+      toast.error("Please enter next increment date");
       return;
     }
 
@@ -406,10 +334,28 @@ export default function EmployeeIncrementDashboard() {
       return;
     }
 
+    if (!form.effective_date) {
+      toast.error("Please select effective date");
+      return;
+    }
+
+    if (
+      new Date(form.effective_date) <
+      new Date(new Date().toISOString().slice(0, 10))
+    ) {
+      toast.error("Past effective date not allowed");
+      return;
+    }
+
     const preview = getPreview(empId);
 
     const ok = window.confirm(
-      `Are you sure you want to complete increment for ${empId}?\n\nIncrement: ${preview.currentPercent}%\nAmount: ${formatMoney(preview.amount)}\nNext Increment Date: ${form.next_increment_date}`
+      `Are you sure you want to complete increment for ${empId}?
+
+Increment: ${preview.currentPercent}%
+Amount: ${formatMoney(preview.amount)}
+Effective Date: ${form.effective_date}
+Next Increment Date: ${form.next_increment_date}`
     );
 
     if (!ok) return;
@@ -449,6 +395,7 @@ export default function EmployeeIncrementDashboard() {
           Number(form.custom_increment_value || 0)
         ),
         next_increment_date: form.next_increment_date,
+        effective_date: form.effective_date,
         remark: form.remark || "",
       };
 
@@ -767,26 +714,58 @@ export default function EmployeeIncrementDashboard() {
                                 />
                               </div>
                             </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                                  <CalendarDays size={14} />
+                                  Increment Effective Date
+                                </label>
 
-                            <div>
-                              <label className="text-xs font-bold text-slate-600 flex items-center gap-1">
-                                <CalendarDays size={14} />
-                                Next Increment Date
-                              </label>
-                              <input
-                                type="date"
-                                value={form.next_increment_date || ""}
-                                required
-                                onChange={(e) =>
-                                  handleFormChange(
-                                    emp.employee_id,
-                                    "next_increment_date",
-                                    e.target.value
-                                  )
-                                }
-                                disabled={!canAdd}
-                                className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
-                              />
+                                <input
+                                  type="date"
+                                  min={new Date().toISOString().slice(0, 10)}
+                                  value={form.effective_date || ""}
+                                  required
+                                  placeholder="Select Effective Date"
+                                  onChange={(e) =>
+                                    handleFormChange(
+                                      emp.employee_id,
+                                      "effective_date",
+                                      e.target.value
+                                    )
+                                  }
+                                  disabled={!canAdd}
+                                  className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                                  <CalendarDays size={14} />
+                                  Next Increment Date
+                                </label>
+                                <input
+                                  type="date"
+                                  value={form.next_increment_date || ""}
+                                  min={new Date().toISOString().split("T")[0]}
+                                  required
+                                  placeholder="Select Next Increment Date"
+                                  onChange={(e) =>
+                                    handleFormChange(
+                                      emp.employee_id,
+                                      "next_increment_date",
+                                      e.target.value
+                                    )
+                                  }
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      saveIncrement(emp.employee_id);
+                                    }
+                                  }}
+                                  disabled={!canAdd}
+                                  className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                                />
+                              </div>
                             </div>
 
                             <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4">
@@ -884,20 +863,37 @@ export default function EmployeeIncrementDashboard() {
                         )}
                       />
                       <HistoryBox
-                        title="Next Date"
-                        value={item.next_increment_date || "N/A"}
+                        title="Increment Effective Date"
+                        value={item.effective_date
+                          ? new Date(item.effective_date).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                          : "N/A"}
+                      />
+                      <HistoryBox
+                        title="Next Increment Date"
+                        value={item.next_increment_date
+                          ? new Date(item.next_increment_date).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                          : "N/A"}
                       />
                       <HistoryBox
                         title="Status"
                         value={item.approval_status || "Approved"}
                       />
+
+                      {item.remark && (
+                        <p className="mt-3 text-xs text-slate-500 bg-slate-50 rounded-xl p-3">
+                          {item.remark}
+                        </p>
+                      )}
                     </div>
 
-                    {item.remark && (
-                      <p className="mt-3 text-xs text-slate-500 bg-slate-50 rounded-xl p-3">
-                        {item.remark}
-                      </p>
-                    )}
 
                     {canDelete && (
                       <button

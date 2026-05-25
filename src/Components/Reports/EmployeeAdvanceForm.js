@@ -453,7 +453,7 @@ export default function EmployeeAdvanceForm() {
                         className="input"
                       >
                         <option value="">Select Advance Type</option>
-                        <option value="Bulk amount">Bulk amount</option>
+                        {/* <option value="Bulk amount">Bulk amount</option> */}
                         <option value="Salary Advance">Salary Advance</option>
                       </select>
                     </div>
