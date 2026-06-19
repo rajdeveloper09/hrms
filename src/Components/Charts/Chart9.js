@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -26,7 +26,7 @@ export default function Chart9() {
       name || "User"
     )}&background=${bg}&color=fff`;
 
-  const fetchData = useCallback(async () => {
+const fetchData = useCallback(async () => {
     try {
       const [complaintRes, employeeRes] = await Promise.all([
         fetch(`${API_BASE_URL}/emp_complaints`),
@@ -151,10 +151,6 @@ export default function Chart9() {
     }
   });
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
   const nextCard = () => {
     if (currentIndex < complaints.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -223,12 +219,13 @@ export default function Chart9() {
                         </h3>
 
                         <span
-                          className={`text-xs px-3 py-1 rounded-full font-medium ${item.status === "Resolved"
+                          className={`text-xs px-3 py-1 rounded-full font-medium ${
+                            item.status === "Resolved"
                               ? "bg-emerald-500/20 text-emerald-300"
                               : item.status === "Pending"
-                                ? "bg-red-500/20 text-red-300"
-                                : "bg-yellow-500/20 text-yellow-300"
-                            }`}
+                              ? "bg-red-500/20 text-red-300"
+                              : "bg-yellow-500/20 text-yellow-300"
+                          }`}
                         >
                           {item.status}
                         </span>
@@ -361,10 +358,11 @@ export default function Chart9() {
             <button
               onClick={prevCard}
               disabled={currentIndex === 0}
-              className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium shadow-md ${currentIndex === 0
+              className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium shadow-md ${
+                currentIndex === 0
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                   : "bg-white text-gray-700"
-                }`}
+              }`}
             >
               <ChevronLeft size={18} />
               Previous
@@ -374,8 +372,9 @@ export default function Chart9() {
               {complaints.map((_, i) => (
                 <div
                   key={i}
-                  className={`h-2 rounded-full transition-all duration-300 ${currentIndex === i ? "w-6 bg-pink-400" : "w-2 bg-gray-300"
-                    }`}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    currentIndex === i ? "w-6 bg-pink-400" : "w-2 bg-gray-300"
+                  }`}
                 />
               ))}
             </div>
@@ -383,10 +382,11 @@ export default function Chart9() {
             <button
               onClick={nextCard}
               disabled={currentIndex === complaints.length - 1}
-              className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium shadow-md ${currentIndex === complaints.length - 1
+              className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium shadow-md ${
+                currentIndex === complaints.length - 1
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                   : "bg-gradient-to-r from-pink-400 to-rose-500 text-white"
-                }`}
+              }`}
             >
               Next
               <ChevronRight size={18} />
