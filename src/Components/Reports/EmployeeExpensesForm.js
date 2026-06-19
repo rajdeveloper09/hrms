@@ -3,7 +3,7 @@ import axios from "axios";
 import { Toaster } from "react-hot-toast";
 import SideNav from "../SideNav";
 
-const API = "https://ojmee.in/employee";
+const API = "https://hrms-apis-ezda.onrender.com";
 const CURRENT_PATH = "/add-expenses";
 
 export default function EmployeeExpensesForm() {

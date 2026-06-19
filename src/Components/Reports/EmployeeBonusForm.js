@@ -16,7 +16,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import SideNav from "../SideNav";
 
-const API = "https://ojmee.in/employee";
+const API = "https://hrms-apis-ezda.onrender.com";
 const EMPLOYEE_API = `${API}/get_employee`;
 const BONUS_GET_API = `${API}/emp_bonus`;
 const BONUS_POST_API = `${API}/emp_bonus_post`;

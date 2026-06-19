@@ -14,7 +14,7 @@ import {
 import SideNav from "../SideNav";
 import toast, { Toaster } from "react-hot-toast";
 
-const API_BASE = "https://ojmee.in/employee";
+const API_BASE = "https://hrms-apis-ezda.onrender.com";
 const CURRENT_PATH = "/add-increment";
 
 export default function EmployeeIncrementDashboard() {

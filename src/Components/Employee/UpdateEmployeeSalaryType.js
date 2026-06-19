@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
-const API = "https://ojmee.in/employee";
+const API = "https://hrms-apis-ezda.onrender.com";
 
 const SALARY_TYPES = [
   { label: "Online", value: "Online" },

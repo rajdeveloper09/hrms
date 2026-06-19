@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDefaultRedirect } from "../utils/permissionRedirect";
-const API = "https://ojmee.in/employee";
+const API = "https://hrms-apis-ezda.onrender.com";
 
 export default function Login({ setIsAuth }) {
   const navigate = useNavigate();

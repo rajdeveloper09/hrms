@@ -11,7 +11,7 @@ import {
   FileDown,
 } from "lucide-react";
 
-const API = "https://ojmee.in/employee";
+const API = "https://hrms-apis-ezda.onrender.com";
 const CURRENT_PATH = "/final-salary";
 
 export default function FinalSalaryCurrentMonth() {
