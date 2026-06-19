@@ -62,9 +62,9 @@ export default function EmployeeResignationForm() {
   const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
   const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
+useEffect(() => {
+   fetchAllData();
+}, [fetchAllData]);
 
   const fetchAllData = async () => {
     await Promise.all([fetchEmployees(), fetchResignations()]);

@@ -36,10 +36,12 @@ export default function FinalSalaryCurrentMonth() {
   const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
 
   useEffect(() => {
-    if (canView) fetchSalary();
-  }, []);
+    if (canView) {
+      fetchSalary();
+    }
+  }, [canView, fetchSalary]);
 
-  const fetchSalary = async () => {
+const fetchSalary = useCallback(async () => {
     if (!canView) return alert("You do not have view permission");
 
     try {
@@ -62,7 +64,7 @@ export default function FinalSalaryCurrentMonth() {
     } finally {
       setLoading(false);
     }
-  };
+  });
 
   const filteredData = useMemo(() => {
     const q = search.toLowerCase().trim();

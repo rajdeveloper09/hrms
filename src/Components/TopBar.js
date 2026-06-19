@@ -1,13 +1,10 @@
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
     Bell,
     Settings,
-    UserCircle2,
 } from "lucide-react";
 
 export default function TopBar({ setIsAuth }) {
-    const navigate = useNavigate();
     const [currentTime, setCurrentTime] = useState(new Date());
     useEffect(() => {
         const timer = setInterval(() => {

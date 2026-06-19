@@ -205,7 +205,7 @@ export const Chart10 = ({
     0
   );
 
-  const nextIncrementDate = incrementRecord?.next_increment_date || "-";
+  // const nextIncrementDate = incrementRecord?.next_increment_date || "-";
 
   const isGrowth = recommendationAmount >= lastIncrement;
 

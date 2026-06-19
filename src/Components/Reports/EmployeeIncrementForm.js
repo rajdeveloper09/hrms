@@ -43,13 +43,9 @@ export default function EmployeeIncrementDashboard() {
 
   useEffect(() => {
     loadPage();
-  }, []);
+  }, [loadPage]);
 
-  const getDefaultNextDate = () => {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 6);
-    return d.toISOString().slice(0, 10);
-  };
+
 
   const safeJson = async (res) => {
     const text = await res.text();
@@ -96,41 +92,6 @@ export default function EmployeeIncrementDashboard() {
 
     const [h, m] = str.split(":").map(Number);
     return (Number(h) || 0) * 60 + (Number(m) || 0);
-  };
-
-  const getAverageLateMinutes = (empId, shiftTime) => {
-    const list = attendanceData.filter(
-      (item) =>
-        String(item.employee_id || item.emp_id || "")
-          .trim()
-          .toUpperCase() === String(empId).trim().toUpperCase()
-    );
-
-    const lateList = list
-      .map((item) => {
-        const inPunches =
-          item.punches?.filter((p) => Number(p.status) === 0) || [];
-
-        const inPunch = inPunches[0];
-
-        if (!inPunch?.time) return 0;
-
-        const shiftMin = toMinutes(shiftTime || "09:30");
-        const inMin = toMinutes(inPunch.time);
-
-        if (!shiftMin || !inMin) return 0;
-
-        return inMin > shiftMin ? inMin - shiftMin : 0;
-      })
-      .filter((mins) => mins > 0);
-
-    if (lateList.length === 0) return 0;
-
-    return Number(
-      (
-        lateList.reduce((sum, mins) => sum + mins, 0) / lateList.length
-      ).toFixed(2)
-    );
   };
 
   const fetchEmployees = async () => {

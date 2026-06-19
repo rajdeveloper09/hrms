@@ -5,7 +5,6 @@ import html2canvas from "html2canvas";
 import { useRef } from "react";
 import {
   ArrowLeft,
-  Phone,
   Mail,
   MapPin,
   Building2,
@@ -17,7 +16,6 @@ import {
   X,
   Image as ImageIcon,
   FileText,
-  TimerReset,
   BadgeCheck,
 } from "lucide-react";
 
@@ -282,13 +280,13 @@ export default function EmployeeProfile() {
   const userEmpId =
     EmployeeProfile?.emp_id || EmployeeProfile?.employee_id;
 
-  const userComplaint = (empComplaint || []).filter(
-    (item) => item.emp_id === userEmpId
-  );
+  // const userComplaint = (empComplaint || []).filter(
+  //   (item) => item.emp_id === userEmpId
+  // );
 
-  const userPenalty = (penaltyData || []).filter(
-    (item) => item.emp_id === userEmpId
-  );
+  // const userPenalty = (penaltyData || []).filter(
+  //   (item) => item.emp_id === userEmpId
+  // );
 
 
   // EMPLOYEE FETCH
@@ -1314,6 +1312,7 @@ export default function EmployeeProfile() {
                     <a
                       href={getImageUrl(doc.file)}
                       target="_blank"
+                      rel="noopener noreferrer"
                       download={`${employee.employee_id}_${doc.title}`}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-sm"
                     >
@@ -1377,6 +1376,7 @@ export default function EmployeeProfile() {
                   <a
                     href={selectedImage.url}
                     target="_blank"
+                    rel="noopener noreferrer"
                     download={`${employee.employee_id}_${selectedImage.title}`}
                     className="flex items-center gap-2 px-5 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white"
                   >

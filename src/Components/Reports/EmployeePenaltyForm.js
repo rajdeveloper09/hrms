@@ -48,7 +48,7 @@ export default function EmployeePenaltyForm() {
   const [penalties, setPenalties] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [selectedComplaint, setSelectedComplaint] = useState("");
-  const [search, setSearch] = useState("");
+  const [search] = useState("");
   const [penaltySearch, setPenaltySearch] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -210,29 +210,6 @@ export default function EmployeePenaltyForm() {
     }));
   };
 
-  const handleComplaintRowClick = (item) => {
-    if (!canAdd) {
-      toast.error("You do not have add permission");
-      return;
-    }
-
-    const status = String(item.status || "").toLowerCase();
-
-    if (status !== "completed") {
-      toast.error("Only completed complaint can be selected for penalty");
-      return;
-    }
-
-    const suspected = String(item.suspected_employee || "").trim().toLowerCase();
-
-    if (!suspected || suspected === "other") {
-      toast.error("Suspected employee not valid");
-      return;
-    }
-
-    handleComplaintSelect(item.complaint_id || item.id);
-    setPenaltyType("Complaint");
-  };
 
   const handleChange = (e) => {
     if (!editMode && !canAdd) return toast.error("You do not have add permission");
@@ -383,29 +360,6 @@ export default function EmployeePenaltyForm() {
     }
   };
 
-  const filteredComplaintList = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    if (!q) return allComplaints;
-
-    return allComplaints.filter((item) =>
-      [
-        item.complaint_id,
-        item.emp_id,
-        item.emp_name,
-        item.branch_id,
-        item.complaint_type,
-        item.complaint_between,
-        item.suspected_employee,
-        item.status,
-        item.incident_place,
-        item.complaint_raise_by,
-        item.remark,
-      ]
-        .map((v) => String(v || "").toLowerCase())
-        .join(" ")
-        .includes(q)
-    );
-  }, [allComplaints, search]);
 
   const filteredPenalties = useMemo(() => {
     const q = penaltySearch.toLowerCase().trim();

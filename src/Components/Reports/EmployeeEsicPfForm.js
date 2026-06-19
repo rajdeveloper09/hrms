@@ -74,7 +74,7 @@ export default function EmployeeESICPFForm() {
   useEffect(() => {
     fetchEmployees();
     fetchList();
-  }, []);
+  }, [form]);
 
   useEffect(() => {
     calculateAmounts(form);

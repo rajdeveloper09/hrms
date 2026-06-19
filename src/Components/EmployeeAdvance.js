@@ -6,7 +6,6 @@ export default function EmployeeAdvance() {
     {
       advance_id: "ADV1001",
       emp_id: "EMP101",
-      emp_id: "EMP101",
       amount: 15000,
       adv_type: "Salary Advance",
       pdf_status: "Generated",
