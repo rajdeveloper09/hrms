@@ -15,7 +15,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import SideNav from "../SideNav";
 
-const API = "https://ojmee.in/employee";
+const API = "https://hrms-apis-ezda.onrender.com";
 const CURRENT_PATH = "/add-resignation";
 
 const EMPLOYEE_API = `${API}/get_employee`;
@@ -62,9 +62,9 @@ export default function EmployeeResignationForm() {
   const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
   const canDelete = role === "superAdmin" || Number(pagePermission.can_delete) === 1;
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
+useEffect(() => {
+   fetchAllData();
+}, [fetchAllData]);
 
   const fetchAllData = async () => {
     await Promise.all([fetchEmployees(), fetchResignations()]);

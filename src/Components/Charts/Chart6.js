@@ -5,7 +5,6 @@ import {
   CreditCard,
   Clock3,
   BadgeIndianRupee,
-  CalendarDays,
 } from "lucide-react";
 
 export default function Chart6() {

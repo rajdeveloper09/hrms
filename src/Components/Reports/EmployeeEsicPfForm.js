@@ -3,7 +3,7 @@ import axios from "axios";
 import SideNav from "../SideNav";
 import { Toaster } from "react-hot-toast";
 
-const API = "https://ojmee.in/employee";
+const API = "https://hrms-apis-ezda.onrender.com";
 const CURRENT_PATH = "/add-EsicPf";
 
 export default function EmployeeESICPFForm() {
@@ -74,7 +74,7 @@ export default function EmployeeESICPFForm() {
   useEffect(() => {
     fetchEmployees();
     fetchList();
-  }, []);
+  }, [form]);
 
   useEffect(() => {
     calculateAmounts(form);

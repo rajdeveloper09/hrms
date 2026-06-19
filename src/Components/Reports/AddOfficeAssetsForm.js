@@ -3,7 +3,7 @@ import axios from "axios";
 import SideNav from "../SideNav";
 import { Toaster } from "react-hot-toast";
 
-const API = "https://ojmee.in/employee";
+const API = "https://hrms-apis-ezda.onrender.com";
 
 export default function AddOfficeAssetsForm() {
     const today = new Date().toISOString().slice(0, 10);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -13,9 +13,6 @@ export default function Chart9() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [complaints, setComplaints] = useState([]);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const cleanId = (value) => String(value || "").trim();
 
@@ -29,7 +26,7 @@ export default function Chart9() {
       name || "User"
     )}&background=${bg}&color=fff`;
 
-  const fetchData = async () => {
+const fetchData = useCallback(async () => {
     try {
       const [complaintRes, employeeRes] = await Promise.all([
         fetch(`${API_BASE_URL}/emp_complaints`),
@@ -152,7 +149,7 @@ export default function Chart9() {
       console.error("Complaint API Error:", error);
       setComplaints([]);
     }
-  };
+  });
 
   const nextCard = () => {
     if (currentIndex < complaints.length - 1) {

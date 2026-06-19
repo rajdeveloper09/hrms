@@ -12,7 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 
-const API = "https://ojmee.in/employee";
+const API = "https://hrms-apis-ezda.onrender.com";
 const CURRENT_PATH = "/add-areaManagerBranch";
 
 const cleanText = (value) =>

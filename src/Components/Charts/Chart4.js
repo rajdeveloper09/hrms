@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell
@@ -54,7 +54,7 @@ export default function Chart4() {
         }
     };
 
-    const getAllBranchRoleData = () => {
+   const getAllBranchRoleData = useCallback(() => {
         const result = {};
 
         Object.values(roleDataByBranch).forEach((branch) => {
@@ -67,7 +67,11 @@ export default function Chart4() {
             name: key,
             value: result[key],
         }));
-    };
+    });
+
+    useMemo(() => {
+   return getAllBranchRoleData();
+}, [getAllBranchRoleData]);
 
     const roleData = useMemo(() => {
         const data =

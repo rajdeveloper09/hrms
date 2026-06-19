@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "../../config/api";
 
@@ -8,10 +8,6 @@ export default function Chart2() {
     const [month, setMonth] = useState("All");
 
     const [payrollData, setPayrollData] = useState([]);
-
-    useEffect(() => {
-        fetchPenaltyData();
-    }, []);
 
     const getMonthName = (dateString) => {
         if (!dateString) return "";
@@ -24,7 +20,8 @@ export default function Chart2() {
         return String(value || "").trim().toUpperCase();
     };
 
-    const fetchPenaltyData = async () => {
+
+    const fetchPenaltyData = useCallback(async () => {
         try {
             const [penaltyRes, employeeRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/emp_penalties`),
@@ -36,7 +33,7 @@ export default function Chart2() {
 
             const employees =
                 (employeeJson.success === true || employeeJson.status === true) &&
-                Array.isArray(employeeJson.data)
+                    Array.isArray(employeeJson.data)
                     ? employeeJson.data
                     : [];
 
@@ -71,11 +68,15 @@ export default function Chart2() {
         } catch (error) {
             console.error("Penalty API Error:", error);
         }
-    };
+    });
 
-    const branchOptions = useMemo(() => {
-        return [...new Set(payrollData.map((emp) => emp.branch).filter(Boolean))];
-    }, [payrollData]);
+    useEffect(() => {
+        fetchPenaltyData();
+    }, [fetchPenaltyData]);
+
+    // const branchOptions = useMemo(() => {
+    //     return [...new Set(payrollData.map((emp) => emp.branch).filter(Boolean))];
+    // }, [payrollData]);
 
     const postOptions = useMemo(() => {
         return [...new Set(payrollData.map((emp) => emp.post).filter(Boolean))];
@@ -224,11 +225,10 @@ export default function Chart2() {
                             </motion.p>
 
                             <span
-                                className={`inline-block mt-1 text-[11px] px-3 py-1 rounded-full font-medium shadow-sm ${
-                                    emp.status === "Panelty"
+                                className={`inline-block mt-1 text-[11px] px-3 py-1 rounded-full font-medium shadow-sm ${emp.status === "Panelty"
                                         ? "bg-red-100 text-red-600"
                                         : "bg-red-100 text-red-500"
-                                }`}
+                                    }`}
                             >
                                 {emp.post}
                             </span>

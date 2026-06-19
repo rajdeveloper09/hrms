@@ -4,7 +4,7 @@ import SideNav from "../SideNav";
 import { Search, Clock, User, Send, Edit, Trash2, X } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
-const API = "https://ojmee.in/employee";
+const API = "https://hrms-apis-ezda.onrender.com";
 const CURRENT_PATH = "/add-overtime";
 
 const emptyForm = {

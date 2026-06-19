@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import SideNav from "./SideNav";
 import {
@@ -11,7 +11,7 @@ import {
   FileDown,
 } from "lucide-react";
 
-const API = "https://ojmee.in/employee";
+const API = "https://hrms-apis-ezda.onrender.com";
 const CURRENT_PATH = "/final-salary";
 
 export default function FinalSalaryCurrentMonth() {
@@ -36,10 +36,12 @@ export default function FinalSalaryCurrentMonth() {
   const canEdit = role === "superAdmin" || Number(pagePermission.can_edit) === 1;
 
   useEffect(() => {
-    if (canView) fetchSalary();
-  }, []);
+    if (canView) {
+      fetchSalary();
+    }
+  }, [canView, fetchSalary]);
 
-  const fetchSalary = async () => {
+const fetchSalary = useCallback(async () => {
     if (!canView) return alert("You do not have view permission");
 
     try {
@@ -62,7 +64,7 @@ export default function FinalSalaryCurrentMonth() {
     } finally {
       setLoading(false);
     }
-  };
+  });
 
   const filteredData = useMemo(() => {
     const q = search.toLowerCase().trim();
